@@ -5,7 +5,7 @@ Template repository for producing comprehensive AI-assisted critical literature 
 ## Quick Start
 
 1. Create a new repo from this template
-2. Open in Claude/Operon and provide your review prompt:
+2. Open in Claude and provide your review prompt:
 
 > Start a comprehensive critical literature review titled: "[YOUR TITLE]"
 > 
