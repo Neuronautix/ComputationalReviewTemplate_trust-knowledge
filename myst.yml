@@ -1,0 +1,47 @@
+version: 1
+extends:
+  - authors.yml
+project:
+  title: "REVIEW TITLE — Update in myst.yml"
+  subtitle: A Reproducible Computational Review
+  description: >
+    Update this description for your review topic.
+  keywords:
+    - neuroscience
+    - critical review
+    - reproducible research
+  license: MIT
+  open_access: true
+  authors:
+    - id: ai-pipeline
+  plugins:
+    - plugins/citation-annotation-plugin.mjs
+    - plugins/authorship-plugin.mjs
+    - plugins/evidence-explorer-plugin.mjs
+  github: https://github.com/AllenNeuralDynamics/ComputationalReviewTemplate
+  bibliography:
+    - content/references.bib
+  toc:
+    - file: content/00_frontmatter.md
+    - file: content/01_introduction.md
+    - file: content/M_methods.md
+      title: Methods
+    - file: content/evidence_database.md
+      title: Evidence Database
+    - file: content/provenance.md
+      title: Pipeline Provenance
+site:
+  template: book-theme
+  title: "Computational Review"
+  nav:
+    - title: Review
+      children:
+        - file: content/00_frontmatter.md
+    - title: Methods
+      file: content/M_methods.md
+    - title: Evidence Database
+      file: content/evidence_database.md
+    - title: Pipeline Provenance
+      file: content/provenance.md
+    - title: GitHub
+      url: https://github.com/AllenNeuralDynamics/ComputationalReviewTemplate

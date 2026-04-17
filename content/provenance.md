@@ -1,0 +1,12 @@
+(sec-provenance)=
+# Pipeline Provenance
+
+This review was produced using the Expert Review Orchestrator v24 pipeline.
+
+## Pipeline Summary
+
+*Summary will be populated by the pipeline during Phase 13 assembly.*
+
+## Phase Execution
+
+The pipeline executes 19 phases — see the orchestrator skill for details.
