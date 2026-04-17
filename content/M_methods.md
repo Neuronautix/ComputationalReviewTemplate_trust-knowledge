@@ -1,5 +1,14 @@
 (sec-methods)=
 # Methods
+
+:::{figure} ../figures/fig_methods_pipeline.png
+:name: fig-methods-pipeline
+:width: 100%
+
+Overview of the 19-phase Expert Review Pipeline v24. Green boxes indicate EXPERT agents (scientific judgment), blue boxes indicate DATAML agents (mechanical work), and the gray box is the coordinator. Red dashed lines mark information barriers where actor-critic separation is enforced. Orange diamonds indicate gate checkpoints where the coordinator verifies compliance before advancing.
+:::
+
+
 This review was produced through a structured, multi-phase computational pipeline. All claims in this section are derived from recorded pipeline metadata and gate artifacts; no post-hoc characterizations have been added.
 
 (sec-methods-search)=
