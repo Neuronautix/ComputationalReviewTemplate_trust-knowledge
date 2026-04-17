@@ -406,11 +406,20 @@ MyST citation syntax:
 MyST figure syntax:
 ```markdown
 :::{figure} ../figures/fig_secN_name.png
-:name: fig-secN-name
+:label: fig-secN-name
 :width: 100%
-Caption text with {cite:p}`Source2020` attribution.
+**Short descriptive title.** Caption body with {cite:p}`Source2020` attribution.
 :::
 ```
+
+**Figure caption rules (enforced in Phase 8 critic audit):**
+
+1. **Use `:label:` not `:name:`.** MyST resolves `{numref}` against `:label:` first; using `:name:` in addition produces a duplicate-key warning. Pick one, and standardise on `:label:` everywhere.
+2. **No manual figure numbering in captions.** Never write `**Figure 10.2** —` at the start of a caption. MyST auto-numbers figures from document order, and a manual prefix of `10.2` placed before `10.1` in source order produces a contradiction that the build cannot resolve. Let `{numref}` do the work.
+3. **Caption MUST open with a short bold title phrase.** Format: `**Five-or-fewer-word title.** Body of caption...` The bold title is rhetorical — it tells the reader at a glance what the figure shows. The body sentence(s) that follow explain the mechanism or evidence and attach citations.
+4. **One `:label:` directive per figure, no aliases.** If the same figure needs multiple xref anchors, use MyST target syntax (`(sec-fig-alt)=`) above the figure rather than duplicate `:label:` directives.
+
+**Heading numbering rule:** Section headings must NOT embed manual numbers (`## 10.2 Mechanisms`). Use plain titles (`## Mechanisms`) plus an invisible label above (`(sec-10-mechanisms)=`) for cross-references. Numbering is the build system's responsibility.
 
 **Cross-references between sections:**
 - Use `` {ref}`sec-target-label` `` (no parentheses wrapping)

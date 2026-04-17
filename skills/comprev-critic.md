@@ -181,6 +181,52 @@ for critic_id in phase_4b_critic_ids:
         f'Critic {critic_id} is the same agent as a section writer — blinding violated'
 ```
 
+**Figure Caption Mechanical Audit (MANDATORY — runs before the gate artifact is saved):**
+
+Alongside the prose critic, the coordinator runs a regex audit on every figure
+directive across the section .md files. This catches four caption-formatting bugs that
+appeared in the VIP review and required a late cleanup pass:
+
+```python
+import re, pathlib
+
+CAP_RE = re.compile(r':::\{figure\}[^\n]*\n((?::[^\n]+\n)+)([^\n]+)\n:::', re.M)
+
+def audit_figures(md_paths):
+    problems = []
+    for path in md_paths:
+        text = pathlib.Path(path).read_text()
+        for m in CAP_RE.finditer(text):
+            opts_block, caption_line = m.group(1), m.group(2)
+            opts = dict(re.findall(r':([a-z]+):\s*(.*)', opts_block))
+
+            # Bug 1: manual 'Figure N.M' prefix in caption
+            if re.match(r'\*\*Figure\s+\d+(\.\d+)?\*\*', caption_line):
+                problems.append((path, 'MANUAL_NUMBERING', caption_line[:80]))
+
+            # Bug 2: missing bold title lead
+            if not caption_line.lstrip().startswith('**'):
+                problems.append((path, 'NO_BOLD_TITLE', caption_line[:80]))
+
+            # Bug 3: both :name: and :label: declared with same value
+            if 'name' in opts and 'label' in opts and opts['name'] == opts['label']:
+                problems.append((path, 'REDUNDANT_NAME_LABEL', opts.get('label', '')))
+
+            # Bug 4: neither :label: nor :name: (un-referenceable figure)
+            if 'name' not in opts and 'label' not in opts:
+                problems.append((path, 'NO_ANCHOR', caption_line[:80]))
+    return problems
+```
+
+If `audit_figures` returns any problems, the coordinator fixes them in-place
+(mechanical — does not require critic judgment) before emitting
+`gate_critic_complete.json`. These are not claims about evidence; they are
+formatting bugs that MyST cannot resolve at build time.
+
+**Heading numbering audit (same gate):** grep each section .md for
+`^##+ \d+(\.\d+)* ` (headings that embed a manual number). Flag and strip —
+MyST auto-numbers sections from `toc.yml` order.
+
 **GATE ARTIFACT:** After all MUST_FIX issues are resolved (via `send_message` back to Phase 7 writers), save `gate_critic_complete.json`:
 
 **MUST_FIX enforcement loop (coordinator executes):**

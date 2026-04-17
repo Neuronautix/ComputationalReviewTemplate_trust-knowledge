@@ -85,10 +85,65 @@ check_gate('gate_integration.json')
 - **Conclusion:** Receives section summaries + key findings including conflicts and gaps + master citation list. Synthesizes (not summarizes), acknowledges limitations, identifies open questions.
 
 
-**MANDATORY — Abstract:**
-Phase 11 also writes a 200-300 word Abstract for insertion into `content/00_frontmatter.md`. The Abstract must:
-- Cite the UNIQUE paper count from `citation_key_map` (not the pre-dedup count from evidence compliance)
-- Summarize the central thesis, key findings, and methodology
-- Save as a separate artifact `abstract.md` for Phase 13 to insert into the frontmatter
+**MANDATORY — Abstract and Frontmatter Assembly:**
+
+Phase 11 writes a 250–400 word Abstract AND composes the final
+`content/00_frontmatter.md` from the template scaffold. The Abstract body must:
+
+- Cite the UNIQUE paper count from `citation_key_map` (not the pre-dedup count
+  from evidence compliance).
+- Summarize the central thesis, key findings, and methodology.
+- Avoid inline citations (abstract is self-contained prose).
+- Be one paragraph, or at most four short paragraphs.
+
+The final frontmatter file MUST follow this fixed layout (the template ships a
+scaffold with placeholders — fill them, do not reorder):
+
+```
+---
+title: "<REVIEW TITLE>"
+subtitle: A Reproducible Computational Review
+---
+
+# <REVIEW TITLE>
+
+```{authorship-explorer}
+:authors: ./authors.yml
+:height: 600px
+```
+
+:::{admonition} AI-Generated Content Disclosure
+:class: danger
+
+**This review was generated with substantial AI assistance.** ...
+
+**What the AI did:** <one paragraph, pipeline-filled>
+**What the human did:** <one paragraph, pipeline-filled>
+**All evidence is traceable:** ... links to Methods and Evidence Database ...
+:::
+
+## Abstract
+
+<250–400 word abstract body>
+
+**Keywords:** keyword1, keyword2, keyword3, ...
+```
+
+**Layout rules (enforced at gate):**
+1. `subtitle` in frontmatter is required — the site header composes `title: subtitle`.
+2. `{authorship-explorer}` widget MUST come immediately after the H1, before any
+   other content. The widget binds to DOM anchors that MyST only emits when it
+   follows the H1 in source order; placing it at the bottom of the file silently
+   breaks rendering.
+3. AI-Disclosure admonition is mandatory on every computational review produced
+   by this pipeline. Fill in both "What the AI did" and "What the human did"
+   paragraphs — do not delete the admonition block.
+4. `## Abstract` heading must be present (some templates styled abstract as
+   un-headed — don't; the reader and search index need the anchor).
+5. Keywords line at bottom, bold label, comma-separated, 4–8 terms.
+
+Save the assembled file directly to `content/00_frontmatter.md`. Phase 13
+(assembly) verifies the five layout rules above and fails the gate if any are
+violated.
 
 
