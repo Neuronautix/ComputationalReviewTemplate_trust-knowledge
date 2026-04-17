@@ -305,49 +305,9 @@ Every evidence-gathering agent returns a JSON matching this schema. The coordina
 
 ## Repository Structure
 
-All pipeline outputs are pushed to a GitHub repository with this structure:
+The template repo (`ComputationalReviewTemplate`) provides the complete scaffold: `myst.yml`, plugins, widgets, `deploy.yml`, directory structure, and placeholder content files. Phases 13 and 19 UPDATE existing files — they do not create the scaffold from scratch.
 
-```
-repo-root/
-├── myst.yml                    # MyST config (project metadata, bibliography)
-├── _toc.yml                    # Table of contents for MyST build
-├── content/
-│   ├── 00_frontmatter.md       # Title, authors, abstract
-│   ├── 01_introduction.md      # Section 1 (MyST markdown)
-│   ├── ...                     # Sections 2–12
-│   ├── 13_conclusion.md
-│   └── M_methods.md            # Methods section (coordinator-written)
-├── figures/
-│   ├── fig_sec2_*.png           # Figure PNGs (300 DPI)
-│   ├── notebooks/               # One Jupyter notebook per figure
-│   │   └── fig_secN_name.ipynb
-│   └── _figure_registry.json   # Per-figure provenance
-├── evidence/
-│   ├── section_NN_evidence.json # Per-section evidence packages
-│   └── citation_key_map.json   # DOI → cite_key mapping
-├── provenance/
-│   ├── phase_ledger.json        # Pipeline execution log
-│   ├── gate_*.json              # Gate artifacts
-│   └── critic_reports/          # Phase 6 + 8 critic findings
-├── scripts/
-│   ├── retrieve_fulltext.py     # Full-text retrieval function
-│   ├── build_figures.py         # Rebuild all figures from evidence
-│   └── shared_style.py          # Canonical color palette + style
-├── latex/
-│   ├── review.tex               # Assembled LaTeX document
-│   ├── bibliography.bib         # Consolidated BibTeX
-│   └── section_*.tex            # Per-section LaTeX files
-├── README.md
-├── LICENSE
-└── requirements.txt
-```
-
-The MyST markdown files in `content/` are the **primary** output — they render via GitHub Pages or Jupyter Book. The `latex/` directory contains the parallel LaTeX version for PDF compilation.
-
----
-
----
-
+See the template repo README for the full file inventory.
 
 ## Phase 1: Scope and Thesis
 

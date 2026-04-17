@@ -1,5 +1,8 @@
 # DATAML Phase Protocols
 
+> **Template-aware:** This pipeline assumes the repo was created from `ComputationalReviewTemplate`. All directory structure, plugins, widgets, `myst.yml`, `deploy.yml`, and `authors.yml` already exist. Phase 13 UPDATES existing files (adds section entries to `myst.yml` toc, populates `content/provenance.md`). Phase 19 pushes content into the existing structure — it does NOT create directories or deploy infrastructure.
+
+
 Delegation templates for all DATAML mechanical phases: citation infrastructure (3), evidence curation (5), bibliography (9), methods (12), document assembly (13), citation triples (14), fix preparation (16), fix application (18), and repository push (19).
 
 **Information barrier:** No information barrier. DATAML performs mechanical work (database queries, JSON manipulation, file assembly, git operations). Seeing all phase templates does not bias scientific judgment because DATAML does not make scientific judgments.
