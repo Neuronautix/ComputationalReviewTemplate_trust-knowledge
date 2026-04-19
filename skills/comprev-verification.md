@@ -45,11 +45,11 @@ that the claimed finding actually matches the paper's abstract.
 > - Wrong volume/pages → **MINOR**, provide correct values
 > - **Preprint metadata:** Preprints have no volume/pages — this is expected, not an error. The "journal" field should be "bioRxiv", "medRxiv", or "arXiv preprint arXiv:XXXX.XXXXX". If the bib entry lists a journal name but the paper is actually a preprint (or vice versa), check whether the preprint has since been published in a journal — if so, update the bib entry to the published version with full metadata.
 >
-> **Step 5 — Claim Verification (two tiers):**
+> **Step 5 — Claim Verification (every triple, no tiering):**
 >
-> **Tier A — Deep check (20 most consequential citations per batch):**
-> Select topic sentences, paragraph conclusions, and claims with
-> quantitative values attributed to specific papers. For each:
+> **ALL triples receive the full check.** There is no Tier A/B split.
+> Every citation-claim pair in the review is verified to the same standard.
+> For each triple:
 > - Fetch abstract via PubMed or Europe PMC
 > - Does the abstract support the SPECIFIC claim, not just the topic?
 > - If the review text includes a NUMBER attributed to this paper
@@ -80,15 +80,10 @@ that the claimed finding actually matches the paper's abstract.
 >   Citing a paper that uses a Cre line is not evidence that the line
 >   has the caveat. Flag as **MISATTRIBUTED** with note: "paper uses
 >   the tool but does not discuss the caveat attributed to it."
->
-> **Tier B — Plausibility check (remaining citations):**
-> - Title + abstract: is the claimed finding plausible for this paper?
-> - Finding clearly not from this paper → category: **MISATTRIBUTED**
-> - Overclaimed confidence → category: **MINOR**
-> - Does the review's claim match the direction of the paper's
->   finding? A paper reporting high specificity (positive) cannot
->   support a claim about off-target labeling (negative) unless the
->   paper explicitly discusses the discrepancy. If the abstract argues
+> - **Direction check:** Does the review's claim match the direction
+>   of the paper's finding? A paper reporting high specificity (positive)
+>   cannot support a claim about off-target labeling (negative) unless
+>   the paper explicitly discusses the discrepancy. If the abstract argues
 >   the opposite direction → category: **MISATTRIBUTED** (with note:
 >   "paper argues opposite of the attributed claim")
 >

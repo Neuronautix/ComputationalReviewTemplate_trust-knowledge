@@ -75,8 +75,8 @@ delegations:
 | 12 | Bookend Critic | EXPERT | Blinded critic on intro/conclusion; novel claim-citation pairs verified |
 | 13 | Methods | DATAML | Pipeline metadata → M_methods.md + architecture figure |
 | 14 | Document Assembly | DATAML | Collect files, verify paths, build LaTeX preamble, run assertions |
-| 15 | Citation Triples | DATAML | Extract {cite_key, sentence, claimed_finding, bib_entry} per citation |
-| 16 | Citation Verification | EXPERT (parallel) | 5-step check: DOI → title → authors → metadata → claim verification |
+| 15 | Citation Triples | DATAML | Exhaustive extraction: one triple per cite key occurrence, no sampling |
+| 16 | Citation Verification | EXPERT (parallel) | 5-step deep check on every triple: DOI → title → authors → metadata → claim verification (no tiering) |
 | 17 | Fix Preparation | DATAML | Build fix requests with ±10 line context per non-VERIFIED triple |
 | 18 | Fix Execution | EXPERT (parallel) | Apply bib fixes and text fixes per fix request |
 | 19 | Fix Application | DATAML | Apply diffs in reverse order, verify zero orphans |
@@ -339,8 +339,8 @@ The coordinator uses this table to delegate each phase. The full delegation temp
 | 12 | EXPERT | parallel | `comprev-critic` + `comprev-reviewer-agent` | `gate_bookend_critic.json` | MUST_FIX = 0, novel pairs verified |
 | 13 | DATAML | single | `comprev-dataml-phases` | `gate_methods.json` | 8 subsections present |
 | 14 | DATAML | single | `comprev-dataml-phases` | `gate_assembly.json` | 0 broken refs, toc=file count, plugins deployed |
-| 15 | DATAML | single | `comprev-dataml-phases` | — | triples extracted into batches of 18 |
-| 16 | EXPERT | ×4 batches | `comprev-verification` + `comprev-reviewer-agent` | — | ALL triples verified, no sampling |
+| 15 | DATAML | single | `comprev-dataml-phases` | — | exhaustive triples extracted into batches of 18 |
+| 16 | EXPERT | ×8 batches | `comprev-verification` + `comprev-reviewer-agent` | — | ALL triples deep-checked, no tiering or sampling |
 | 17 | DATAML | single | `comprev-dataml-phases` | — | fix requests prepared |
 | 18 | EXPERT | ×4 batches | `comprev-fix-execution` + `comprev-reviewer-agent` | — | fixes executed with DB-verified replacements |
 | 19 | DATAML | single | `comprev-dataml-phases` | — | fixes applied, integrity verified |
@@ -391,8 +391,8 @@ The coordinator uses this table to delegate each phase. The full delegation temp
 | 12 | EXPERT | parallel | `comprev-critic` | `gate_bookend_critic.json` | MUST_FIX = 0, novel pairs verified |
 | 13 | DATAML | single | `comprev-dataml-phases` | `gate_methods.json` | 8 subsections present |
 | 14 | DATAML | single | `comprev-dataml-phases` | `gate_assembly.json` | 0 broken refs, toc=file count, plugins deployed |
-| 15 | DATAML | single | `comprev-dataml-phases` | — | triples extracted into batches of 18 |
-| 16 | EXPERT | ×4 batches | `comprev-verification` | — | ALL triples verified, no sampling |
+| 15 | DATAML | single | `comprev-dataml-phases` | — | exhaustive triples extracted into batches of 18 |
+| 16 | EXPERT | ×8 batches | `comprev-verification` | — | ALL triples deep-checked, no tiering or sampling |
 | 17 | DATAML | single | `comprev-dataml-phases` | — | fix requests prepared |
 | 18 | EXPERT | ×4 batches | `comprev-fix-execution` | — | fixes executed with DB-verified replacements |
 | 19 | DATAML | single | `comprev-dataml-phases` | — | fixes applied, integrity verified |

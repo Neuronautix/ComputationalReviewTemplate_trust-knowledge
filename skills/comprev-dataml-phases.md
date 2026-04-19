@@ -504,16 +504,23 @@ g) Insert the Phase 11 Abstract into `content/00_frontmatter.md`
 
 **Agent:** DATAML
 
-For every `\citep{}`/`\citet{}` in the final document, extract a triple:
+**EXHAUSTIVE EXTRACTION (MANDATORY):** Extract one triple for EVERY `{cite:p}` and
+`{cite:t}` occurrence in the final document. If a citation directive contains
+multiple keys (e.g., `{cite:p}\`Smith2020,Jones2021\``), each key produces a
+separate triple paired with the same sentence. No heuristic selection, no
+sampling, no prioritization — every citation-claim pair must be extracted.
+
+For each occurrence, produce:
 
 ```json
 {
   "cite_key": "Smith2022",
-  "section": "4.3",
-  "sentence": "the full sentence containing the \\citep{}/\\citet{} command",
-  "claimed_finding": "what the review says this paper shows",
+  "source_file": "sec-05-intrinsic-electrophysiology.md",
+  "source_line": 42,
+  "sentence": "the full sentence containing the {cite:p}/{cite:t} directive",
+  "claimed_finding": "what the review says this paper shows (1-2 sentence summary)",
   "bib_entry": {
-    "title": "from the .bib file",
+    "title": "from the .bib file or references.bib",
     "author": "from the .bib file",
     "journal": "from the .bib file",
     "year": "from the .bib file",
@@ -524,7 +531,17 @@ For every `\citep{}`/`\citet{}` in the final document, extract a triple:
 }
 ```
 
-Split into batches of 15–20 triples. The bib entry gives checkers everything needed to verify without guessing keywords.
+Split into batches of 18 triples. The bib entry gives checkers everything needed
+to verify without guessing keywords.
+
+**Completeness check:** After extraction, assert that the total triple count equals
+the total number of individual cite keys across all `{cite:p}`/`{cite:t}` directives
+in the document. If the counts diverge, re-extract — a citation was missed.
+
+**Why exhaustive:** Heuristic extraction (e.g., selecting only topic sentences or
+paragraph conclusions) misses citations in parenthetical asides, subordinate clauses,
+and methodological caveats. These low-profile citations are disproportionately likely
+to carry misattributions because they receive less authorial attention during drafting.
 
 
 ## Phase 17: Fix Preparation
