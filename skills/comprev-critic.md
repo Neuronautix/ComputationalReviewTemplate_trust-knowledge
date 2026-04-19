@@ -92,6 +92,16 @@ for sec_num, writer_id in section_to_writer_id.items():
 > - Is the study system/scope/experimental context correct?
 > - Is the confidence level appropriate? ('established' vs 'suggested' vs 'is consistent with')
 > - Are quantitative values attributed correctly?
+> - **Interpretive-mismatch:** Does the cited paper actually advance the
+>   interpretation the review places on it? A paper can be topically
+>   relevant (same tool, same system) yet not support the specific claim.
+>   Watch for: review says "Paper X showed Y" when Paper X reported data
+>   that the review reinterprets as Y but the paper itself interprets as
+>   not-Y or does not discuss Y. This is especially common for
+>   methodological caveats (e.g., "some Cre-captured cells may not
+>   express the marker in adulthood") attributed to papers that actually
+>   argue the tool is reliable. Flag as: "interpretive mismatch —
+>   paper supports [actual finding], review attributes [different claim]."
 >
 > **TRACK 3 — Conflict Survival:**
 > The evidence package contains explicit conflicts. For each:

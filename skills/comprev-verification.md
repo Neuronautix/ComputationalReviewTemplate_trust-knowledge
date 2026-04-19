@@ -61,11 +61,36 @@ that the claimed finding actually matches the paper's abstract.
 > - Is the confidence level appropriate? Review says "demonstrated" but
 >   abstract says "suggests" or "is consistent with" → category: **MINOR**
 >   (overclaimed confidence)
+> - **Interpretive-mismatch check (CRITICAL):** Does the cited paper
+>   actually advance the specific interpretation the review places on it,
+>   or does the review impose a conclusion the authors do not draw?
+>   A paper can be topically relevant yet not support the claim as stated.
+>   Example failure mode: a paper reports 91% Cre-line specificity
+>   (arguing the line is reliable), but the review cites it as evidence
+>   that some Cre-captured cells "express the marker only transiently
+>   during development" — an interpretation the paper never makes and
+>   arguably contradicts. If the paper's data could be reinterpreted
+>   to support the claim but the authors do not do so, flag as
+>   **MISATTRIBUTED** with note: "review imposes interpretation not
+>   advanced by the cited paper."
+> - **General-caveat check:** If the claim is a theoretical possibility
+>   or general methodological caveat (e.g., "Cre lines can capture
+>   transiently expressing cells"), verify that the cited paper actually
+>   discusses this caveat — not merely uses the tool in question.
+>   Citing a paper that uses a Cre line is not evidence that the line
+>   has the caveat. Flag as **MISATTRIBUTED** with note: "paper uses
+>   the tool but does not discuss the caveat attributed to it."
 >
 > **Tier B — Plausibility check (remaining citations):**
 > - Title + abstract: is the claimed finding plausible for this paper?
 > - Finding clearly not from this paper → category: **MISATTRIBUTED**
 > - Overclaimed confidence → category: **MINOR**
+> - Does the review's claim match the direction of the paper's
+>   finding? A paper reporting high specificity (positive) cannot
+>   support a claim about off-target labeling (negative) unless the
+>   paper explicitly discusses the discrepancy. If the abstract argues
+>   the opposite direction → category: **MISATTRIBUTED** (with note:
+>   "paper argues opposite of the attributed claim")
 >
 > **Databases to use (in order):**
 > 1. CrossRef (primary for DOI resolution — universal across domains)
