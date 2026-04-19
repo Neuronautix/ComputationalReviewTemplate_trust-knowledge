@@ -24,6 +24,23 @@ Two types of fixes, handled differently:
 - Must preserve surrounding text exactly — only modify the flagged sentence
 - Output: `{cite_key, old_text, new_text, new_bib_entry (if replacement)}`
 
+**SENTENCE CLEANUP AFTER CITATION DELETION (MANDATORY):**
+When removing a `{cite:t}` (textual citation), check whether it serves as the
+**grammatical subject** of the sentence (e.g., "{cite:t}\`Smith2020\` show that…").
+If so, deleting the citation leaves an orphaned predicate with no subject.
+You MUST either:
+1. Remove the entire sentence/clause that depended on the deleted citation, OR
+2. Rewrite the sentence with a different subject.
+
+Never leave fragments like " show, in earlier work, that…" or ", and demonstrate…"
+after a deletion. Similarly, when deleting a citation from a comma-separated list,
+clean up double commas (`,,`) and orphaned conjunctions (`and show that` with no
+preceding subject).
+
+**Self-check before saving:** After all deletions, grep for `,,` and for sentences
+that begin with a lowercase verb immediately after a period. Both are signs of
+incomplete cleanup.
+
 **Citation discipline in fixes:** Any NEW citation introduced as a replacement must have a DOI verified against PubMed, Europe PMC, or CrossRef. Include the DOI comment: `\citep{NewKey} % doi:10.1234/verified`
 
 
