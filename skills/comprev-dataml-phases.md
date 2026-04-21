@@ -376,7 +376,7 @@ Copy all `.md` section files, figures, evidence, and provenance to the repositor
 
 *(Assembly file-copy logic delegated to DATAML — see Phase 14 task description)*
 
-Verify MyST build: `myst build --execute` should complete without errors.
+Verify MyST build: install mystmd (`npm install -g mystmd`) then run `myst build --html`. Must complete with zero ⛔ errors. This is a hard gate — do NOT proceed to Phase 20 if the build fails.
 
 **8b. LaTeX Assembly:**
 
@@ -444,7 +444,8 @@ assert count(bare \begin{figure} without placement specifier) == 0
 ```
 
 **MyST Build Test (MANDATORY gate — catches ~25 issue categories at once):**
-Run `myst build --html` on the assembled content and parse stdout/stderr:
+Install mystmd if not already present: `npm install -g mystmd`
+Then run `myst build --html` on the assembled content and parse stdout/stderr:
 - Assert: 0 lines containing "Could not link citation"
 - Assert: 0 lines containing "Cross reference target was not found"  
 - Assert: 0 lines containing "Cannot find image"
@@ -709,7 +710,7 @@ advance_phase('14_github_push', '<saved_version_id>')
 After `git push`, verify:
 a) `myst.yml` `project.toc` entry count matches the number of `.md` files in `content/`
 b) `site.nav` structure is preserved from the repo scaffold (do not restructure existing nav)
-c) Run `myst build --html` if available and confirm zero "Could not link citation" and zero "Cannot find image" errors
+c) Install mystmd (`npm install -g mystmd`) and run `myst build --html`. Assert zero "Could not link citation" and zero "Cannot find image" errors. This is MANDATORY, not optional.
 
 
 ## Repository Structure
