@@ -7,7 +7,7 @@ body:
     attributes:
       label: Proposed topic
       description: What topic should be added?
-      placeholder: "PV interneurons in the retina"
+      placeholder: "e.g., PV interneurons in the retina"
     validations:
       required: true
 

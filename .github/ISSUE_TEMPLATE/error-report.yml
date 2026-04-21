@@ -2,27 +2,12 @@ name: "🐛 Error Report"
 description: Report an error in the review — wrong citation, incorrect claim, or factual mistake
 labels: ["error-report", "needs-triage"]
 body:
-  - type: dropdown
+  - type: input
     id: section
     attributes:
       label: Which section?
-      options:
-        - "01 — Introduction"
-        - "02 — Molecular Identity and Transcriptomic Taxonomy"
-        - "03 — Developmental Origins"
-        - "04 — Morphological Diversity"
-        - "05 — Intrinsic Electrophysiology"
-        - "06 — Synaptic Physiology"
-        - "07 — Local Circuit Motifs"
-        - "08 — In Vivo Dynamics"
-        - "09 — Brain Region and Layer Context"
-        - "10 — Oscillations and Network Dynamics"
-        - "11 — Species Translation and Disease"
-        - "12 — Computational Models"
-        - "13 — Cross-Cluster Synthesis"
-        - "14 — Conclusion"
-        - "Methods"
-        - "Other / Multiple sections"
+      description: Section number or title (e.g., "03 — Developmental Origins" or "Section 7").
+      placeholder: "Section number or title"
     validations:
       required: true
 
