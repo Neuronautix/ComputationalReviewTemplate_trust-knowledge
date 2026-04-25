@@ -160,7 +160,7 @@ The coordinator will independently re-run this validation on a random sample aft
 - [ ] Every paper has a DOI (starts with `10.`)? If not → send back.
 - [ ] `search_failures` present for papers mentioned in delegation but not found in databases? If unfound papers appear in `findings` without database-verified DOI → send back.
 - [ ] Fulltext retrieval rate ≥ 20% per cluster? If below → send back (worker likely skipped retrieval).
-- [ ] Overall fulltext rate ≥ 50% across all clusters after fallback tiers? If below → delegate targeted retrieval to EXPERT agent via send_message.
+- [ ] Overall fulltext rate ≥ 50% across all clusters after fallback tiers? If below → delegate targeted retrieval to LITREVIEW agent via send_message.
 - [ ] Quantitative extraction: ≥ 30% of findings have non-null `effect_size`? If below → send back for number extraction.
 - [ ] Sample size: ≥ 20% of findings have `n` > 0? If below → send back.
 - [ ] Replication status: ≤ 70% `replication_unknown`? If above → send back for replication investigation.

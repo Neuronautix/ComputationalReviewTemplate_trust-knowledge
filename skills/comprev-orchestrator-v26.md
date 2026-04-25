@@ -69,23 +69,23 @@ delegations:
 | Phase | Title | Agent | Key Steps |
 |-------|-------|-------|-----------|
 | 1 | Scope and Thesis | Coordinator | Define clusters, sections, targets from user TOC |
-| 2 | Evidence Gathering | EXPERT (parallel) | Search databases, extract findings, papers ≥ min_papers_per_cluster (from evidence_parameters), ≥50% fulltext |
+| 2 | Evidence Gathering | LITREVIEW (parallel) | Search databases, extract findings, papers ≥ min_papers_per_cluster (from evidence_parameters), ≥50% fulltext |
 | 3 | Citation Infrastructure | DATAML | CrossRef queries → citation_key_map + author_name_table |
-| 4 | Scaffold Construction | EXPERT | Argument arc, section plans, figure specs, style guide |
+| 4 | Scaffold Construction | LITREVIEW | Argument arc, section plans, figure specs, style guide |
 | 5 | Evidence Curation | DATAML | Cluster→section assignment, per-section packages, scaffold extracts |
-| 6 | Figure Comparability Audit | EXPERT (parallel) | Blinded review of figure_data, verdicts: PASS/CAVEAT/SPLIT/REDESIGN |
-| 7 | Section Drafting | EXPERT (parallel) | One writer per section, MyST + LaTeX + figures + notebooks |
-| 8 | Section Critics | EXPERT (parallel) | Blinded prose review, 6 tracks, MUST_FIX/SHOULD_CAVEAT/MINOR |
+| 6 | Figure Comparability Audit | LITREVIEW (parallel) | Blinded review of figure_data, verdicts: PASS/CAVEAT/SPLIT/REDESIGN |
+| 7 | Section Drafting | LITREVIEW (parallel) | One writer per section, MyST + LaTeX + figures + notebooks |
+| 8 | Section Critics | LITREVIEW (parallel) | Blinded prose review, 6 tracks, MUST_FIX/SHOULD_CAVEAT/MINOR |
 | 9 | Bibliography | DATAML | CrossRef → BibTeX, ASCII-only, dedup, contamination scan |
-| 10 | Integration | EXPERT | 6 passes: transitions, cross-refs, terminology, continuity, figures, hygiene |
-| 11 | Introduction and Conclusion | EXPERT | Written LAST, after all body sections, may only cite existing papers |
-| 12 | Bookend Critic | EXPERT | Blinded critic on intro/conclusion; novel claim-citation pairs verified |
+| 10 | Integration | LITREVIEW | 6 passes: transitions, cross-refs, terminology, continuity, figures, hygiene |
+| 11 | Introduction and Conclusion | LITREVIEW | Written LAST, after all body sections, may only cite existing papers |
+| 12 | Bookend Critic | LITREVIEW | Blinded critic on intro/conclusion; novel claim-citation pairs verified |
 | 13 | Methods | DATAML | Pipeline metadata → Methods.md + architecture figure |
 | 14 | Document Assembly | DATAML | Collect files, verify paths, build LaTeX preamble, run assertions |
 | 15 | Citation Triples | DATAML | Exhaustive extraction: one triple per cite key occurrence, no sampling |
-| 16 | Citation Verification | EXPERT (parallel) | 5-step deep check on every triple: DOI → title → authors → metadata → full-text claim verification (no tiering) |
+| 16 | Citation Verification | LITREVIEW (parallel) | 5-step deep check on every triple: DOI → title → authors → metadata → full-text claim verification (no tiering) |
 | 17 | Fix Preparation | DATAML | Build fix requests with ±10 line context per non-VERIFIED triple |
-| 18 | Fix Execution | EXPERT (parallel) | Apply bib fixes and text fixes per fix request |
+| 18 | Fix Execution | LITREVIEW (parallel) | Apply bib fixes and text fixes per fix request |
 | 19 | Fix Application | DATAML | Apply diffs in reverse order, verify zero orphans |
 | 20a | Methods Ledger Refresh | DATAML | Re-render M.6 + M.5 phase outcomes from final operon.frames ledger |
 | 20 | Repository Push | DATAML | Push all files via Contents API |
