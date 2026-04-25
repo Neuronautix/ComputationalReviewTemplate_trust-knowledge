@@ -4,7 +4,7 @@ import { resolve, dirname } from 'node:path';
 
 const evidenceDirective = {
   name: 'evidence-explorer',
-  doc: 'Interactive evidence database explorer widget.',
+  doc: 'Interactive evidence database explorer widget. The :evidence-dir: option is resolved relative to the calling markdown file. Default "../evidence" is correct when the directive is placed in a content/*.md page (the conventional layout).',
   options: {
     'evidence-dir': { type: String },
     height: { type: String },
@@ -12,7 +12,7 @@ const evidenceDirective = {
   run(data) {
     return [{
       type: 'evidence-explorer',
-      evidenceDir: data.options?.['evidence-dir'] || './evidence',
+      evidenceDir: data.options?.['evidence-dir'] || '../evidence',
       height: data.options?.height || '700px',
     }];
   },
@@ -135,7 +135,7 @@ const evidenceTransform = {
       if (node == null) return;
       if (node.type === 'evidence-explorer') {
         const docDir = vfile?.path ? dirname(vfile.path) : process.cwd();
-        const evidenceDir = resolve(docDir, node.evidenceDir || './evidence');
+        const evidenceDir = resolve(docDir, node.evidenceDir || '../evidence');
         try {
           const sections = [];
           const allFindings = [];

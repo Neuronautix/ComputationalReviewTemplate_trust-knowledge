@@ -32,7 +32,7 @@ project:
   toc:
     - file: content/00_frontmatter.md
     - file: content/01_introduction.md
-    - file: content/M_methods.md
+    - file: content/Methods.md
       title: Methods
     - file: content/evidence_database.md
       title: Evidence Database

@@ -41,31 +41,31 @@
     cannot see cross-section heading inconsistencies — e.g. §4 numbered H1 alongside
     §5 unnumbered H1 + numbered H2, or a wrapped `## heading\nundermined` orphan.)
 
-19. **METHODS_LEDGER_FRESH** *(Phase 20V only)*: `content/M_methods.md` must
+19. **METHODS_LEDGER_FRESH** *(Phase 20V only)*: `content/Methods.md` must
     reflect the final pipeline state, not the Phase-13 draft snapshot.
     Three sub-checks, all must pass:
 
-    1. **No forbidden stale phrasings.** Grep `M_methods.md` for any of:
+    1. **No forbidden stale phrasings.** Grep `Methods.md` for any of:
        `\bare scheduled\b`, `\bhad not yet executed\b`,
        `\bin progress \(this document\b`,
        `\bwill be captured in the final\b`,
        `\bPhases? 1[4-9].20 \(scheduled\)`. Zero hits required.
-    2. **M.6 frame count matches live ledger.** Parse the integer that
-       follows `Total session frames: \*\*` in the M.6 section. Must equal
+    2. **Pipeline Execution frame count matches live ledger.** Parse the integer that
+       follows `Total session frames: \*\*` in the Pipeline Execution section. Must equal
        `len(operon.frames(project_id=PROJECT_ID, roots_only=False, has_task=False)['frames'])`
        within ±1 (allow for the validator's own frame).
-    3. **M.6 phases-completed wording is final.** The phrase
+    3. **Pipeline Execution phases-completed wording is final.** The phrase
        "All 20 pipeline phases completed" (case-sensitive) must appear in
-       the M.6 section.
-    4. **M.0 figure is post-Phase-13.** Open
+       the Pipeline Execution section.
+    4. **Pipeline Architecture figure is post-Phase-13.** Open
        `figures/notebooks/fig_methods_pipeline.ipynb` and parse the
        `phases` list inside the notebook source; assert that no tuple
        carries the status `"scheduled"` or `"in_progress"`. Also assert
        that `figures/fig_methods_pipeline.png` mtime is later than the
        Phase 13 gate artifact's `created_at`. (The figure is regenerated
        by Phase 20a step (4); this sub-check verifies it ran.)
-    5. **§M.6 ledger has 20 individual rows, no combined ranges.**
-       Parse the markdown table immediately under `## M.6 Pipeline
+    5. **Pipeline Execution ledger has 20 individual rows, no combined ranges.**
+       Parse the markdown table immediately under `## Pipeline
        Execution` and assert: (a) exactly 20 data rows; (b) no row's
        Phase column contains a range delimiter (`–`, `-`, `to`, `,`)
        — every phase number is a single integer 1..20; (c) zero rows
@@ -74,7 +74,7 @@
        in place instead of replacing it wholesale (the template ships
        a 13-row placeholder with one combined `14–20` row).
 
-    Block check that catches the failure mode where M_methods.md or
+    Block check that catches the failure mode where Methods.md or
     fig_methods_pipeline.png were rendered at Phase 13 with provisional
     numbers and never refreshed.
     The Phase 20a Methods Ledger Refresh step in `comprev-dataml-phases.md`

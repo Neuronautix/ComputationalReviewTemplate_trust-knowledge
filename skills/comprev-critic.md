@@ -332,7 +332,7 @@ def audit_headings(md_paths):
                              f"H1 {'numbered' if h1_numbered else 'unnumbered'} but H2 {'numbered' if h2_numbered else 'unnumbered'}"))
 
     body = {p: s for p, s in h1_styles.items()
-            if not (str(p).endswith("00_frontmatter.md") or str(p).endswith("M_methods.md"))}
+            if not (str(p).endswith("00_frontmatter.md") or str(p).endswith("Methods.md"))}
     if body and len(set(body.values())) > 1:
         for p, s in body.items():
             problems.append((p, "INCONSISTENT_ACROSS_SECTIONS",

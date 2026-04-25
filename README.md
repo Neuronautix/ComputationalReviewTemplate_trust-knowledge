@@ -90,7 +90,7 @@ The pipeline is split into role-specific skills with **information barriers** to
 Pre-configured pages that the pipeline populates:
 - `00_frontmatter.md` — Abstract + authorship explorer
 - `01_introduction.md` — Placeholder (written in Phase 11)
-- `M_methods.md` — Methods template with pipeline figure
+- `Methods.md` — Methods template with pipeline figure
 - `evidence_database.md` — Interactive evidence explorer
 - `provenance.md` — Pipeline execution summary
 

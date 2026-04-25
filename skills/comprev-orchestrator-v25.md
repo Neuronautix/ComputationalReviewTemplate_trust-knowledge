@@ -80,7 +80,7 @@ delegations:
 | 10 | Integration | EXPERT | 6 passes: transitions, cross-refs, terminology, continuity, figures, hygiene |
 | 11 | Introduction and Conclusion | EXPERT | Written LAST, after all body sections, may only cite existing papers |
 | 12 | Bookend Critic | EXPERT | Blinded critic on intro/conclusion; novel claim-citation pairs verified |
-| 13 | Methods | DATAML | Pipeline metadata → M_methods.md + architecture figure |
+| 13 | Methods | DATAML | Pipeline metadata → Methods.md + architecture figure |
 | 14 | Document Assembly | DATAML | Collect files, verify paths, build LaTeX preamble, run assertions |
 | 15 | Citation Triples | DATAML | Exhaustive extraction: one triple per cite key occurrence, no sampling |
 | 16 | Citation Verification | EXPERT (parallel) | 5-step deep check on every triple: DOI → title → authors → metadata → full-text claim verification (no tiering) |
@@ -350,7 +350,7 @@ The coordinator uses this table to delegate each phase. The full delegation temp
 | 10 | actor | LITREVIEW | `comprev-integration` + `comprev-reviewer-agent` | integrated sections | `gate_integration.json`: 6 passes documented |
 | 11 | actor | LITREVIEW | `comprev-integration` + `comprev-reviewer-agent` | intro + conclusion | `gate_intro_conclusion.json`: no new citations |
 | 12 | critic | LITREVIEW | `comprev-critic` + `comprev-reviewer-agent` | bookend critic report | `gate_bookend_critic.json`: MUST_FIX=0 |
-| 13 | actor | DATAML | `comprev-dataml-phases` | M_methods.md | `gate_methods.json`: 8 subsections |
+| 13 | actor | DATAML | `comprev-dataml-phases` | Methods.md | `gate_methods.json`: 8 subsections |
 | 14 | **actor** | DATAML | `comprev-dataml-phases` | assembled manuscript | all files collected, toc updated |
 | 14V | **validator** | DATAML | `comprev-myst-validator` | `gate_assembly.json` | myst build passes, structural checks, **`EVIDENCE_PACKAGES_POPULATED`** (each `evidence/section_XX_evidence_package.json` ≥1 KB and parses with `section_title` key), **`PLUGIN_DIRECTIVES_INVOKED`** (every plugin directive registered in `myst.yml` has ≥1 `:::{name}` invocation in `content/*.md` and zero bare-`{name}` role-syntax mis-invocations), **`FIGURE_DROPDOWN_MATCH`** (`:::{dropdown} 📓 Figure code` count == `:::{figure}` count per section), **`FIGURE_NOTEBOOK_MATCH`** (every figure has a non-stub `.ipynb`), **`HEADING_STYLE_CONSISTENT`** (zero problems from `audit_headings`: no manual number prefixes, no wrapped headings, no en-/em-dashes, H1 and H2 styles match within each section, body sections share one H1 style). `structural_results` MUST contain a key for every check defined in the validator skill — missing key ⇒ fail. HARD FAIL — never downgrade to a `note`. |
 | 15 | **actor** | DATAML | `comprev-dataml-phases` | citation_triples.json | all triples extracted |
@@ -361,7 +361,7 @@ The coordinator uses this table to delegate each phase. The full delegation temp
 | 18 | actor | LITREVIEW | `comprev-fix-execution` + `comprev-reviewer-agent` | fix diffs | fixes executed |
 | 19 | **actor** | DATAML | `comprev-dataml-phases` | updated files | diffs applied |
 | 19V | **validator** | DATAML | `comprev-myst-validator` | validation report | build passes, zero orphans |
-| 20a | **actor** | DATAML | `comprev-dataml-phases` | refreshed `M_methods.md` + `gate_phase_20a_methods_refresh.json` | re-render M.6 from live ledger; replace `Phases 14-20 (pending refresh)` placeholder with actual gate outcomes |
+| 20a | **actor** | DATAML | `comprev-dataml-phases` | refreshed `Methods.md` + `gate_phase_20a_methods_refresh.json` | re-render M.6 from live ledger; replace `Phases 14-20 (pending refresh)` placeholder with actual gate outcomes |
 | 20 | **actor** | DATAML | `comprev-dataml-phases` | pushed repo | git push |
 | 20V | **validator** | DATAML | `comprev-myst-validator` | `gate_repository_push.json` | fresh clone builds, files match, **`METHODS_LEDGER_FRESH`** (M.6 frame count matches live ledger; "All 20 pipeline phases completed" present; zero forbidden stale phrasings — `are scheduled`, `had not yet executed`, etc.). HARD FAIL — the Phase 20a Methods Ledger Refresh in `comprev-dataml-phases.md` is what populates these; this gate verifies the refresh ran. |
 

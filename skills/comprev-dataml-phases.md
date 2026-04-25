@@ -234,9 +234,10 @@ For each match:
 
 **Agent:** DATAML
 
-The Methods section is a transparency document describing how the review was produced. The coordinator delegates this to DATAML with all gate artifacts and the phase ledger as inputs. DATAML writes it using pipeline metadata — no LLM-generated claims about the pipeline. Save as `content/M_methods.md`.
+The Methods section is a transparency document describing how the review was produced. The coordinator delegates this to DATAML with all gate artifacts and the phase ledger as inputs. DATAML writes it using pipeline metadata — no LLM-generated claims about the pipeline. Save as `content/Methods.md`.
 
-**Subsections (M.1–M.8):**
+**Subsections (referenced internally as M.1–M.8 in this skill; the
+rendered template drops the `M.` prefix from H2 headings):**
 
 **M.1 Search Strategy:**
 - Databases searched (with URLs)
@@ -306,8 +307,7 @@ methods_data = {
 Generate a publication-quality figure (`fig_methods_pipeline.png`) showing the complete
 pipeline architecture with actual execution metrics from this run (phase count, agent
 count, paper count, fulltext rate, verification results). Place it at the TOP of the
-Methods file, immediately after the chapter intro paragraph and before `## M.1 Search
-Strategy`:
+Methods file, immediately after the chapter intro paragraph and before `## Search Strategy`:
 
 ```markdown
 :::{figure} ../figures/fig_methods_pipeline.png
@@ -328,7 +328,7 @@ regenerates the figure from `provenance/pipeline_metrics.json`.
 
 **M.8 Pipeline Skills section (MANDATORY, inserted before Reproducibility Statement):**
 
-The Methods file must include a `## M.8 Pipeline Skills` subsection describing the
+The Methods file must include a `## Pipeline Skills` subsection describing the
 twelve skill files that encode the pipeline. Build the table programmatically by
 scanning `skills/*.md` for frontmatter / first-line description:
 
@@ -345,9 +345,10 @@ table += "\n".join(f"| `{n}` | {d} |" for n, d in rows)
 Do NOT write the table by hand (skill names and phase ownership change across
 template versions). The output is an auto-generated table plus a single paragraph
 pointing readers to the template repository for re-running the pipeline on a new
-topic. Renumber the existing Reproducibility Statement to M.9 to accommodate.
+topic. The Pipeline Skills subsection slots in just before the Reproducibility
+Statement subsection at the end of Methods.
 
-The template scaffold at `content/M_methods.md` already contains the skeleton for
+The template scaffold at `content/Methods.md` already contains the skeleton for
 this section — fill in the table from the live `skills/` directory rather than
 retyping the template literal.
 
@@ -742,8 +743,8 @@ M.6 and replaces any draft-time placeholder paragraphs in M.5.
 > **Wholesale-replacement contract.** The template ships §M.6 as a 13-row
 > placeholder ledger ending with one combined `14–20 | Remaining phases |
 > Pending` row. Phase 20a does NOT patch this in place — it **replaces the
-> entire M.6 block** (everything between `## M.6 Pipeline Execution` and
-> `## M.7`) with a fully-rendered ledger that has **20 individual rows**,
+> entire Pipeline Execution block** (everything between
+> `## Pipeline Execution` and `## Figure Reproducibility`) with a fully-rendered ledger that has **20 individual rows**,
 > one per phase, each carrying its real status and key outputs from the
 > corresponding gate artifact. Validator check `METHODS_LEDGER_FRESH` (see
 > `comprev-myst-validator.md` #19) asserts: (a) zero rows in §M.6 contain
@@ -767,12 +768,16 @@ end_at = json.loads(release_gate.read_text())['released_at'] if release_gate.exi
 elapsed_h = (datetime.fromisoformat(end_at.replace('Z','+00:00'))
              - datetime.fromisoformat(first_at.replace('Z','+00:00'))).total_seconds() / 3600
 
-methods = pathlib.Path('content/M_methods.md').read_text()
+methods = pathlib.Path('content/Methods.md').read_text()
 
-# (1) Replace the entire M.6 block, keyed on the H2 heading and the next H2.
-m6_pattern = re.compile(r'^## M\.6 Pipeline Execution\n.*?(?=^## M\.7 )', re.MULTILINE | re.DOTALL)
+# (1) Replace the entire Pipeline Execution block, keyed on the H2 heading
+#     and the next H2 (Figure Reproducibility).
+m6_pattern = re.compile(
+    r'^## Pipeline Execution\n.*?(?=^## Figure Reproducibility)',
+    re.MULTILINE | re.DOTALL,
+)
 agent_table = '\n'.join(f'| `{a}` | {n} |' for a, n in agent_counts.most_common())
-m6_block = f'''## M.6 Pipeline Execution
+m6_block = f'''## Pipeline Execution
 
 **Model version.** `claude-sonnet-4-5` (Anthropic Claude), invoked via the
 Operon agent runtime.
@@ -798,7 +803,8 @@ records `status: PUBLISHED`.
 '''
 methods = m6_pattern.sub(m6_block, methods)
 
-# (2) Replace the Phase-13 placeholder paragraph in M.5. The Phase-13 step
+# (2) Replace the Phase-13 placeholder paragraph in Citation Verification.
+#     The Phase-13 step
 #     MUST emit a paragraph starting `**Phases 14-20 (pending refresh).**`
 #     so this regex can find it.
 placeholder_pattern = re.compile(
@@ -829,9 +835,9 @@ for pat in forbidden:
     if re.search(pat, methods, re.IGNORECASE):
         raise RuntimeError(f'Stale phrasing not cleaned: {pat}')
 
-pathlib.Path('content/M_methods.md').write_text(methods)
+pathlib.Path('content/Methods.md').write_text(methods)
 
-# (4) Re-render the M.0 pipeline architecture figure. The Phase-13 snapshot
+# (4) Re-render the Pipeline Architecture figure (top of Methods). The Phase-13 snapshot
 #     marks Phases 13-20 as in_progress/scheduled with dashed/faded boxes;
 #     after the full run, the figure must show every phase complete with the
 #     real gate-derived metric annotations. The notebook at
@@ -918,7 +924,7 @@ repo-root/
 │   ├── 01_introduction.md      # Section 1 (MyST markdown)
 │   ├── ...                     # Sections 2–12
 │   ├── 13_conclusion.md
-│   └── M_methods.md            # Methods section (coordinator-written)
+│   └── Methods.md            # Methods section (coordinator-written)
 ├── figures/
 │   ├── fig_sec2_*.png           # Figure PNGs (300 DPI)
 │   ├── notebooks/               # One Jupyter notebook per figure

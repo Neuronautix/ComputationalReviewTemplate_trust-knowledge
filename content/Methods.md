@@ -12,7 +12,7 @@ Overview of the 20-phase Expert Review Pipeline v25. Green boxes indicate EXPERT
 This review was produced through a structured, multi-phase computational pipeline. All claims in this section are derived from recorded pipeline metadata and gate artifacts; no post-hoc characterizations have been added.
 
 (sec-methods-search)=
-## M.1 Search Strategy
+## Search Strategy
 
 Literature searches were conducted across four databases: **PubMed**, **Europe PMC**, **OpenAlex**, and **bioRxiv**. Searches were organized around topic clusters defined in the scope document, each corresponding to a body section of the review:
 
@@ -24,7 +24,7 @@ Literature searches were conducted across four databases: **PubMed**, **Europe P
 Paper counts above are pre-deduplication totals across all clusters.
 
 (sec-methods-inclusion)=
-## M.2 Inclusion and Exclusion Criteria
+## Inclusion and Exclusion Criteria
 
 The scope document specified the following inclusion criteria:
 
@@ -37,12 +37,12 @@ The scope document specified the following inclusion criteria:
 Papers were excluded if they did not address the review topic or related circuit mechanisms. Preprint–journal duplicate pairs were resolved during integration by replacing preprints with their published journal versions where identified.
 
 (sec-methods-retrieval)=
-## M.3 Full-Text Retrieval
+## Full-Text Retrieval
 
 Full-text retrieval was attempted for all retrieved papers using open-access sources (Unpaywall, Semantic Scholar, PubMed Central), publisher APIs (Elsevier, Springer Nature), and institutional proxy access. The overall full-text retrieval rate was **[PIPELINE FILLS THIS]**.
 
 (sec-methods-extraction)=
-## M.4 Evidence Extraction
+## Evidence Extraction
 
 Structured evidence extraction was performed for each cluster, producing evidence packages containing:
 
@@ -60,12 +60,12 @@ Structured evidence extraction was performed for each cluster, producing evidenc
 Each evidence package was stored as a versioned artifact linked to its cluster, enabling traceability from any claim in the review back to its source evidence.
 
 (sec-methods-citation-verification)=
-## M.5 Citation Verification
+## Citation Verification
 
 [PIPELINE FILLS THIS — citation verification results from Phase 16]
 
 (sec-methods-pipeline)=
-## M.6 Pipeline Execution
+## Pipeline Execution
 
 The review was produced through a 20-phase pipeline. Key execution metadata from completed phases:
 
@@ -87,14 +87,14 @@ The review was produced through a 20-phase pipeline. Key execution metadata from
 | 14–20 | Remaining phases | Pending | — |
 
 (sec-methods-figures)=
-## M.7 Figure Reproducibility
+## Figure Reproducibility
 
 [PIPELINE FILLS THIS — figure reproducibility details from pipeline execution]
 
 Figure generation notebooks are preserved in `figures/notebooks/` and can be re-executed against the archived evidence packages to reproduce all figures.
 
 (sec-methods-skills)=
-## M.8 Pipeline Skills
+## Pipeline Skills
 
 The full pipeline is encoded as seventeen version-controlled skill files committed
 to this repository under [`skills/`](./skills): twelve worker skills that produce
@@ -133,7 +133,7 @@ and table of contents, and issue a single coordinator prompt — the orchestrato
 then drives all twenty phases to completion.
 
 (sec-methods-reproducibility)=
-## M.9 Reproducibility Statement
+## Reproducibility Statement
 
 All pipeline artifacts are preserved and versioned, enabling full reproduction of this review:
 
