@@ -128,6 +128,18 @@
     of the entire review — exists only in the conversation transcript
     and is lost when the session ends. **pass/fail**.
 
+
+23. **FIGURE_WIDTH_DECLARED** *(Phase 7V, 14V, 20V)*: Every `:::{figure}`
+    directive in `content/*.md` MUST declare an explicit `:width:` option
+    in its option block (the lines between the directive opener and the
+    caption body). MyST's default LaTeX renderer emits
+    `\\includegraphics[width=0.7\\linewidth]` when `:width:` is absent,
+    producing under-sized PDF figures. The canonical value is
+    `:width: 100%` per the section-writing skill; non-default values
+    (e.g. `:width: 80%` for narrow plots) are acceptable, but a missing
+    `:width:` is a fail. **pass/fail** with `figures_missing_width`
+    listing offenders as `path:line`.
+
 ## Output Schema
 
 The validator's gate JSON (e.g. `gate_assembly.json`, `gate_post_publish.json`) MUST be a single JSON object containing — at minimum — these keys:
@@ -149,6 +161,7 @@ The validator's gate JSON (e.g. `gate_assembly.json`, `gate_post_publish.json`) 
     "EVIDENCE_JSONS_EXIST": "pass|fail",
     "EVIDENCE_PACKAGES_POPULATED": "pass|fail",
     "PLUGIN_DIRECTIVES_INVOKED": "pass|fail",
+    "FIGURE_WIDTH_DECLARED": "pass|fail",
     "...": "every other check in this skill, by exact NAME"
   },
   "gate_passed": bool

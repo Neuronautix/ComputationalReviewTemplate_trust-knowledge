@@ -37,6 +37,12 @@ project:
       title: Evidence Database
     - file: content/provenance.md
       title: Pipeline Provenance
+  exports:
+    - format: tex
+      output: review_manuscript.tex
+      template: ./latex/template
+    - format: pdf
+      output: review_manuscript.pdf
 site:
   template: book-theme
   title: "Computational Review"
