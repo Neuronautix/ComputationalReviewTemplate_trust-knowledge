@@ -1,6 +1,6 @@
 # Section Writing Protocol
 
-> **Template provides:** `scripts/shared_style.py` is available for figure styling. Import it in your figure code: `from shared_style import COLORS, apply_style, save_figure`. Widget assets (`authorship-widget.mjs`, `evidence-explorer-widget.mjs`, `citation-annotation-widget.mjs`) are already deployed in `content/`. Do not recreate them.
+> **Template provides:** `scripts/shared_style.py` is available for figure styling. Import it in your figure code: `from shared_style import COLORS, apply_style, save_figure`. Widget assets (`authorship-widget.mjs`, `evidence-explorer-widget.mjs`) are already deployed in `content/`. Do not recreate them.
 
 
 Phase 7 delegation template for section writers. Draft one section of the review in MyST markdown with figures, citations, and evidence synthesis.

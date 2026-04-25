@@ -22,7 +22,6 @@ project:
     code:
       continue: true
   plugins:
-    - plugins/citation-annotation-plugin.mjs
     - plugins/authorship-plugin.mjs
     - plugins/evidence-explorer-plugin.mjs
     - plugins/figure-lightbox-plugin.mjs

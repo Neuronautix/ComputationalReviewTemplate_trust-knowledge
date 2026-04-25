@@ -76,13 +76,12 @@ The pipeline is split into role-specific skills with **information barriers** to
 | `comprev-triples-validator` | 15V | DATAML | One triple per `{cite:p}`/`{cite:t}` occurrence, no sampling |
 | `comprev-myst-validator` | 7V, 14V, 19V, 20V | DATAML | MyST build, structural checks, figure/heading consistency, plugin-directive invocation, evidence-package population |
 
-### Plugins (4 files in `plugins/`)
+### Plugins (3 files in `plugins/`)
 
 | Plugin | What it does |
 |--------|-------------|
 | `authorship-plugin.mjs` | Renders interactive CRediT authorship widget |
 | `evidence-explorer-plugin.mjs` | Loads evidence packages into interactive browser |
-| `citation-annotation-plugin.mjs` | Adds CiTO annotation tooltips on citation hover |
 | `figure-lightbox-plugin.mjs` | Click-to-zoom lightbox for inline figures |
 
 ### Content placeholders (`content/`)

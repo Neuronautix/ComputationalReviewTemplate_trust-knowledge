@@ -527,10 +527,9 @@ Phase 14 MUST also:
 a) Create `content/evidence_database.md` with `:::{evidence-explorer}` directive
 b) Create `content/provenance.md` with pipeline summary from gate artifacts
 c) Add `:::{authorship-explorer}` with `:authors: ../authors.yml` to `content/00_frontmatter.md` ONLY (after the abstract, before the body)
-d) Add `:::{citation-annotations}` with `:evidence-dir: ../evidence` to each section .md file
-e) Verify `myst.yml` `project.toc` lists ALL `content/*.md` files (count must match)
-f) Deploy plugin files: `citation-annotation-plugin.mjs`, `citation-annotation-widget.mjs`, `evidence-explorer-plugin.mjs`, `evidence-explorer-widget.mjs` — all using the anywidget pattern (NEVER raw HTML/CSS/JS injection)
-g) Insert the Phase 11 Abstract into `content/00_frontmatter.md`
+d) Verify `myst.yml` `project.toc` lists ALL `content/*.md` files (count must match)
+e) Deploy plugin files: `evidence-explorer-plugin.mjs`, `evidence-explorer-widget.mjs` — all using the anywidget pattern (NEVER raw HTML/CSS/JS injection)
+f) Insert the Phase 11 Abstract into `content/00_frontmatter.md`
 
 **MANDATORY — Pre-validator self-check (Phase 14, before emitting `gate_assembly.json`):**
 
