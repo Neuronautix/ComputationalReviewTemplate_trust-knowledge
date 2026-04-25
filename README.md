@@ -32,6 +32,11 @@ Section writers load it for figure production.
 GitHub Repository: https://github.com/[YOUR-ORG]/[YOUR-REPO]
 Push all outputs to this repo in Phase 20.
 
+Evidence parameters: [OPTIONAL — omit for defaults]
+- Target ≥200 papers per cluster, snowball 2 rounds
+- Saturation criterion: <2% new unique in last 100
+- Total bibliography target: ≥1000
+
 Table of Contents:
 1. Introduction
 2. [Your Section 2]
@@ -107,6 +112,25 @@ Pre-configured pages that the pipeline populates:
 **Act 2 — Drafting & Criticism** (Phases 7–13): Draft sections in parallel (max 4 agents), run blinded 6-track criticism, build bibliography from CrossRef, perform 6-pass integration for consistency, write introduction/conclusion/abstract, run blinded bookend critic on intro/conclusion, and generate the methods section.
 
 **Act 3 — Assembly, Verification & Deploy** (Phases 14–20): Assemble the complete document, exhaustively extract citation triples (every citation occurrence), verify ALL citations with full-text-first claim checking (DOI resolution, title/author/metadata match, full-text claim verification with supporting passage audit trail), prepare and execute fixes for non-verified citations, apply fixes, and push to GitHub.
+
+### Evidence Parameters (v26)
+
+The pipeline's evidence-gathering depth is user-configurable via the prompt. The orchestrator extracts these from your review request at Phase 1:
+
+| Parameter | Default | What it controls |
+|-----------|---------|-----------------|
+| `min_papers_per_cluster` | 70 | Minimum unique papers per topic cluster |
+| `saturation_criterion` | null | Optional stopping rule (e.g., "<2% new unique in last 100") |
+| `snowball_rounds` | 0 | Citation-chasing rounds via OpenAlex (forward + backward) |
+| `total_bibliography_target` | null | Optional floor for total bibliography across all clusters |
+
+**Saturation mode:** Say "saturate the literature" in your prompt — the pipeline sets `min_papers_per_cluster: null`, `saturation_criterion: "<2% new unique in last 100"`, `snowball_rounds: 2`, and searches until the field is exhausted.
+
+**Quota mode:** Say "≥200 papers per section" — the pipeline gathers at least 200 per cluster via keyword search without snowballing.
+
+**Both:** Specify a floor AND a saturation criterion — the agent must meet the floor AND confirm saturation.
+
+Phase 5 curation floors scale proportionally with your evidence density target.
 
 ### Key Design Principles
 
