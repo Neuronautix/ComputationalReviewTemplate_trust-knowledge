@@ -32,6 +32,14 @@
     and Phase 14 had nothing to embed in dropdowns.)
 16. **AUTHORS_YML_EXISTS**: `content/authors.yml` exists? **pass/fail**
 17. **ALL_PLUGINS_LISTED**: myst.yml lists all 4 plugins? **pass/fail**
+18. **HEADING_STYLE_CONSISTENT**: Run `audit_headings()` (defined in `comprev-critic.md`)
+    across all `content/*.md` files. Zero problems of any type:
+    `MANUAL_NUMBER_PREFIX`, `WRAPPED_HEADING`, `MULTI_SPACE_AFTER_NUMBER`,
+    `INCONSISTENT_DASH`, `MIXED_H1_H2_STYLE`, `INCONSISTENT_ACROSS_SECTIONS`?
+    **pass/fail**
+    (Block check that catches the failure mode where Phase 8 per-section critics
+    cannot see cross-section heading inconsistencies — e.g. §4 numbered H1 alongside
+    §5 unnumbered H1 + numbered H2, or a wrapped `## heading\nundermined` orphan.)
 
 ## Output Schema
 ```json

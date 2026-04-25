@@ -233,9 +233,120 @@ If `audit_figures` returns any problems, the coordinator fixes them in-place
 `gate_critic_complete.json`. These are not claims about evidence; they are
 formatting bugs that MyST cannot resolve at build time.
 
-**Heading numbering audit (same gate):** grep each section .md for
-`^##+ \d+(\.\d+)* ` (headings that embed a manual number). Flag and strip —
-MyST auto-numbers sections from `toc.yml` order.
+**Heading style audit (MANDATORY mechanical pass — same gate):**
+
+The Phase 8 prose critic CANNOT see across sections, so heading-style consistency
+must run as coordinator code (paralleling `audit_figures` above). The audit
+catches the cross-section failure mode where one section ships numbered headings
+and another ships unnumbered ones, plus four narrower bugs that have shipped to
+production reviews.
+
+```python
+import re, pathlib
+
+# Lines inside fenced code blocks or :::{...}::: directive blocks must be excluded —
+# Python comments (`# panel A`) and ASCII rules look like headings to a naive grep.
+_FENCE = re.compile(r"^(`{3,}|~{3,})")
+_OPEN  = re.compile(r"^:::\{[a-z]+\}")
+_CLOSE = re.compile(r"^:::\s*$")
+
+def _skip_mask(lines):
+    """True for lines inside fenced code or :::{}::: blocks."""
+    mask = [False] * len(lines)
+    in_fence, dir_depth = None, 0
+    for i, ln in enumerate(lines):
+        f = _FENCE.match(ln)
+        if in_fence is None and f:
+            in_fence = f.group(1); mask[i] = True; continue
+        if in_fence and ln.startswith(in_fence):
+            mask[i] = True; in_fence = None; continue
+        if in_fence is not None:
+            mask[i] = True; continue
+        if _OPEN.match(ln):
+            dir_depth += 1; mask[i] = True; continue
+        if dir_depth and _CLOSE.match(ln):
+            dir_depth -= 1; mask[i] = True; continue
+        if dir_depth:
+            mask[i] = True
+    return mask
+
+def audit_headings(md_paths):
+    """
+    Returns list of (path, type, detail) problems.
+
+    Bug types:
+      MANUAL_NUMBER_PREFIX         - heading begins with N. or N.M
+      WRAPPED_HEADING              - heading where the next line is non-blank text
+                                     (orphaned word that belongs in the heading)
+      MULTI_SPACE_AFTER_NUMBER     - 2+ spaces after the number prefix
+      INCONSISTENT_DASH            - en-dash or em-dash inside heading text
+      MIXED_H1_H2_STYLE            - within a section, H1 numbered XOR H2 numbered
+      INCONSISTENT_ACROSS_SECTIONS - body sections do not share one H1 style
+    """
+    problems = []
+    h1_styles = {}
+
+    for path in md_paths:
+        text = pathlib.Path(path).read_text()
+        lines = text.splitlines()
+        skip = _skip_mask(lines)
+        h1_numbered = None
+        h2_numbered = None
+
+        for i, line in enumerate(lines):
+            if skip[i]:
+                continue
+            m = re.match(r"^(#{1,6})\s+(.*)$", line)
+            if not m:
+                continue
+            level, body = len(m.group(1)), m.group(2)
+            stripped = body.rstrip()
+
+            nxt = lines[i + 1] if i + 1 < len(lines) else ""
+            if (nxt.strip() and i + 1 < len(skip) and not skip[i + 1] and
+                    not nxt.lstrip().startswith(("#", ":", "-", "|", "`", "*", ">", "1.", "2."))):
+                problems.append((path, "WRAPPED_HEADING",
+                                 f"L{i+1}: {stripped[:70]} -> {nxt[:40]}"))
+
+            num_match = re.match(r"^(\d+(\.\d+)*)\.?\s+", stripped)
+            if num_match:
+                problems.append((path, "MANUAL_NUMBER_PREFIX",
+                                 f"L{i+1} H{level}: {stripped[:70]}"))
+                if re.match(r"^\d+(\.\d+)*\.?\s{2,}", stripped):
+                    problems.append((path, "MULTI_SPACE_AFTER_NUMBER",
+                                     f"L{i+1}: {stripped[:70]}"))
+
+            if "\u2013" in stripped or "\u2014" in stripped:
+                problems.append((path, "INCONSISTENT_DASH",
+                                 f"L{i+1} H{level}: {stripped[:70]}"))
+
+            if level == 1 and h1_numbered is None:
+                h1_numbered = bool(num_match)
+                h1_styles[path] = "numbered" if h1_numbered else "unnumbered"
+            if level == 2 and h2_numbered is None:
+                h2_numbered = bool(num_match)
+
+        if (h1_numbered is not None and h2_numbered is not None
+                and h1_numbered != h2_numbered):
+            problems.append((path, "MIXED_H1_H2_STYLE",
+                             f"H1 {'numbered' if h1_numbered else 'unnumbered'} but H2 {'numbered' if h2_numbered else 'unnumbered'}"))
+
+    body = {p: s for p, s in h1_styles.items()
+            if not (str(p).endswith("00_frontmatter.md") or str(p).endswith("M_methods.md"))}
+    if body and len(set(body.values())) > 1:
+        for p, s in body.items():
+            problems.append((p, "INCONSISTENT_ACROSS_SECTIONS",
+                             f"H1 is {s}; siblings disagree"))
+
+    return problems
+```
+
+If `audit_headings` returns any problems the coordinator either auto-strips
+manual numbers and dashes (fully mechanical, see Phase 14V validator wiring)
+or `send_message`s the writer for a re-roll. As with figures, these are
+formatting bugs MyST cannot resolve at build time, so they must be eliminated
+before `gate_critic_complete.json` is written.
+
 
 **Hardcoded cross-reference audit (same gate):** grep each section .md for
 `§\d+`, `Section \d+\.\d+`, and `[Ss]ec\.\s*\d+`. Any match in prose (not
