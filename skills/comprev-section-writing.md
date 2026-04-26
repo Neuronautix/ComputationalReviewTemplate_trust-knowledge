@@ -260,13 +260,12 @@ Do NOT accept the section until all 9 checks pass.
 
 
 **MANDATORY — Figure code reproducibility:**
-For EACH figure produced, include a `:::{dropdown} 📓 Figure code` block immediately after the `:::{figure}` directive containing the COMPLETE Python code used to generate it. The code must be the actual executed code, not a stub or placeholder.
+Do **NOT** include `:::{dropdown}` code blocks after figures in section .md files. Phase 14 (Document Assembly) injects the dropdowns mechanically from the saved `figures/notebooks/<fig>.ipynb`. Your responsibility ends when the figure PNG, the figure `.py` source, and the matching notebook are saved as artifacts — see `comprev-figure-construction.md`.
 
 **MANDATORY — No authorship-explorer in sections:**
 Do NOT include `{authorship-explorer}` in section files. It belongs only on the frontmatter page (added during Phase 14 assembly).
 
-**Gate check — dropdown count:**
-After the writer returns, the coordinator verifies: the number of `:::{dropdown}` blocks equals the number of `:::{figure}` blocks. If not, send back.
+**Phase 14 verifies dropdown count.** The myst-validator's `FIGURE_DROPDOWN_MATCH` check runs at Phase 14V, 19V, and 20V (not at 7V), after the assembler has injected dropdowns from the saved notebooks.
 
 
 
@@ -386,6 +385,15 @@ When `comprev-figure-construction` is loaded (Phase 7):
 
 ---
 
+
+## Output Hygiene
+
+FORBIDDEN in review text: Operon, scaffold, evidence package, framework failure, adversarial search, verdict, orchestrator, batch, sub-agent, revision manifest, prediction error, replication scorecard (as section title), paper weight, epistemic checkpoint.
+
+Allowed scientific uses: "phase" (oscillation), "convergence" (convergent evidence), "scaffold" (developmental scaffolding), "recursive" (recursive processing).
+
+**Test:** Could a reader tell this was produced by an automated system? If yes → fail.
+
 ## Output Format: MyST Markdown
 
 When writing review sections, produce BOTH formats:
@@ -433,10 +441,10 @@ MyST figure syntax:
 - `:::{figure} ../figures/fig_sec5_my_plot.png` — CORRECT
 - `:::{figure} #fig-sec5-my-plot` — WRONG (this is a cross-reference, not an image path; the figure will not render)
 
-**Figure-dropdown pairing rule (MANDATORY):**
-- Every `:::{figure}` block MUST be immediately followed by a `:::{dropdown}` block containing the complete Python code that generates that figure.
-- A figure without an accompanying code dropdown is INCOMPLETE and will be flagged by the Phase 8 critic.
-- A code dropdown without a preceding figure image is also invalid — the code must be executed and the PNG saved BEFORE writing the markdown.
+**Figure-notebook pairing rule (MANDATORY):**
+- Every `:::{figure}` block in your section .md MUST have a corresponding `figures/notebooks/<fig>.ipynb` saved as an artifact (the notebook contains the executed code and the PNG output).
+- Do NOT add a `:::{dropdown}` code block in the section .md — Phase 14 assembly injects it from the notebook. A figure without a saved notebook will fail myst-validator's `FIGURE_NOTEBOOK_MATCH` check at Phase 14V.
+- The PNG must already be saved before the .md is finalised — `:::{figure}` directives must point to a real `../figures/*.png`.
 
 **Heading numbering rule:** Section headings must NOT embed manual numbers (`## 10.2 Mechanisms`). Use plain titles (`## Mechanisms`) plus an invisible label above (`(sec-10-mechanisms)=`) for cross-references. Numbering is the build system's responsibility.
 
@@ -495,4 +503,4 @@ from shared_style import COLORS, apply_style, save_figure
 ---
 
 
-**Figure code embedding (MANDATORY):** After producing each figure, you MUST embed the COMPLETE Python generation code in a `:::{dropdown} 📓 Figure code` block immediately following the `:::{figure}` directive in the section .md file. The code must be the actual executed code — not a placeholder or stub. A figure without its code block is incomplete and will be sent back.
+**Figure code persistence (MANDATORY):** After producing each figure, you MUST save the COMPLETE Python generation code as an executed `figures/notebooks/<fig>.ipynb` notebook artifact (not as an inline `:::{dropdown}` in the section .md). The notebook must contain the actual executed code — not a placeholder or stub. Phase 14 assembly injects the dropdown blocks from these notebooks; a figure without a saved notebook will be sent back at Phase 14V.

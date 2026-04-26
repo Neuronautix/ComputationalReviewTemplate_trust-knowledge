@@ -10,7 +10,7 @@
 3. **CROSS_SECTION_DIFFERENTIATION**: Same DOI in multiple sections → different `claim_source_sentence`? **pass/fail**
 4. **CITE_KEY_ASSIGNED**: Every finding has non-empty `cite_key`? **pass/fail**
 5. **HAS_DOI**: Every finding has non-empty `doi`? **pass/fail**
-6. **TEXT_ACCESS_VALID**: Every finding's `text_access` is either `fulltext` or `abstract_only`? **pass/fail**
+6. **TEXT_ACCESS_VALID**: Every finding's `text_access` is one of `fulltext` or `abstract_only`? **pass/fail** (papers with neither full text nor abstract MUST be excluded entirely — never recorded with a placeholder)
 
 ## Aggregate Checks
 
@@ -22,3 +22,4 @@
 ```json
 {"phase": 5, "gate": "pass|fail", "sections_checked": N, "per_section_results": {...}, "aggregate_results": {...}}
 ```
+

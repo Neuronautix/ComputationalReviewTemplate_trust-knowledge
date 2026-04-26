@@ -32,7 +32,7 @@ Each agent searches databases and returns structured evidence. Delegation MUST r
 ```json
 {
   "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only"}],
-  "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "nature_of_conflict": "", "likely_reason": "", "conflict_source": "describe which sentences in which papers' abstracts/text establish the conflict"}],
+  "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "paper_a_claim": "verbatim sentence from paper A", "paper_b_claim": "verbatim sentence from paper B", "nature_of_conflict": "what disagrees and on what dimension", "resolution_status": "open | resolved-by-replication | resolved-by-method"}],
   "unreplicated_claims": [{"claim": "", "source": "", "years_since_publication": 0}],
   "evidence_gaps": [{"topic": "", "what_is_missing": "", "why_it_matters": ""}],
   "strongest_evidence": {"claim": "", "why_strong": ""},
@@ -83,14 +83,14 @@ The coordinator writes the Phase 2 delegation task descriptions. These contain t
 - Every finding entry must include the DOI. If a DOI cannot be found, flag with `DOI-NOT-FOUND` and include enough metadata (title, authors, journal, year) for later resolution.
 - Do NOT fabricate bibliographic metadata. If uncertain about a detail, search for it rather than guessing.
 - **Hard drop rule for failed searches:** If a database search for a paper returns zero results, the paper MUST be excluded from the evidence output. Do not fill in metadata from memory. Do not include a paper just because the coordinator's task description mentioned it. The coordinator's suggested topics are search guidance, not a source of truth — if a paper cannot be found in PubMed, Europe PMC, or CrossRef, it may not exist. Mark it in a `search_failures` list (paper description, search queries tried, zero-result confirmation) but do NOT include it in `findings` or assign it a DOI.
-- **Schema-only requirement:** Findings must contain ONLY the schema fields: `claim`, `claim_source_sentence`, `effect_size`, `effect_size_source_sentence`, `n`, `species`, `replication_status`, `replication_evidence_dois`, `doi`, `text_access`. If a cluster returns findings with additional fields (`title`, `authors`, `journal`, `year`, `pmid`, `volume`, `pages`, `cite_key`), send back: "Remove non-schema fields. Each extra free-text field is a fabrication vector — measured 74% hallucination rate when agents add an authors field. Cite_keys are assigned mechanically by the coordinator, not by agents."
-- **Full-text retrieval requirement:** Every paper must have `text_access` set to `fulltext`, `abstract_only`, or `metadata_only`, reflecting a genuine retrieval attempt.
+- **Schema-only requirement:** Findings must contain ONLY the schema fields: `claim`, `claim_source_sentence`, `effect_size`, `effect_size_source_sentence`, `n`, `study_system`, `replication_status`, `replication_evidence_dois`, `doi`, `text_access`, `evidence`. If a cluster returns findings with additional fields (`title`, `authors`, `journal`, `year`, `pmid`, `volume`, `pages`, `cite_key`), send back: "Remove non-schema fields. Each extra free-text field is a fabrication vector — measured 74% hallucination rate when agents add an authors field. Cite_keys are assigned mechanically by the coordinator, not by agents."
+- **Full-text retrieval requirement:** Every paper must have `text_access` set to `fulltext` or `abstract_only`, reflecting a genuine retrieval attempt. **Always prefer `fulltext`** — attempt full-text retrieval for every paper before falling back to `abstract_only`. Papers for which neither full text nor abstract was retrieved MUST be excluded entirely (move to `search_failures`); they cannot enter `findings` with a placeholder.
 
 **Full-Text Retrieval Protocol :**
 
-Agents MUST use `retrieve_fulltext()` for ALL papers — not just the "top 50." The function tries publisher APIs first (which have higher success rates for paywalled content), then falls back to open-access sources.
+Agents MUST attempt full-text retrieval for ALL papers — not just the "top 50." Follow the 5-tier API protocol defined in `comprev-reviewer-agent` (PMC OA → publisher API → Europe PMC → bioRxiv/medRxiv/arXiv readers → `fetch_article_fulltext(doi)`). Publisher-API tiers have higher success rates for paywalled content; open-access tiers are the fallback.
 
-The retrieval protocol (API tiers, size validation) is defined in the comprev-reviewer-agent skill.
+The retrieval protocol (tier order, API tiers, size validation) is defined in the comprev-reviewer-agent skill.
 
 **Size-based validation (MANDATORY after any retrieval):**
 - Response > 15KB AND contains `<body>` tag → genuine fulltext → `text_access = "fulltext"`
@@ -107,17 +107,8 @@ This means:
 
 The validator will check this: if `text_access = "fulltext"` but the source sentence IS found in the abstract, the finding fails validation. Extract deeper or label honestly.
 
-**Coordinator full-text fallback tiers** remain as before, but agents now use `retrieve_fulltext()` instead of `fetch_article_fulltext` for their initial retrieval pass. Call with explicit keys:
-
-```python
-text, source = retrieve_fulltext(
-    doi,
-    elsevier_api_key=os.environ.get('ELSEVIER_API_KEY'),
-    springer_api_key=os.environ.get('SPRINGER_API_KEY'),
-    ncbi_api_key=os.environ.get('NCBI_API_KEY'),
-)
-```
-- **Text-only extraction requirement:** All `claim`, `effect_size`, and `figure_data.papers.value` fields must come from retrieved text. Every value must have a corresponding `_source_sentence`. Papers with `text_access` = `metadata_only` must be excluded from findings entirely and moved to `search_failures` — they cannot contribute claims, source sentences, or quantitative data.
+**Coordinator full-text fallback tiers** apply to every paper. Agents call the 5-tier sequence directly using the MCP tools and `fetch_article_fulltext(doi)` as documented in `comprev-reviewer-agent`. Publisher-API keys (`ELSEVIER_API_KEY`, `SPRINGER_API_KEY`, `NCBI_API_KEY`) are read from the environment by `fetch_article_fulltext` automatically — agents do not pass them explicitly.
+- **Text-only extraction requirement:** All `claim`, `effect_size`, and `figure_data.papers.value` fields must come from retrieved text. Every value must have a corresponding `_source_sentence`. Papers for which neither full text nor abstract was retrieved must be excluded from findings entirely and moved to `search_failures` — they cannot contribute claims, source sentences, or quantitative data, and have no valid `text_access` value (`metadata_only` is not allowed).
 - **Figure data requirement:** Every `figure_data.papers.value` must have a non-null `value_source_sentence`. Papers without a traceable number are excluded from figure comparisons.
 - **Replication evidence requirement:** `replication_status` = `independently_replicated` requires ≥2 DOIs from different labs in `replication_evidence_dois`. `contested` requires conflicting DOIs. Otherwise use `replication_unknown`.
 
@@ -149,97 +140,7 @@ After extracting all findings and before saving the evidence JSON, run this vali
 
 **Anti-gaming rule:** The validation must use the FULL `claim_source_sentence` as the search string, not a truncated prefix. Matching on the first 30-50 characters is insufficient — it passes paraphrases that diverge after the opening words. Use `source_sentence in abstract_text` (full string containment), not `source_sentence[:50] in abstract_text`.
 
-The coordinator will independently re-run this validation on a random sample after receiving the evidence. Discrepancies between the agent's self-reported numbers and the coordinator's verification will trigger a full re-validation and send-back.
-
-**Compliance checklist (each returning cluster):**
-- [ ] `conflicts` non-empty? If empty → send back.
-- [ ] `weakest_evidence_cited` substantive? If "all strong" → send back.
-- [ ] `figure_data` present? If empty → send back.
-- [ ] `papers_reviewed_count` ≥ `min_papers_per_cluster` (from `evidence_parameters` in the delegation task)? If below → send back with specific undertreated subtopics.
-- [ ] Cross-cluster unique DOI count ≥ 80% of target? If below → send back thinnest clusters for additional citation chaining.
-- [ ] Every paper has a DOI (starts with `10.`)? If not → send back.
-- [ ] `search_failures` present for papers mentioned in delegation but not found in databases? If unfound papers appear in `findings` without database-verified DOI → send back.
-- [ ] Fulltext retrieval rate ≥ 20% per cluster? If below → send back (worker likely skipped retrieval).
-- [ ] Overall fulltext rate ≥ 50% across all clusters after fallback tiers? If below → delegate targeted retrieval to LITREVIEW agent via send_message.
-- [ ] Quantitative extraction: ≥ 30% of findings have non-null `effect_size`? If below → send back for number extraction.
-- [ ] Sample size: ≥ 20% of findings have `n` > 0? If below → send back.
-- [ ] Replication status: ≤ 70% `replication_unknown`? If above → send back for replication investigation.
-- [ ] Every `independently_replicated` finding has ≥2 DOIs in `replication_evidence_dois`? If not → send back.
-- [ ] Every conflict has valid DOIs for both papers + non-empty `conflict_source` (≥20 chars)? If not → send back.
-- [ ] `figure_data` comparisons have `homogeneity_check` with non-trivial `caveats` when uniformity fields are false? If not → send back.
-- [ ] No `metadata_only` papers in findings? If present → send back.
-- [ ] Schema field names exactly match the orchestrator schema? 
-  Conflicts MUST have: paper_a_doi, paper_b_doi, nature_of_conflict, likely_reason, conflict_source
-  Figure_data MUST have: comparison_id, comparison_name, what_it_reveals, suggested_plot_type, 
-  papers, homogeneity_check
-  If an agent returns 'topic' instead of 'nature_of_conflict', or 'title' instead of 
-  'comparison_name' → send back: "Field names must match the schema exactly. 
-  Rename [wrong_field] to [correct_field]."
-- [ ] **Contradiction search executed?** For each major topic, at least one query must 
-  explicitly search for papers that challenge or revise the textbook narrative. Include queries
-  like "[mechanism X] challenged OR revised OR incorrect OR reconsidered" and 
-  "[established claim] alternative OR reinterpretation". If zero contradiction-targeted queries
-  were run → send back: "Add explicit searches for papers that challenge the consensus on [topic]."
-- [ ] **False consensus risks identified?** The `evidence_gaps` array must include at least one
-  entry with a claim that is "widely stated but primary experimental evidence is thin or absent."
-  If the agent reports zero false-consensus risks across an entire topic cluster → this is itself
-  suspicious. Send back: "Identify at least one claim in this topic area where the textbook 
-  narrative may outpace the primary experimental evidence."
-
-
-
-- **DOI-title cross-validation (MANDATORY, not a sample):** After each cluster returns, the coordinator verifies EVERY DOI by fetching its title from CrossRef and comparing against the reported title in the evidence package. Implementation:
-  - For each paper in findings:
-    - `GET https://api.crossref.org/works/{doi}`
-    - Extract title from response
-    - Compare word overlap between CrossRef title and the finding's `claim_source_sentence` (first 10 words of each)
-    - If overlap < 0.2 and no shared domain-specific terms: flag as `WRONG_DOI`
-  - If >10% of a cluster's DOIs are flagged:
-    - Send back: "DOIs point to the wrong papers. Rebuild using search-first: iterate over database search results and extract DOIs with `result.get('doi')`. Do not pre-populate paper lists from memory."
-  - For individual flagged DOIs:
-    - Search Europe PMC by the REPORTED title
-    - If found: replace with the correct DOI
-    - If not found: move to `search_failures`
-  - Papers with `text_access` = `metadata_only` must NOT appear in findings. If present → send back: "Remove metadata-only papers from findings. Papers without at least an abstract cannot contribute evidence."
-- `replication_evidence_dois` populated for every `independently_replicated` finding? If not → send back.
-- **Figure data comparability check:** For each `figure_data` comparison, verify the `homogeneity_check` is present and non-trivial. If `scope_region_uniform`, `scope_population_uniform`, or `taxonomic_level_uniform` is false, verify that `caveats` is non-empty and describes the heterogeneity. If all three are marked true but the `metric` fields across entries differ substantively (e.g., "Number of category-X types" vs "Number of clusters (whole dataset)"), send back: "The metric labels in comparison [comparison_id] differ but homogeneity_check claims uniformity. Re-examine whether these entries are measuring the same thing at the same scope."
-- **Quantitative extraction rate:** At least 30% of findings must have a
-  non-empty, non-null `effect_size` field (excluding values like "not
-  reported", "N/A", "qualitative"). If below 30% → send back: "Only X%
-  of findings have effect sizes. For the top 50 papers by relevance,
-  return to the abstract or full text and extract any reported numbers:
-  percentages, fold-changes, p-values, correlation coefficients, response
-  magnitudes. Set effect_size_source_sentence to the verbatim sentence
-  containing each number."
-- **Sample size extraction rate:** At least 20% of findings must have
-  `n` as an integer > 0. If below 20% → send back: "Only X% of findings
-  report sample size. For each finding, check the abstract for n, number
-  of cells, number of animals, number of slices, number of recordings.
-  Use the most relevant n for the claim (e.g., neurons recorded, not
-  total animals, if the claim is about neural activity)."
-- **Replication status audit:** No more than 70% of findings may have
-  `replication_status` = `replication_unknown`. If above 70% → send back:
-  "X% of findings have unknown replication status. For the top 50 claims,
-  actively investigate: search PubMed for [claim keywords] AND (replicate
-  OR confirm OR consistent OR corroborate). For each, upgrade to
-  `independently_replicated` (with ≥2 DOIs from different labs in
-  `replication_evidence_dois`), `contested` (with conflicting DOIs), or
-  confirm `replication_unknown` with a one-sentence note explaining why
-  no replication evidence was found."
-- **Conflict DOI completeness:** Every entry in `conflicts` must have
-  valid DOIs for both papers (fields: `paper_a_doi` and `paper_b_doi`).
-  Descriptions like "the 2012 gain control papers" are not sufficient —
-  resolve them to DOIs. If any conflict lacks both DOIs → send back:
-  "Resolve conflict paper descriptions to database-verified DOIs."
-- **Conflict source completeness:** Every entry in `conflicts` must have
-  a non-empty `conflict_source` field (≥20 characters) describing which
-  sentences in which papers' abstracts or full text establish the conflict.
-  If empty → send back: "Fill conflict_source with the specific sentences
-  from each paper's text that demonstrate the disagreement."
-
-**DOI-title cross-validation (MANDATORY — delegated to DATAML in Phase 3):**
-For each DOI, DATAML compares CrossRef title word overlap with claim_source_sentence. Overlap < 0.2 → flag as WRONG_DOI. >10% flag rate per cluster → send cluster back for rebuild. Individual flags → search by reported title for correct DOI.
-
+The validator skill defines the binary gate. See `comprev-evidence-validator.md` for the authoritative criteria. Aim for full compliance; do not optimise to the floor.
 
 ## Snowball Protocol
 
@@ -282,8 +183,58 @@ After each search pass (initial keyword search, each snowball round, each query 
 - `min_papers_per_cluster` (if set) acts as a hard floor: even if the saturation criterion fires early, do not stop until the floor is met.
 
 **Output:**
-Save `saturation_log.json` as an artifact alongside the evidence package. This log is consumed by the validator (check `EVIDENCE_PARAMETERS_HONORED`) and by the Methods section (Phase 13) to document the search strategy.
+Save `saturation_log.json` as an artifact alongside the evidence package. This log is consumed at Phase 2V by `comprev-evidence-validator`'s `SATURATION_LOGGED` check, at Phase 14V/20V by `comprev-myst-validator`'s `EVIDENCE_PARAMETERS_HONORED` check, and by the Methods section (Phase 13) to document the search strategy.
 
+
+
+## Per-Frame Findings Budget (Compaction Mitigation)
+
+Phase 2 evidence gathering is the only phase in the pipeline that empirically produces **multi-compaction chains** within a single sub-agent — a 52% per-frame compaction rate, with ~20% of Phase 2 children showing signals of more than one rollover. To eliminate this risk, every Phase 2 child runs under a hard findings-count budget and exits cleanly when the budget is hit. The coordinator forks a fresh continuation child if more searching is needed.
+
+**The budget rule:**
+- **Maximum findings per child frame: 40** (one HARDENED checkpoint cycle plus a small buffer).
+- The agent MUST check `len(set(f["doi"] for f in findings))` after every save and every snowball round.
+- When the count reaches **40 unique findings**, the agent must stop searching, save final state, and exit — even if `min_papers_per_cluster` has not been met. The coordinator will fork a continuation.
+- This budget is **independent of saturation**. Saturation can fire earlier and stops the *entire cluster*; the per-frame budget can fire repeatedly and only stops the *current child*.
+
+**On budget exit, the agent MUST:**
+
+1. Save the evidence JSON one last time as `cluster_NN_evidence.json` (versioned via `version_of` if a prior version exists).
+2. Save `cluster_NN_search_state.json` with the search-state fields needed for resumption:
+   ```json
+   {
+     "cluster_id": "cluster_06",
+     "section_id": "section_07",
+     "passes_completed": ["epmc:disinhibit*", "epmc:VIP+SST", "openalex:disinhibition", "snowball_round_1"],
+     "passes_remaining": ["epmc:gain_modulation", "openalex:L1_disinhibitory", "snowball_round_2"],
+     "snowball_seeds_used": ["10.1038/nature12676", "10.1038/nn.3446", "..."],
+     "seen_dois_artifact_id": "<artifact id of seen-DOI list, written as one DOI per line>",
+     "saturation_log_artifact_id": "<artifact id>",
+     "papers_so_far": 38,
+     "evidence_artifact_id": "<latest cluster_NN_evidence.json version id>",
+     "exit_reason": "frame_budget_reached | saturation | papers_target_met"
+   }
+   ```
+3. Return a **structured output** with:
+   ```json
+   {
+     "continuation_required": true,
+     "search_state_artifact_id": "<id of cluster_NN_search_state.json>",
+     "evidence_artifact_id": "<id of cluster_NN_evidence.json>",
+     "papers_so_far": 38,
+     "exit_reason": "frame_budget_reached"
+   }
+   ```
+   Set `continuation_required: false` only when `exit_reason` is `saturation` or `papers_target_met`.
+4. Do NOT attempt one more search pass "to round up." Exit immediately.
+
+**On continuation entry, the agent receives:**
+- A standard Phase 2 delegation task with one extra block: `continuation_state` containing the previous search-state and evidence-artifact IDs.
+- The agent MUST: load the previous evidence JSON, load the seen-DOI list, skip every pass already in `passes_completed`, and deduplicate every new hit against the seen-DOI list before adding it.
+- The agent appends to the same `findings`, `conflicts`, `figure_data` arrays — does NOT reset them.
+- The continuation child runs under the same 40-findings budget, measured against findings *added in this child* (not the cumulative count). If the cluster still hasn't saturated after this child's 40 are added, the agent emits another `continuation_required: true` and the coordinator forks again.
+
+**Why 40, not 30 or 50?** 30 is the existing checkpoint cadence — a child must be able to hit 30 and still have headroom to finalize the schema (homogeneity_check, figure_data, conflicts). 50 puts the heaviest children too close to the empirical compaction threshold (the chained frames in the VIP v2 audit hit rollover at ~100+ cumulative findings spread across 100–150 messages). 40 leaves a safe buffer.
 
 ## Evidence Schema
 
@@ -292,7 +243,7 @@ Every evidence-gathering agent returns a JSON matching this schema. The coordina
 ```json
 {
   "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only"}],
-  "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "nature_of_conflict": "", "likely_reason": "", "conflict_source": "describe which sentences in which papers' abstracts/text establish the conflict"}],
+  "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "paper_a_claim": "verbatim sentence from paper A", "paper_b_claim": "verbatim sentence from paper B", "nature_of_conflict": "what disagrees and on what dimension", "resolution_status": "open | resolved-by-replication | resolved-by-method"}],
   "unreplicated_claims": [{"claim": "", "source": "", "years_since_publication": 0}],
   "evidence_gaps": [{"topic": "", "what_is_missing": "", "why_it_matters": ""}],
   "strongest_evidence": {"claim": "", "why_strong": ""},
@@ -332,6 +283,7 @@ Every evidence-gathering agent returns a JSON matching this schema. The coordina
 - Conflicts MUST use exactly these fields: `paper_a_doi`, `paper_b_doi`, `paper_a_claim`, `paper_b_claim`, `nature_of_conflict`, `resolution_status`. No other field names. No nested objects for sides. No `papers[]` arrays. No custom field names per conflict type. Every conflict MUST have both DOIs.
 - JSON values: use `null` for missing values, NEVER the Python string `"None"`. Agents must ensure None→null conversion during JSON serialization.
 - `figure_data` papers arrays MUST have unique DOIs. Deduplicate before saving. If the same paper appears multiple times in a comparison, keep only the first entry.
+- Every finding MUST carry a non-empty `replication_status` (`replicated` | `unreplicated` | `disputed` | `single-study`). When `replication_status = replicated`, `replication_evidence_dois` MUST list ≥1 DOI. The Methods section (M.4) and the validator both summarise this distribution.
 
 
 ---
@@ -437,9 +389,8 @@ When gathering evidence (Phase 2 of orchestrator), produce STRUCTURED output —
    - If the paper has a PMCID: call `bc_get_europepmc_fulltext` for full-text XML.
    - Search domain-appropriate full-text sources by DOI (e.g., `bc_get_europepmc_articles` for biomedical — check for `fullTextUrlList` for open-access URLs). If a URL is returned, fetch it.
    - For preprints: use the appropriate reader — `read_biorxiv_paper`, `read_medrxiv_paper`, or `read_arxiv_paper` as applicable to the domain.
-   - For your top 50 papers by relevance, also call `fetch_article_fulltext(doi)` and update `text_access` to `fulltext` if successful.
 
-   Set `text_access` to `fulltext`, `abstract_only`, or `metadata_only` based on what you obtained.
+   Set `text_access` to `fulltext` (paper body retrieved) or `abstract_only` (only abstract retrieved). If neither was retrieved, do NOT include the paper — move it to `search_failures` instead.
 
    After retrieving metadata, COMPARE the returned title against the title from the search result that provided this DOI:
    ```python
@@ -496,16 +447,16 @@ When gathering evidence (Phase 2 of orchestrator), produce STRUCTURED output —
    e. For `figure_data`: ONLY include papers where you found the
       number in the text with a source sentence.
 
-4. **Papers without text access.** Papers with `text_access` = `metadata_only` (no abstract, no full text) MUST be excluded from findings entirely. Move them to `search_failures` with `action` = "metadata_only — no text available for evidence extraction." Papers without even an abstract cannot contribute claims, source sentences, or quantitative data.
+4. **Papers without text access.** Papers for which neither full text nor abstract was retrieved MUST be excluded from findings entirely. Move them to `search_failures` with `action` = "no text available for evidence extraction (neither full text nor abstract retrieved)." Such papers cannot contribute claims, source sentences, or quantitative data, and have no valid `text_access` value — `metadata_only` is NOT an allowed value.
 
 5. **Replication status.** To mark a finding as `independently_replicated`, you must have found ≥2 papers from different labs (different last authors) reporting the same result. List their DOIs in `replication_evidence_dois`. For `contested`, list the conflicting DOIs. If you cannot identify specific replicating or conflicting papers from your searches, use `replication_unknown`.
 
 6. **Before saving, verify your count.** `len(set(f['doi'] for f in findings))` must be ≥ `min_papers_per_cluster` per section covered (read this value from the `evidence_parameters` in your delegation task; default 70). If below target, you are over-filtering — go back and include replication studies, negative results, and cross-area extensions.
 
 7. **Before saving, verify extraction rates.** The orchestrator will reject clusters that fall below these thresholds:
-   - **Effect size rate:** ≥30% of findings must have a non-empty, non-null `effect_size` (excluding "not reported", "N/A", "qualitative"). If below 30%, return to abstracts/full text for your top 50 papers and extract any reported numbers.
+   - **Effect size rate:** ≥30% of findings must have a non-empty, non-null `effect_size` (excluding "not reported", "N/A", "qualitative"). If below 30%, return to abstracts/full text for your most-cited papers (prioritize the top ~50 by citation count) and extract any reported numbers.
    - **Sample size rate:** ≥20% of findings must have `n` as an integer > 0. Check abstracts for cell counts, animal counts, recording counts.
-   - **Replication status rate:** ≤70% of findings may have `replication_status` = `replication_unknown`. For your top 50 claims, actively search for replication or contradiction evidence before accepting "unknown."
+   - **Replication status rate:** ≤70% of findings may have `replication_status` = `replication_unknown`. Prioritize your most-cited claims (the top ~50 by citation count) and actively search for replication or contradiction evidence before accepting "unknown."
 
 **figure_data is mandatory:** For each major conflict or convergence, extract quantitative values from each paper's text. Every `figure_data.papers.value` must have a `value_source_sentence`. If the number isn't in the text, exclude that paper from the comparison.
 
@@ -516,7 +467,8 @@ When gathering evidence (Phase 2 of orchestrator), produce STRUCTURED output —
 - `n_definition`: what n counts (e.g., samples collected vs samples post-QC)
 - `n_analyzed`: the post-QC or actually-analyzed count, if different from n
 
-After assembling all entries in a comparison, record a `homogeneity_check`: are all entries comparable in scope_region, scope_population, taxonomic_level, and n_definition? List any caveats. This metadata is used by the comparability audit (Phase 6) to catch misleading cross-study figures.
+**MANDATORY — Homogeneity record (`homogeneity_check`):**
+After assembling all entries in a comparison, record a `homogeneity_check` block. Every entry in `figure_data[i].papers[]` MUST carry the seven scope fields: `scope_region`, `scope_population`, `taxonomic_level`, `experimental_conditions`, `method`, `n_definition`, and `value_source_sentence`. The `homogeneity_check` then summarises whether each is uniform across the comparison (`scope_region_uniform`, `scope_population_uniform`, `taxonomic_level_uniform`, `n_definition_uniform`) and lists `caveats[]` for any non-uniform field. The comparability audit (Phase 6) reads these to catch misleading cross-study figures; missing scope fields hard-fail there.
 
 ### Citation Density
 Before saving any .tex file, count your `\citep{}`/`\citet{}` commands and divide by the number of substantial paragraphs (exclude figure environments, single-sentence transitions, and subsection-opening topic sentences followed by elaboration). Report this as `citations_per_paragraph` in your structured output. If below 4.0, restructure: merge consecutive single-paper paragraphs into synthesis paragraphs that cite 5–8 papers in dialogue before each paragraph's concluding synthesis sentence.
@@ -530,3 +482,6 @@ Organize by **debates and open questions**, not just topics. Each section: histo
 - Reserve sequential paper-by-paper exposition for historical narratives where chronology IS the argument.
 
 ---
+
+
+

@@ -111,7 +111,7 @@ that the claimed finding actually matches the paper's abstract.
 >   "cite_key": "Smith2022",
 >   "category": "VERIFIED | MINOR | CHIMERIC | HALLUCINATED | MISATTRIBUTED",
 >   "failed_at_step": null or 1-5,
->   "verification_depth": "fulltext | abstract_only | metadata_only",
+>   "verification_depth": "fulltext | abstract_only",
 >   "supporting_passage": "verbatim sentence(s) from the paper that support the claim (null if MISATTRIBUTED or not found)",
 >   "details": "specific description of the issue",
 >   "correct_metadata": {
@@ -128,8 +128,11 @@ that the claimed finding actually matches the paper's abstract.
 > - `abstract_only`: only abstract available. Claim verification is limited —
 >   a claim can appear supported by the abstract but contradicted by the
 >   paper's actual results or discussion. Flag in the gate summary.
-> - `metadata_only`: neither full text nor abstract retrieved. Claim
->   verification could not be performed — flag as requiring manual review.
+>
+> If neither full text nor abstract was retrieved for a triple, the
+> triple cannot be verified — categorize as MISATTRIBUTED (or skip with
+> a manual-review flag). Do NOT record `verification_depth = "metadata_only"`;
+> that value is not allowed.
 >
 > **Supporting passage requirement:** For every VERIFIED triple checked at
 > fulltext depth, include the verbatim passage (≤2 sentences) from the
@@ -151,7 +154,7 @@ For each match: verify against CrossRef whether "Bhatt" is a real author on that
 - If `crossref_data[doi]['author'][0]['family'].lower() == 'bhatt'` → legitimate, no action.
 - If fabricated → pipeline compliance failure. Fix mechanically using author_name_table. Log incident.
 
-In a compliant v17 pipeline run, these scans should return zero fabricated matches. If they return >0, the preventive controls (mechanical cite_key assignment in Phase 2 compliance, author_name_table in Phase 7) failed and the root cause must be investigated before the document is delivered.
+In a compliant pipeline run, these scans should return zero fabricated matches. If they return >0, the preventive controls (mechanical cite_key assignment in Phase 2 compliance, author_name_table in Phase 7) failed and the root cause must be investigated before the document is delivered.
 
 > **Note:** "Bhatt" IS a real surname — some matches may be legitimate. Always verify against the database. The diagnostic is: does this person appear in the database-fetched author list for this paper's DOI? If yes → legitimate. If no → contamination.
 
@@ -187,5 +190,6 @@ In addition to verifying individual citation triples, run one check per multi-so
 > ```"
 
 Figures flagged as MISLEADING are added to Phase 17 fix requests as a new category: **FIGURE_MISLEADING**. The fix request includes the specific issue and suggested caption amendment or figure redesign.
+
 
 

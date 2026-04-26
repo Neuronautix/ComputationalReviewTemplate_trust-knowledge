@@ -9,6 +9,54 @@ Delegation templates for all DATAML mechanical phases: citation infrastructure (
 
 ---
 
+
+## Phase 1: Scoping Materialisation (DATAML actor)
+
+**Agent:** DATAML actor (mechanical only)
+
+After the LITREVIEW Phase 1 scoper returns `scope.json` and the `plan_content`
+list, a DATAML actor materialises the on-disk artifacts that downstream phases
+depend on. This is mechanical work only — no rewriting of the user's prompt,
+no reinterpretation of `evidence_parameters`.
+
+**Inputs.**
+- `scope.json` (from the LITREVIEW scoper)
+- The user's submitted prompt as captured by the coordinator (raw bytes)
+
+**Mechanical steps.**
+1. Write `provenance/review_request.txt` — the user's prompt, byte-for-byte, no reflow, no normalisation. Compute and record SHA256 alongside.
+2. Write `provenance/review_request.md` — three labelled sections (header with project ID + timestamp + pipeline version; `## Verbatim user prompt` blockquote; `## Editorial note` listing every mechanical reflow applied or stating "No edits applied").
+3. Write `gate_scope.json` derived directly from `scope.json`. Required keys: `title`, `clusters[]`, `sections[]`, `evidence_parameters{}`, `review_request_path: "provenance/review_request.md"`.
+4. Verify NO `[PIPELINE FILLS THIS]` placeholders or `<...>` template tokens remain in any of the four files.
+
+**Output:** `gate_scope.json` plus the two provenance files. Triggered by the
+coordinator after Phase 1 LITREVIEW returns; followed by Phase 1V validation
+via `comprev-scoping-validator`.
+
+---
+
+## Author Table Continuity (Phase 17/18 fix flow)
+
+The `author_name_table.json` produced in Phase 3 is the SOLE source for
+author-name strings used in `{cite:t}` rendering. During Phase 17 fix
+preparation and Phase 18 fix execution, any new bibliography entry created or
+modified must update `author_name_table.json` synchronously. Specifically:
+
+- When Phase 18 adds a bib entry for a previously-unseen DOI, append the
+  CrossRef-derived author surname to `author_name_table.json` immediately;
+  do not defer to Phase 19.
+- When Phase 18 modifies an existing entry's author family name (e.g. correcting
+  ASCII collation), update both `references.bib` and `author_name_table.json`
+  in the same diff bundle.
+- The Phase 19 fix-application gate verifies row-count parity between
+  `references.bib` and `author_name_table.json`; mismatch → fail.
+
+Failure mode this prevents: bib entry written without the author table being
+updated, leading to `{cite:t}` rendering empty author placeholders or stale
+names downstream.
+
+---
+
 ## Phase 3: Citation Infrastructure
 
 **Agent:** DATAML
@@ -185,6 +233,18 @@ Before passing `citation_key_map` and `author_name_table` to Phase 7 writers, DA
 **MANDATORY — Conflict normalization:**
 DATAML MUST normalize all conflict schemas from Phase 2 into the canonical format (`paper_a_doi`, `paper_b_doi`, `paper_a_claim`, `paper_b_claim`, `nature_of_conflict`, `resolution_status`) before saving per-section evidence packages. Per-section evidence package `argument_groups` MUST use field names: `supporting_findings`, `counter_findings` (not `_evidence`).
 
+**MANDATORY — Per-section uniqueness (`NO_INTRA_SECTION_DUPLICATES`):**
+Within a single section's evidence package, no two findings may share an identical `claim_source_sentence`. If the same DOI contributes multiple findings to one section, each must cite a different sentence from the paper.
+
+**MANDATORY — Cross-section differentiation (`CROSS_SECTION_DIFFERENTIATION`):**
+When the same DOI appears in multiple sections, each section's finding for that DOI MUST cite a *different* `claim_source_sentence`. A paper used in two sections that quotes the same sentence in both is a duplication, not differentiated reuse — re-extract or drop one.
+
+**MANDATORY — Lossless aggregation (`ZERO_LOSS`):**
+The total finding count summed across all per-section evidence packages MUST be ≥ the Phase 2 total. Findings may be duplicated across sections (with different source sentences per the rule above), but never silently dropped. If any cluster's findings cannot be assigned to a section, log them in a `unassigned_findings.json` artifact and send back to scoping, do not delete.
+
+**MANDATORY — Conflict coverage (`ALL_CONFLICTS_ASSIGNED`):**
+Every conflict in the Phase 2 cluster evidence MUST appear in ≥1 per-section evidence package. Conflicts cannot be silently lost during cluster→section reassignment. If a conflict's two papers are split across sections that don't both surface it, replicate the conflict entry into each affected section's package.
+
 
 ## Phase 9: Bibliography
 
@@ -231,6 +291,20 @@ For each match:
 
 **BibTeX ASCII requirement:** The final `.bib` file must be pure ASCII. Replace accented characters with LaTeX escapes (é → `{\'e}`, ü → `{\"u}`, ñ → `{\~n}`). Strip any remaining non-ASCII bytes. This is a hard compilation requirement — a single emoji or Unicode character can cause BibTeX to silently drop dozens of entries.
 
+**GATE ARTIFACT:** After bibliography is written, save `gate_bibliography.json`:
+
+```python
+gate_data = {
+    'bib_artifact_id': '<saved_version_id>',
+    'entry_count':     N,
+    'unfindable_dois': [...],   # cite_keys whose DOI failed CrossRef + Europe PMC
+    'ascii_clean':     True,
+    'bhatt_contamination_matches': 0,   # from grep scan above
+}
+json.dump(gate_data, open('gate_bibliography.json', 'w'), indent=2)
+advance_phase('5_bibliography', '<saved_version_id>')
+```
+
 
 ## Phase 13: Methods
 
@@ -251,7 +325,7 @@ rendered template drops the `M.` prefix from H2 headings):**
 **M.2 Inclusion/Exclusion Criteria:**
 - Criteria applied (from Phase 1 scope + Phase 2 compliance checks)
 - Papers excluded and reasons (from `search_failures`)
-- Papers with `metadata_only` access that were excluded
+- Papers excluded because neither full text nor abstract could be retrieved
 
 **M.3 Full-Text Retrieval:**
 - Sources used: Elsevier API, Springer API, PMC, Europe PMC
@@ -353,6 +427,19 @@ Statement subsection at the end of Methods.
 The template scaffold at `content/Methods.md` already contains the skeleton for
 this section — fill in the table from the live `skills/` directory rather than
 retyping the template literal.
+
+**GATE ARTIFACT:** After `Methods.md` is written, save `gate_methods.json`:
+
+```python
+gate_data = {
+    'methods_artifact_id': '<saved_version_id>',
+    'subsection_count':    8,             # M.1–M.8 must all be present
+    'pipeline_skills_table_rows': N,      # auto-generated row count
+    'reproducibility_statement_present': True,
+}
+json.dump(gate_data, open('gate_methods.json', 'w'), indent=2)
+advance_phase('13_methods', '<saved_version_id>')
+```
 
 
 ## Phase 14: Document Assembly
@@ -481,6 +568,10 @@ Section writers do NOT embed dropdown code. Phase 14 DATAML does it mechanically
 6. Validate: no single line > 200 chars (catches concatenation bugs).
 7. Validate: in every section .md file, `count(':::{figure}') == count(':::{dropdown} 📓 Figure code')`.
 
+**Dropdown injection (MANDATORY).** When injecting `:::{dropdown} 📓 Figure code` blocks from the saved notebooks, do NOT set `:icon:` or `:color:` properties — these are blocked by `comprev-myst-validator`'s `NO_ICON_COLOR` check. Use the bare `:::{dropdown} 📓 Figure code` form. The injected dropdown count per section MUST equal the `:::{figure}` count (verified by `FIGURE_DROPDOWN_MATCH` at 14V).
+
+**Figure width declaration (MANDATORY).** Every `:::{figure}` directive in the assembled `content/*.md` MUST carry a `:width:` property (e.g. `:width: 100%` or `:width: 600px`). If a section writer omitted `:width:` at Phase 7, the assembler MUST inject a default before emitting the assembled file — `comprev-myst-validator`'s `FIGURE_WIDTH_DECLARED` check rejects bare `:::{figure}` directives at 14V/20V.
+
 **Missing-notebook policy (MANDATORY).** If `figures/notebooks/<fig>.ipynb` is missing for
 any figure referenced in a section .md:
   a. FIRST attempt to reconstruct the notebook from `pipeline.lineage[figure_vid]` — extract
@@ -569,7 +660,7 @@ before handing off to the validator. Treat these as a hard gate:
    invoked at the markdown layer.
 
 These three checks correspond to validator checks `PLUGIN_DIRECTIVES_INVOKED`
-(#20), `EVIDENCE_PACKAGES_POPULATED` (#21), and the existing build/structural
+(#21), `EVIDENCE_PACKAGES_POPULATED` (#22), and the existing build/structural
 checks. Running them at Phase 14 *before* validator handoff catches the
 silent-render failure mode that produced the v1.0 dead widgets.
 
@@ -638,6 +729,8 @@ FIX REQUEST (MINOR — bib metadata correction)
   correct_metadata: {year: 2022, volume: 45, pages: "112-128"}
   context_lines: [not needed for pure bib fixes]
 ```
+
+**MANDATORY — `correct_metadata` populated for every METADATA_ERROR fix.** The `correct_metadata` field MUST be a non-empty object whose values come from a fresh CrossRef/Europe PMC lookup of the DOI — never paraphrased from the existing bib entry, never elided. The 17V validator's `CORRECT_METADATA` check rejects any MINOR fix request whose `correct_metadata` is null, empty, or contains placeholder values.
 
 **For CHIMERIC issues:**
 ```
@@ -748,7 +841,7 @@ M.6 and replaces any draft-time placeholder paragraphs in M.5.
 > `## Pipeline Execution` and `## Figure Reproducibility`) with a fully-rendered ledger that has **20 individual rows**,
 > one per phase, each carrying its real status and key outputs from the
 > corresponding gate artifact. Validator check `METHODS_LEDGER_FRESH` (see
-> `comprev-myst-validator.md` #19) asserts: (a) zero rows in §M.6 contain
+> `comprev-myst-validator.md` #20) asserts: (a) zero rows in §M.6 contain
 > the literal word `Pending`, (b) the row count equals 20, and (c) no
 > row spans a phase range like `14–20`.
 
@@ -939,7 +1032,6 @@ repo-root/
 │   ├── gate_*.json              # Gate artifacts
 │   └── critic_reports/          # Phase 6 + 8 critic findings
 ├── scripts/
-│   ├── retrieve_fulltext.py     # Full-text retrieval function
 │   ├── build_figures.py         # Rebuild all figures from evidence
 │   └── shared_style.py          # Canonical color palette + style
 ├── latex/
@@ -956,3 +1048,5 @@ The MyST markdown files in `content/` are the **primary** output — they render
 ---
 
 ---
+
+
