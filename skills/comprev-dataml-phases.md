@@ -233,6 +233,18 @@ Before passing `citation_key_map` and `author_name_table` to Phase 7 writers, DA
 **MANDATORY — Conflict normalization:**
 DATAML MUST normalize all conflict schemas from Phase 2 into the canonical format (`paper_a_doi`, `paper_b_doi`, `paper_a_claim`, `paper_b_claim`, `nature_of_conflict`, `resolution_status`) before saving per-section evidence packages. Per-section evidence package `argument_groups` MUST use field names: `supporting_findings`, `counter_findings` (not `_evidence`).
 
+**MANDATORY — Per-section uniqueness (`NO_INTRA_SECTION_DUPLICATES`):**
+Within a single section's evidence package, no two findings may share an identical `claim_source_sentence`. If the same DOI contributes multiple findings to one section, each must cite a different sentence from the paper.
+
+**MANDATORY — Cross-section differentiation (`CROSS_SECTION_DIFFERENTIATION`):**
+When the same DOI appears in multiple sections, each section's finding for that DOI MUST cite a *different* `claim_source_sentence`. A paper used in two sections that quotes the same sentence in both is a duplication, not differentiated reuse — re-extract or drop one.
+
+**MANDATORY — Lossless aggregation (`ZERO_LOSS`):**
+The total finding count summed across all per-section evidence packages MUST be ≥ the Phase 2 total. Findings may be duplicated across sections (with different source sentences per the rule above), but never silently dropped. If any cluster's findings cannot be assigned to a section, log them in a `unassigned_findings.json` artifact and send back to scoping, do not delete.
+
+**MANDATORY — Conflict coverage (`ALL_CONFLICTS_ASSIGNED`):**
+Every conflict in the Phase 2 cluster evidence MUST appear in ≥1 per-section evidence package. Conflicts cannot be silently lost during cluster→section reassignment. If a conflict's two papers are split across sections that don't both surface it, replicate the conflict entry into each affected section's package.
+
 
 ## Phase 9: Bibliography
 
@@ -529,6 +541,10 @@ Section writers do NOT embed dropdown code. Phase 14 DATAML does it mechanically
 6. Validate: no single line > 200 chars (catches concatenation bugs).
 7. Validate: in every section .md file, `count(':::{figure}') == count(':::{dropdown} 📓 Figure code')`.
 
+**Dropdown injection (MANDATORY).** When injecting `:::{dropdown} 📓 Figure code` blocks from the saved notebooks, do NOT set `:icon:` or `:color:` properties — these are blocked by `comprev-myst-validator`'s `NO_ICON_COLOR` check. Use the bare `:::{dropdown} 📓 Figure code` form. The injected dropdown count per section MUST equal the `:::{figure}` count (verified by `FIGURE_DROPDOWN_MATCH` at 14V).
+
+**Figure width declaration (MANDATORY).** Every `:::{figure}` directive in the assembled `content/*.md` MUST carry a `:width:` property (e.g. `:width: 100%` or `:width: 600px`). If a section writer omitted `:width:` at Phase 7, the assembler MUST inject a default before emitting the assembled file — `comprev-myst-validator`'s `FIGURE_WIDTH_DECLARED` check rejects bare `:::{figure}` directives at 14V/20V.
+
 **Missing-notebook policy (MANDATORY).** If `figures/notebooks/<fig>.ipynb` is missing for
 any figure referenced in a section .md:
   a. FIRST attempt to reconstruct the notebook from `pipeline.lineage[figure_vid]` — extract
@@ -617,7 +633,7 @@ before handing off to the validator. Treat these as a hard gate:
    invoked at the markdown layer.
 
 These three checks correspond to validator checks `PLUGIN_DIRECTIVES_INVOKED`
-(#20), `EVIDENCE_PACKAGES_POPULATED` (#21), and the existing build/structural
+(#21), `EVIDENCE_PACKAGES_POPULATED` (#22), and the existing build/structural
 checks. Running them at Phase 14 *before* validator handoff catches the
 silent-render failure mode that produced the v1.0 dead widgets.
 
@@ -686,6 +702,8 @@ FIX REQUEST (MINOR — bib metadata correction)
   correct_metadata: {year: 2022, volume: 45, pages: "112-128"}
   context_lines: [not needed for pure bib fixes]
 ```
+
+**MANDATORY — `correct_metadata` populated for every METADATA_ERROR fix.** The `correct_metadata` field MUST be a non-empty object whose values come from a fresh CrossRef/Europe PMC lookup of the DOI — never paraphrased from the existing bib entry, never elided. The 17V validator's `CORRECT_METADATA` check rejects any MINOR fix request whose `correct_metadata` is null, empty, or contains placeholder values.
 
 **For CHIMERIC issues:**
 ```
@@ -796,7 +814,7 @@ M.6 and replaces any draft-time placeholder paragraphs in M.5.
 > `## Pipeline Execution` and `## Figure Reproducibility`) with a fully-rendered ledger that has **20 individual rows**,
 > one per phase, each carrying its real status and key outputs from the
 > corresponding gate artifact. Validator check `METHODS_LEDGER_FRESH` (see
-> `comprev-myst-validator.md` #19) asserts: (a) zero rows in §M.6 contain
+> `comprev-myst-validator.md` #20) asserts: (a) zero rows in §M.6 contain
 > the literal word `Pending`, (b) the row count equals 20, and (c) no
 > row spans a phase range like `14–20`.
 

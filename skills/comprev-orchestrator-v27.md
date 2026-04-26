@@ -41,7 +41,7 @@ Before `generate_plan`, the coordinator runs Phase 1 to produce the scope and pl
 
 3. **Phase 1 DATAML (materialiser).** Delegate to a DATAML actor loaded with `comprev-dataml-phases` (Phase 1 Scoping Materialisation section). The actor materialises `provenance/review_request.txt` (verbatim bytes), `provenance/review_request.md` (three-section render), and `gate_scope.json` (derived from `scope.json` with `review_request_path`). No template placeholders may remain.
 
-4. **Phase 1V validation.** Delegate to a separate DATAML validator agent loaded with `comprev-scoping-validator`. The validator runs the binary checks defined there (`REVIEW_REQUEST_VERBATIM`, `NO_PLACEHOLDERS`, `GATE_SCOPE_FIELDS`, `EVIDENCE_PARAMETERS_VALID`, `EVIDENCE_PARAMETERS_CONSISTENT`, `CLUSTERS_NONEMPTY`, `SECTIONS_COVER_TOC`, `PLAN_CONTENT_20_PHASES`, `PLAN_AGENTS_VALID`) and returns a structured pass/fail.
+4. **Phase 1V validation.** Delegate to a separate DATAML validator agent loaded with `comprev-scoping-validator`. The validator runs the binary checks defined there (`REVIEW_REQUEST_VERBATIM`, `REVIEW_REQUEST_MD_PRESENT`, `NO_PLACEHOLDERS`, `GATE_SCOPE_FIELDS`, `EVIDENCE_PARAMETERS_VALID`, `EVIDENCE_PARAMETERS_CONSISTENT`, `CLUSTERS_NONEMPTY`, `SECTIONS_COVER_TOC`, `PLAN_CONTENT_20_PHASES`, `PLAN_AGENTS_VALID`) and returns a structured pass/fail.
 
 5. **On pass: build and approve the plan.** With `gate_scope.json` produced and `comprev-scoping-validator` returning `gate: "pass"`, the coordinator calls `generate_plan(plan_content=scope["plan_content"])` and waits for user approval. The plan is the pipeline's external memory — it survives context compression across 400+ messages and serves as the source of truth for sequencing.
 
@@ -61,7 +61,7 @@ The coordinator uses this table to delegate each phase. The full delegation temp
 | 4 | actor | LITREVIEW | `comprev-scaffold` + `comprev-reviewer-agent` | scaffold JSON | `gate_scaffold_approved.json`: ≥2 figs/section, cross-refs |
 | 5 | **actor** | DATAML | `comprev-dataml-phases` | section evidence packages | findings assigned, cite keys attached |
 | 5V | **validator** | DATAML | `comprev-curation-validator` | `gate_evidence_curated.json` | no duplicates, anti-compression ≥75%, conflicts assigned |
-| 6 | actor | LITREVIEW | `comprev-figure-audit` + `comprev-reviewer-agent` | audit verdicts | `gate_figure_audit.json`: 0 REDESIGN remaining |
+| 6 | actor | LITREVIEW | `comprev-figure-audit` + `comprev-reviewer-agent` | audit verdicts | `gate_figure_audit.json`: 0 REDESIGN remaining (coordinator MUST pre-fetch paper abstracts via Europe PMC and pass them inline; the critic cannot reach the network) |
 | 7 | **actor** | LITREVIEW | `comprev-section-writing` + `comprev-reviewer-agent` + `comprev-figure-construction` | section .md files + figures | word count, citation count, figures |
 | 7V | **validator** | DATAML | `comprev-myst-validator` | validation report | `gate_sections_drafted.json`: :name: not :label:, cite keys exist (dropdowns are NOT yet present — they are added at Phase 14) |
 | 8 | critic | LITREVIEW | `comprev-critic` + `comprev-reviewer-agent` | critic report | `gate_critic_complete.json`: MUST_FIX=0 after send-back |
@@ -106,15 +106,25 @@ Each phase transition requires a named gate artifact. The coordinator saves it b
 | 10 → 11 | `gate_integration.json` | Passes 10a-10f, filename mismatches, structural hygiene |
 | 11 → 12 | `gate_intro_conclusion.json` | Section artifact IDs, citation count |
 | 12 → 13 | `gate_methods.json` | Methods artifact ID |
-| 13 → 14 | `gate_assembly.json` | All verification assertions passed |
-| 19 gate | `gate_repository_push.json` | Repo URL, file counts |
+| 13 → 14 | `gate_methods.json` | Methods.md artifact ID, ledger sub-block populated |
+| 14 → 14V | (assembled manuscript) | LaTeX + content/*.md + figures + notebooks present |
+| 14V → 15 | `gate_assembly.json` | All build/structural assertions passed |
+| 15 → 16 | `citation_triples.json` | Triple count, batch IDs, schema version |
+| 16 → 17 | (verification reports) | Per-triple verdicts, MUST_FIX count |
+| 17 → 18 | `fix_requests.json` | Fix-request count, target files, contexts |
+| 18 → 19 | (fix diffs) | Applied diffs, reverse-order verification |
+| 19 → 19V | (updated files) | Patched .md and .bib |
+| 19V → 20a | (myst rebuild report) | All structural checks pass on patched files |
+| 20a → 20 | `gate_phase_20a_methods_refresh.json` | Methods.md M.5/M.6 fully rendered (no `Pending` rows) |
+| 20 → 20V | (pushed repo) | Contents API push complete, commit SHA |
+| 20V (release gate) | `gate_repository_push.json` | Fresh-clone build passes; files match local |
 
 ### Phase Ledger
 
 ```python
 import json
 phase_ledger = {f'phase_{i}': {'status': 'pending', 'gate_artifact_id': None, 'child_ids': []}
-                for i in range(1, 20)}
+                for i in list(range(1, 21)) + ['20a']}
 
 def advance_phase(phase_num, gate_artifact_id, child_ids=None):
     key = f'phase_{phase_num}'

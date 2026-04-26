@@ -31,8 +31,8 @@ Each agent searches databases and returns structured evidence. Delegation MUST r
 
 ```json
 {
-  "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only"}],
-  "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "nature_of_conflict": "", "likely_reason": "", "conflict_source": "describe which sentences in which papers' abstracts/text establish the conflict"}],
+  "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only | metadata_only"}],
+  "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "paper_a_claim": "verbatim sentence from paper A", "paper_b_claim": "verbatim sentence from paper B", "nature_of_conflict": "what disagrees and on what dimension", "resolution_status": "open | resolved-by-replication | resolved-by-method"}],
   "unreplicated_claims": [{"claim": "", "source": "", "years_since_publication": 0}],
   "evidence_gaps": [{"topic": "", "what_is_missing": "", "why_it_matters": ""}],
   "strongest_evidence": {"claim": "", "why_strong": ""},
@@ -44,7 +44,7 @@ Each agent searches databases and returns structured evidence. Delegation MUST r
       "comparison_id": "descriptive-slug",
       "comparison_name": "Human-readable name",
       "papers": [
-        {"doi": "", "metric": "", "value": "", "value_source_sentence": "verbatim sentence from abstract or full text containing this number", "ci_or_error": "", "n": 0, "n_analyzed": "number that passed QC or was actually used in analysis, if different from n", "n_definition": "what n counts: items profiled | items post-QC | subjects | samples", "study_system": "", "experimental_conditions": "", "method": "", "text_access": "fulltext | abstract_only", "scope_region": "domain/region scope: e.g., whole system | specific region | subregion | ...", "scope_population": "population scope: all items | all category-X | subtype-Y only | ...", "taxonomic_level": "granularity of the classification: broad category | subcategory | fine type | cluster | other"}
+        {"doi": "", "metric": "", "value": "", "value_source_sentence": "verbatim sentence from abstract or full text containing this number", "ci_or_error": "", "n": 0, "n_analyzed": "number that passed QC or was actually used in analysis, if different from n", "n_definition": "what n counts: items profiled | items post-QC | subjects | samples", "study_system": "", "experimental_conditions": "", "method": "", "text_access": "fulltext | abstract_only | metadata_only", "scope_region": "domain/region scope: e.g., whole system | specific region | subregion | ...", "scope_population": "population scope: all items | all category-X | subtype-Y only | ...", "taxonomic_level": "granularity of the classification: broad category | subcategory | fine type | cluster | other"}
       ],
       "comparison_type": "cross-study conflict | convergent evidence | dose-response | timeline",
       "what_it_reveals": "Why this comparison matters",
@@ -83,7 +83,7 @@ The coordinator writes the Phase 2 delegation task descriptions. These contain t
 - Every finding entry must include the DOI. If a DOI cannot be found, flag with `DOI-NOT-FOUND` and include enough metadata (title, authors, journal, year) for later resolution.
 - Do NOT fabricate bibliographic metadata. If uncertain about a detail, search for it rather than guessing.
 - **Hard drop rule for failed searches:** If a database search for a paper returns zero results, the paper MUST be excluded from the evidence output. Do not fill in metadata from memory. Do not include a paper just because the coordinator's task description mentioned it. The coordinator's suggested topics are search guidance, not a source of truth — if a paper cannot be found in PubMed, Europe PMC, or CrossRef, it may not exist. Mark it in a `search_failures` list (paper description, search queries tried, zero-result confirmation) but do NOT include it in `findings` or assign it a DOI.
-- **Schema-only requirement:** Findings must contain ONLY the schema fields: `claim`, `claim_source_sentence`, `effect_size`, `effect_size_source_sentence`, `n`, `species`, `replication_status`, `replication_evidence_dois`, `doi`, `text_access`. If a cluster returns findings with additional fields (`title`, `authors`, `journal`, `year`, `pmid`, `volume`, `pages`, `cite_key`), send back: "Remove non-schema fields. Each extra free-text field is a fabrication vector — measured 74% hallucination rate when agents add an authors field. Cite_keys are assigned mechanically by the coordinator, not by agents."
+- **Schema-only requirement:** Findings must contain ONLY the schema fields: `claim`, `claim_source_sentence`, `effect_size`, `effect_size_source_sentence`, `n`, `study_system`, `replication_status`, `replication_evidence_dois`, `doi`, `text_access`. If a cluster returns findings with additional fields (`title`, `authors`, `journal`, `year`, `pmid`, `volume`, `pages`, `cite_key`), send back: "Remove non-schema fields. Each extra free-text field is a fabrication vector — measured 74% hallucination rate when agents add an authors field. Cite_keys are assigned mechanically by the coordinator, not by agents."
 - **Full-text retrieval requirement:** Every paper must have `text_access` set to `fulltext`, `abstract_only`, or `metadata_only`, reflecting a genuine retrieval attempt.
 
 **Full-Text Retrieval Protocol :**
@@ -192,7 +192,7 @@ After each search pass (initial keyword search, each snowball round, each query 
 - `min_papers_per_cluster` (if set) acts as a hard floor: even if the saturation criterion fires early, do not stop until the floor is met.
 
 **Output:**
-Save `saturation_log.json` as an artifact alongside the evidence package. This log is consumed by the validator (check `EVIDENCE_PARAMETERS_HONORED`) and by the Methods section (Phase 13) to document the search strategy.
+Save `saturation_log.json` as an artifact alongside the evidence package. This log is consumed at Phase 2V by `comprev-evidence-validator`'s `SATURATION_LOGGED` check, at Phase 14V/20V by `comprev-myst-validator`'s `EVIDENCE_PARAMETERS_HONORED` check, and by the Methods section (Phase 13) to document the search strategy.
 
 
 ## Evidence Schema
@@ -201,8 +201,8 @@ Every evidence-gathering agent returns a JSON matching this schema. The coordina
 
 ```json
 {
-  "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only"}],
-  "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "nature_of_conflict": "", "likely_reason": "", "conflict_source": "describe which sentences in which papers' abstracts/text establish the conflict"}],
+  "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only | metadata_only"}],
+  "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "paper_a_claim": "verbatim sentence from paper A", "paper_b_claim": "verbatim sentence from paper B", "nature_of_conflict": "what disagrees and on what dimension", "resolution_status": "open | resolved-by-replication | resolved-by-method"}],
   "unreplicated_claims": [{"claim": "", "source": "", "years_since_publication": 0}],
   "evidence_gaps": [{"topic": "", "what_is_missing": "", "why_it_matters": ""}],
   "strongest_evidence": {"claim": "", "why_strong": ""},
@@ -214,7 +214,7 @@ Every evidence-gathering agent returns a JSON matching this schema. The coordina
       "comparison_id": "descriptive-slug",
       "comparison_name": "Human-readable name",
       "papers": [
-        {"doi": "", "metric": "", "value": "", "value_source_sentence": "verbatim sentence from abstract or full text containing this number", "ci_or_error": "", "n": 0, "n_analyzed": "number that passed QC or was actually used in analysis, if different from n", "n_definition": "what n counts: items profiled | items post-QC | subjects | samples", "study_system": "", "experimental_conditions": "", "method": "", "text_access": "fulltext | abstract_only", "scope_region": "domain/region scope: e.g., whole system | specific region | subregion | ...", "scope_population": "population scope: all items | all category-X | subtype-Y only | ...", "taxonomic_level": "granularity of the classification: broad category | subcategory | fine type | cluster | other"}
+        {"doi": "", "metric": "", "value": "", "value_source_sentence": "verbatim sentence from abstract or full text containing this number", "ci_or_error": "", "n": 0, "n_analyzed": "number that passed QC or was actually used in analysis, if different from n", "n_definition": "what n counts: items profiled | items post-QC | subjects | samples", "study_system": "", "experimental_conditions": "", "method": "", "text_access": "fulltext | abstract_only | metadata_only", "scope_region": "domain/region scope: e.g., whole system | specific region | subregion | ...", "scope_population": "population scope: all items | all category-X | subtype-Y only | ...", "taxonomic_level": "granularity of the classification: broad category | subcategory | fine type | cluster | other"}
       ],
       "comparison_type": "cross-study conflict | convergent evidence | dose-response | timeline",
       "what_it_reveals": "Why this comparison matters",
@@ -242,6 +242,7 @@ Every evidence-gathering agent returns a JSON matching this schema. The coordina
 - Conflicts MUST use exactly these fields: `paper_a_doi`, `paper_b_doi`, `paper_a_claim`, `paper_b_claim`, `nature_of_conflict`, `resolution_status`. No other field names. No nested objects for sides. No `papers[]` arrays. No custom field names per conflict type. Every conflict MUST have both DOIs.
 - JSON values: use `null` for missing values, NEVER the Python string `"None"`. Agents must ensure None→null conversion during JSON serialization.
 - `figure_data` papers arrays MUST have unique DOIs. Deduplicate before saving. If the same paper appears multiple times in a comparison, keep only the first entry.
+- Every finding MUST carry a non-empty `replication_status` (`replicated` | `unreplicated` | `disputed` | `single-study`). When `replication_status = replicated`, `replication_evidence_dois` MUST list ≥1 DOI. The Methods section (M.4) and the validator both summarise this distribution.
 
 
 ---
@@ -426,7 +427,8 @@ When gathering evidence (Phase 2 of orchestrator), produce STRUCTURED output —
 - `n_definition`: what n counts (e.g., samples collected vs samples post-QC)
 - `n_analyzed`: the post-QC or actually-analyzed count, if different from n
 
-After assembling all entries in a comparison, record a `homogeneity_check`: are all entries comparable in scope_region, scope_population, taxonomic_level, and n_definition? List any caveats. This metadata is used by the comparability audit (Phase 6) to catch misleading cross-study figures.
+**MANDATORY — Homogeneity record (`homogeneity_check`):**
+After assembling all entries in a comparison, record a `homogeneity_check` block. Every entry in `figure_data[i].papers[]` MUST carry the seven scope fields: `scope_region`, `scope_population`, `taxonomic_level`, `experimental_conditions`, `method`, `n_definition`, and `value_source_sentence`. The `homogeneity_check` then summarises whether each is uniform across the comparison (`scope_region_uniform`, `scope_population_uniform`, `taxonomic_level_uniform`, `n_definition_uniform`) and lists `caveats[]` for any non-uniform field. The comparability audit (Phase 6) reads these to catch misleading cross-study figures; missing scope fields hard-fail there.
 
 ### Citation Density
 Before saving any .tex file, count your `\citep{}`/`\citet{}` commands and divide by the number of substantial paragraphs (exclude figure environments, single-sentence transitions, and subsection-opening topic sentences followed by elaboration). Report this as `citations_per_paragraph` in your structured output. If below 4.0, restructure: merge consecutive single-paper paragraphs into synthesis paragraphs that cite 5–8 papers in dialogue before each paragraph's concluding synthesis sentence.

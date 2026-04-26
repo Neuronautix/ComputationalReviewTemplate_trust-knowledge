@@ -151,7 +151,7 @@ For each match: verify against CrossRef whether "Bhatt" is a real author on that
 - If `crossref_data[doi]['author'][0]['family'].lower() == 'bhatt'` → legitimate, no action.
 - If fabricated → pipeline compliance failure. Fix mechanically using author_name_table. Log incident.
 
-In a compliant v17 pipeline run, these scans should return zero fabricated matches. If they return >0, the preventive controls (mechanical cite_key assignment in Phase 2 compliance, author_name_table in Phase 7) failed and the root cause must be investigated before the document is delivered.
+In a compliant pipeline run, these scans should return zero fabricated matches. If they return >0, the preventive controls (mechanical cite_key assignment in Phase 2 compliance, author_name_table in Phase 7) failed and the root cause must be investigated before the document is delivered.
 
 > **Note:** "Bhatt" IS a real surname — some matches may be legitimate. Always verify against the database. The diagnostic is: does this person appear in the database-fetched author list for this paper's DOI? If yes → legitimate. If no → contamination.
 

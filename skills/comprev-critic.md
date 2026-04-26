@@ -186,8 +186,8 @@ Phase 8 critics MUST be different child frames from Phase 7 section
 writers. The coordinator verifies after launching:
 
 ```python
-for critic_id in phase_4b_critic_ids:
-    assert critic_id not in phase_4_writer_ids, \
+for critic_id in phase_8_critic_ids:
+    assert critic_id not in phase_7_writer_ids, \
         f'Critic {critic_id} is the same agent as a section writer — blinding violated'
 ```
 

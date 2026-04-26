@@ -7,8 +7,8 @@
 
 1. **NO_LABEL_DIRECTIVE**: Zero `:label:` (should be `:name:`)? **pass/fail**
 2. **NO_DUPLICATE_NAME**: No `:name:` value appears twice in same file? **pass/fail**
-3. **NO_ICON_COLOR**: Zero `:icon:` or `:color:` in dropdowns? **pass/fail**
-4. **FIGURE_DROPDOWN_MATCH**: `:::{figure}` count == `:::{dropdown}` count per section? **pass/fail**
+3. **NO_ICON_COLOR** *(Phase 14V, 19V, 20V only — dropdowns absent at 7V)*: Zero `:icon:` or `:color:` in dropdowns? **pass/fail**
+4. **FIGURE_DROPDOWN_MATCH** *(Phase 14V, 19V, 20V only — dropdowns are injected at Phase 14)*: `:::{figure}` count == `:::{dropdown}` count per section? **pass/fail**
 5. **FIGURE_HAS_IMAGE_PATH**: Every `:::{figure}` points to `../figures/*.png`, not `#label`? **pass/fail**
 6. **NO_PROCESS_LANGUAGE**: Zero "scaffold", "evidence package", "orchestrator" in prose? **pass/fail**
 7. **CITE_KEYS_EXIST**: Every `{cite:p}` and `{cite:t}` key in references.bib? **pass/fail**
@@ -163,7 +163,7 @@
 
 ## Output Schema
 
-The validator's gate JSON (e.g. `gate_assembly.json`, `gate_post_publish.json`) MUST be a single JSON object containing — at minimum — these keys:
+The validator's gate JSON (e.g. `gate_sections_drafted.json` at 7V, `gate_assembly.json` at 14V, `gate_repository_push.json` at 20V — and the in-memory return value at 19V, which has no named gate file) MUST be a single JSON object containing — at minimum — these keys:
 
 ```json
 {
