@@ -31,7 +31,7 @@ Each agent searches databases and returns structured evidence. Delegation MUST r
 
 ```json
 {
-  "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only | metadata_only"}],
+  "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only"}],
   "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "paper_a_claim": "verbatim sentence from paper A", "paper_b_claim": "verbatim sentence from paper B", "nature_of_conflict": "what disagrees and on what dimension", "resolution_status": "open | resolved-by-replication | resolved-by-method"}],
   "unreplicated_claims": [{"claim": "", "source": "", "years_since_publication": 0}],
   "evidence_gaps": [{"topic": "", "what_is_missing": "", "why_it_matters": ""}],
@@ -44,7 +44,7 @@ Each agent searches databases and returns structured evidence. Delegation MUST r
       "comparison_id": "descriptive-slug",
       "comparison_name": "Human-readable name",
       "papers": [
-        {"doi": "", "metric": "", "value": "", "value_source_sentence": "verbatim sentence from abstract or full text containing this number", "ci_or_error": "", "n": 0, "n_analyzed": "number that passed QC or was actually used in analysis, if different from n", "n_definition": "what n counts: items profiled | items post-QC | subjects | samples", "study_system": "", "experimental_conditions": "", "method": "", "text_access": "fulltext | abstract_only | metadata_only", "scope_region": "domain/region scope: e.g., whole system | specific region | subregion | ...", "scope_population": "population scope: all items | all category-X | subtype-Y only | ...", "taxonomic_level": "granularity of the classification: broad category | subcategory | fine type | cluster | other"}
+        {"doi": "", "metric": "", "value": "", "value_source_sentence": "verbatim sentence from abstract or full text containing this number", "ci_or_error": "", "n": 0, "n_analyzed": "number that passed QC or was actually used in analysis, if different from n", "n_definition": "what n counts: items profiled | items post-QC | subjects | samples", "study_system": "", "experimental_conditions": "", "method": "", "text_access": "fulltext | abstract_only", "scope_region": "domain/region scope: e.g., whole system | specific region | subregion | ...", "scope_population": "population scope: all items | all category-X | subtype-Y only | ...", "taxonomic_level": "granularity of the classification: broad category | subcategory | fine type | cluster | other"}
       ],
       "comparison_type": "cross-study conflict | convergent evidence | dose-response | timeline",
       "what_it_reveals": "Why this comparison matters",
@@ -84,7 +84,7 @@ The coordinator writes the Phase 2 delegation task descriptions. These contain t
 - Do NOT fabricate bibliographic metadata. If uncertain about a detail, search for it rather than guessing.
 - **Hard drop rule for failed searches:** If a database search for a paper returns zero results, the paper MUST be excluded from the evidence output. Do not fill in metadata from memory. Do not include a paper just because the coordinator's task description mentioned it. The coordinator's suggested topics are search guidance, not a source of truth — if a paper cannot be found in PubMed, Europe PMC, or CrossRef, it may not exist. Mark it in a `search_failures` list (paper description, search queries tried, zero-result confirmation) but do NOT include it in `findings` or assign it a DOI.
 - **Schema-only requirement:** Findings must contain ONLY the schema fields: `claim`, `claim_source_sentence`, `effect_size`, `effect_size_source_sentence`, `n`, `study_system`, `replication_status`, `replication_evidence_dois`, `doi`, `text_access`. If a cluster returns findings with additional fields (`title`, `authors`, `journal`, `year`, `pmid`, `volume`, `pages`, `cite_key`), send back: "Remove non-schema fields. Each extra free-text field is a fabrication vector — measured 74% hallucination rate when agents add an authors field. Cite_keys are assigned mechanically by the coordinator, not by agents."
-- **Full-text retrieval requirement:** Every paper must have `text_access` set to `fulltext`, `abstract_only`, or `metadata_only`, reflecting a genuine retrieval attempt.
+- **Full-text retrieval requirement:** Every paper must have `text_access` set to `fulltext` or `abstract_only`, reflecting a genuine retrieval attempt. **Always prefer `fulltext`** — attempt full-text retrieval for every paper before falling back to `abstract_only`. Papers for which neither full text nor abstract was retrieved MUST be excluded entirely (move to `search_failures`); they cannot enter `findings` with a placeholder.
 
 **Full-Text Retrieval Protocol :**
 
@@ -117,7 +117,7 @@ text, source = retrieve_fulltext(
     ncbi_api_key=os.environ.get('NCBI_API_KEY'),
 )
 ```
-- **Text-only extraction requirement:** All `claim`, `effect_size`, and `figure_data.papers.value` fields must come from retrieved text. Every value must have a corresponding `_source_sentence`. Papers with `text_access` = `metadata_only` must be excluded from findings entirely and moved to `search_failures` — they cannot contribute claims, source sentences, or quantitative data.
+- **Text-only extraction requirement:** All `claim`, `effect_size`, and `figure_data.papers.value` fields must come from retrieved text. Every value must have a corresponding `_source_sentence`. Papers for which neither full text nor abstract was retrieved must be excluded from findings entirely and moved to `search_failures` — they cannot contribute claims, source sentences, or quantitative data, and have no valid `text_access` value (`metadata_only` is not allowed).
 - **Figure data requirement:** Every `figure_data.papers.value` must have a non-null `value_source_sentence`. Papers without a traceable number are excluded from figure comparisons.
 - **Replication evidence requirement:** `replication_status` = `independently_replicated` requires ≥2 DOIs from different labs in `replication_evidence_dois`. `contested` requires conflicting DOIs. Otherwise use `replication_unknown`.
 
@@ -251,7 +251,7 @@ Every evidence-gathering agent returns a JSON matching this schema. The coordina
 
 ```json
 {
-  "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only | metadata_only"}],
+  "findings": [{"claim": "", "claim_source_sentence": "verbatim sentence from abstract (if text_access=abstract_only) or paper body (if text_access=fulltext)", "evidence": "", "effect_size": "", "effect_size_source_sentence": "verbatim sentence containing the number, or null if qualitative only", "n": 0, "study_system": "what was studied: e.g. species, material, model organism, dataset, language, market — domain-dependent", "replication_status": "", "replication_evidence_dois": ["doi1", "doi2"], "doi": "", "text_access": "fulltext | abstract_only"}],
   "conflicts": [{"paper_a_doi": "", "paper_b_doi": "", "paper_a_claim": "verbatim sentence from paper A", "paper_b_claim": "verbatim sentence from paper B", "nature_of_conflict": "what disagrees and on what dimension", "resolution_status": "open | resolved-by-replication | resolved-by-method"}],
   "unreplicated_claims": [{"claim": "", "source": "", "years_since_publication": 0}],
   "evidence_gaps": [{"topic": "", "what_is_missing": "", "why_it_matters": ""}],
@@ -264,7 +264,7 @@ Every evidence-gathering agent returns a JSON matching this schema. The coordina
       "comparison_id": "descriptive-slug",
       "comparison_name": "Human-readable name",
       "papers": [
-        {"doi": "", "metric": "", "value": "", "value_source_sentence": "verbatim sentence from abstract or full text containing this number", "ci_or_error": "", "n": 0, "n_analyzed": "number that passed QC or was actually used in analysis, if different from n", "n_definition": "what n counts: items profiled | items post-QC | subjects | samples", "study_system": "", "experimental_conditions": "", "method": "", "text_access": "fulltext | abstract_only | metadata_only", "scope_region": "domain/region scope: e.g., whole system | specific region | subregion | ...", "scope_population": "population scope: all items | all category-X | subtype-Y only | ...", "taxonomic_level": "granularity of the classification: broad category | subcategory | fine type | cluster | other"}
+        {"doi": "", "metric": "", "value": "", "value_source_sentence": "verbatim sentence from abstract or full text containing this number", "ci_or_error": "", "n": 0, "n_analyzed": "number that passed QC or was actually used in analysis, if different from n", "n_definition": "what n counts: items profiled | items post-QC | subjects | samples", "study_system": "", "experimental_conditions": "", "method": "", "text_access": "fulltext | abstract_only", "scope_region": "domain/region scope: e.g., whole system | specific region | subregion | ...", "scope_population": "population scope: all items | all category-X | subtype-Y only | ...", "taxonomic_level": "granularity of the classification: broad category | subcategory | fine type | cluster | other"}
       ],
       "comparison_type": "cross-study conflict | convergent evidence | dose-response | timeline",
       "what_it_reveals": "Why this comparison matters",
@@ -400,7 +400,7 @@ When gathering evidence (Phase 2 of orchestrator), produce STRUCTURED output —
    - For preprints: use the appropriate reader — `read_biorxiv_paper`, `read_medrxiv_paper`, or `read_arxiv_paper` as applicable to the domain.
    - For your top 50 papers by relevance, also call `fetch_article_fulltext(doi)` and update `text_access` to `fulltext` if successful.
 
-   Set `text_access` to `fulltext`, `abstract_only`, or `metadata_only` based on what you obtained.
+   Set `text_access` to `fulltext` (paper body retrieved) or `abstract_only` (only abstract retrieved). If neither was retrieved, do NOT include the paper — move it to `search_failures` instead.
 
    After retrieving metadata, COMPARE the returned title against the title from the search result that provided this DOI:
    ```python
@@ -457,7 +457,7 @@ When gathering evidence (Phase 2 of orchestrator), produce STRUCTURED output —
    e. For `figure_data`: ONLY include papers where you found the
       number in the text with a source sentence.
 
-4. **Papers without text access.** Papers with `text_access` = `metadata_only` (no abstract, no full text) MUST be excluded from findings entirely. Move them to `search_failures` with `action` = "metadata_only — no text available for evidence extraction." Papers without even an abstract cannot contribute claims, source sentences, or quantitative data.
+4. **Papers without text access.** Papers for which neither full text nor abstract was retrieved MUST be excluded from findings entirely. Move them to `search_failures` with `action` = "no text available for evidence extraction (neither full text nor abstract retrieved)." Such papers cannot contribute claims, source sentences, or quantitative data, and have no valid `text_access` value — `metadata_only` is NOT an allowed value.
 
 5. **Replication status.** To mark a finding as `independently_replicated`, you must have found ≥2 papers from different labs (different last authors) reporting the same result. List their DOIs in `replication_evidence_dois`. For `contested`, list the conflicting DOIs. If you cannot identify specific replicating or conflicting papers from your searches, use `replication_unknown`.
 
@@ -492,4 +492,5 @@ Organize by **debates and open questions**, not just topics. Each section: histo
 - Reserve sequential paper-by-paper exposition for historical narratives where chronology IS the argument.
 
 ---
+
 

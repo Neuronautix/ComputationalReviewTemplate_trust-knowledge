@@ -311,7 +311,7 @@ rendered template drops the `M.` prefix from H2 headings):**
 **M.2 Inclusion/Exclusion Criteria:**
 - Criteria applied (from Phase 1 scope + Phase 2 compliance checks)
 - Papers excluded and reasons (from `search_failures`)
-- Papers with `metadata_only` access that were excluded
+- Papers excluded because neither full text nor abstract could be retrieved
 
 **M.3 Full-Text Retrieval:**
 - Sources used: Elsevier API, Springer API, PMC, Europe PMC
@@ -1022,3 +1022,4 @@ The MyST markdown files in `content/` are the **primary** output — they render
 ---
 
 ---
+
