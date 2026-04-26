@@ -150,7 +150,21 @@ Save the assembled file directly to `content/00_frontmatter.md`. Phase 14
 (assembly) verifies the five layout rules above and fails the gate if any are
 violated.
 
+**GATE ARTIFACT:** After Phase 11 writes Introduction, Conclusion, Abstract, and
+frontmatter, save `gate_intro_conclusion.json`:
 
+```python
+gate_data = {
+    'introduction_artifact_id': '<saved_version_id>',
+    'conclusion_artifact_id':   '<saved_version_id>',
+    'abstract_artifact_id':     '<saved_version_id>',
+    'frontmatter_artifact_id':  '<saved_version_id>',
+    'novel_citations': [],   # MUST be empty — no new citations beyond body sections
+    'master_citation_count': N,
+}
+json.dump(gate_data, open('gate_intro_conclusion.json', 'w'), indent=2)
+advance_phase('11_intro_conclusion', '<saved_version_id>')
+```
 
 ## Output Hygiene
 
@@ -161,3 +175,4 @@ Allowed scientific uses: "phase" (oscillation), "convergence" (convergent eviden
 **Test:** Could a reader tell this was produced by an automated system? If yes → fail.
 
 This applies to Phase 9 introduction/conclusion writing, Phase 13 methods, and Phase 11 cross-section integration.
+

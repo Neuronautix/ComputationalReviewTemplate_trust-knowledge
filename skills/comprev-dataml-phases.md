@@ -291,6 +291,20 @@ For each match:
 
 **BibTeX ASCII requirement:** The final `.bib` file must be pure ASCII. Replace accented characters with LaTeX escapes (é → `{\'e}`, ü → `{\"u}`, ñ → `{\~n}`). Strip any remaining non-ASCII bytes. This is a hard compilation requirement — a single emoji or Unicode character can cause BibTeX to silently drop dozens of entries.
 
+**GATE ARTIFACT:** After bibliography is written, save `gate_bibliography.json`:
+
+```python
+gate_data = {
+    'bib_artifact_id': '<saved_version_id>',
+    'entry_count':     N,
+    'unfindable_dois': [...],   # cite_keys whose DOI failed CrossRef + Europe PMC
+    'ascii_clean':     True,
+    'bhatt_contamination_matches': 0,   # from grep scan above
+}
+json.dump(gate_data, open('gate_bibliography.json', 'w'), indent=2)
+advance_phase('5_bibliography', '<saved_version_id>')
+```
+
 
 ## Phase 13: Methods
 
@@ -413,6 +427,19 @@ Statement subsection at the end of Methods.
 The template scaffold at `content/Methods.md` already contains the skeleton for
 this section — fill in the table from the live `skills/` directory rather than
 retyping the template literal.
+
+**GATE ARTIFACT:** After `Methods.md` is written, save `gate_methods.json`:
+
+```python
+gate_data = {
+    'methods_artifact_id': '<saved_version_id>',
+    'subsection_count':    8,             # M.1–M.8 must all be present
+    'pipeline_skills_table_rows': N,      # auto-generated row count
+    'reproducibility_statement_present': True,
+}
+json.dump(gate_data, open('gate_methods.json', 'w'), indent=2)
+advance_phase('13_methods', '<saved_version_id>')
+```
 
 
 ## Phase 14: Document Assembly
@@ -1005,7 +1032,6 @@ repo-root/
 │   ├── gate_*.json              # Gate artifacts
 │   └── critic_reports/          # Phase 6 + 8 critic findings
 ├── scripts/
-│   ├── retrieve_fulltext.py     # Full-text retrieval function
 │   ├── build_figures.py         # Rebuild all figures from evidence
 │   └── shared_style.py          # Canonical color palette + style
 ├── latex/
@@ -1022,4 +1048,5 @@ The MyST markdown files in `content/` are the **primary** output — they render
 ---
 
 ---
+
 

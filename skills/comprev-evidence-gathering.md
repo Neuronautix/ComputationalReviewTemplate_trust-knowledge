@@ -83,14 +83,14 @@ The coordinator writes the Phase 2 delegation task descriptions. These contain t
 - Every finding entry must include the DOI. If a DOI cannot be found, flag with `DOI-NOT-FOUND` and include enough metadata (title, authors, journal, year) for later resolution.
 - Do NOT fabricate bibliographic metadata. If uncertain about a detail, search for it rather than guessing.
 - **Hard drop rule for failed searches:** If a database search for a paper returns zero results, the paper MUST be excluded from the evidence output. Do not fill in metadata from memory. Do not include a paper just because the coordinator's task description mentioned it. The coordinator's suggested topics are search guidance, not a source of truth — if a paper cannot be found in PubMed, Europe PMC, or CrossRef, it may not exist. Mark it in a `search_failures` list (paper description, search queries tried, zero-result confirmation) but do NOT include it in `findings` or assign it a DOI.
-- **Schema-only requirement:** Findings must contain ONLY the schema fields: `claim`, `claim_source_sentence`, `effect_size`, `effect_size_source_sentence`, `n`, `study_system`, `replication_status`, `replication_evidence_dois`, `doi`, `text_access`. If a cluster returns findings with additional fields (`title`, `authors`, `journal`, `year`, `pmid`, `volume`, `pages`, `cite_key`), send back: "Remove non-schema fields. Each extra free-text field is a fabrication vector — measured 74% hallucination rate when agents add an authors field. Cite_keys are assigned mechanically by the coordinator, not by agents."
+- **Schema-only requirement:** Findings must contain ONLY the schema fields: `claim`, `claim_source_sentence`, `effect_size`, `effect_size_source_sentence`, `n`, `study_system`, `replication_status`, `replication_evidence_dois`, `doi`, `text_access`, `evidence`. If a cluster returns findings with additional fields (`title`, `authors`, `journal`, `year`, `pmid`, `volume`, `pages`, `cite_key`), send back: "Remove non-schema fields. Each extra free-text field is a fabrication vector — measured 74% hallucination rate when agents add an authors field. Cite_keys are assigned mechanically by the coordinator, not by agents."
 - **Full-text retrieval requirement:** Every paper must have `text_access` set to `fulltext` or `abstract_only`, reflecting a genuine retrieval attempt. **Always prefer `fulltext`** — attempt full-text retrieval for every paper before falling back to `abstract_only`. Papers for which neither full text nor abstract was retrieved MUST be excluded entirely (move to `search_failures`); they cannot enter `findings` with a placeholder.
 
 **Full-Text Retrieval Protocol :**
 
-Agents MUST use `retrieve_fulltext()` for ALL papers — not just the "top 50." The function tries publisher APIs first (which have higher success rates for paywalled content), then falls back to open-access sources.
+Agents MUST attempt full-text retrieval for ALL papers — not just the "top 50." Follow the 5-tier API protocol defined in `comprev-reviewer-agent` (PMC OA → publisher API → Europe PMC → bioRxiv/medRxiv/arXiv readers → `fetch_article_fulltext(doi)`). Publisher-API tiers have higher success rates for paywalled content; open-access tiers are the fallback.
 
-The retrieval protocol (API tiers, size validation) is defined in the comprev-reviewer-agent skill.
+The retrieval protocol (tier order, API tiers, size validation) is defined in the comprev-reviewer-agent skill.
 
 **Size-based validation (MANDATORY after any retrieval):**
 - Response > 15KB AND contains `<body>` tag → genuine fulltext → `text_access = "fulltext"`
@@ -107,16 +107,7 @@ This means:
 
 The validator will check this: if `text_access = "fulltext"` but the source sentence IS found in the abstract, the finding fails validation. Extract deeper or label honestly.
 
-**Coordinator full-text fallback tiers** remain as before, but agents now use `retrieve_fulltext()` instead of `fetch_article_fulltext` for their initial retrieval pass. Call with explicit keys:
-
-```python
-text, source = retrieve_fulltext(
-    doi,
-    elsevier_api_key=os.environ.get('ELSEVIER_API_KEY'),
-    springer_api_key=os.environ.get('SPRINGER_API_KEY'),
-    ncbi_api_key=os.environ.get('NCBI_API_KEY'),
-)
-```
+**Coordinator full-text fallback tiers** apply to every paper. Agents call the 5-tier sequence directly using the MCP tools and `fetch_article_fulltext(doi)` as documented in `comprev-reviewer-agent`. Publisher-API keys (`ELSEVIER_API_KEY`, `SPRINGER_API_KEY`, `NCBI_API_KEY`) are read from the environment by `fetch_article_fulltext` automatically — agents do not pass them explicitly.
 - **Text-only extraction requirement:** All `claim`, `effect_size`, and `figure_data.papers.value` fields must come from retrieved text. Every value must have a corresponding `_source_sentence`. Papers for which neither full text nor abstract was retrieved must be excluded from findings entirely and moved to `search_failures` — they cannot contribute claims, source sentences, or quantitative data, and have no valid `text_access` value (`metadata_only` is not allowed).
 - **Figure data requirement:** Every `figure_data.papers.value` must have a non-null `value_source_sentence`. Papers without a traceable number are excluded from figure comparisons.
 - **Replication evidence requirement:** `replication_status` = `independently_replicated` requires ≥2 DOIs from different labs in `replication_evidence_dois`. `contested` requires conflicting DOIs. Otherwise use `replication_unknown`.
@@ -398,7 +389,6 @@ When gathering evidence (Phase 2 of orchestrator), produce STRUCTURED output —
    - If the paper has a PMCID: call `bc_get_europepmc_fulltext` for full-text XML.
    - Search domain-appropriate full-text sources by DOI (e.g., `bc_get_europepmc_articles` for biomedical — check for `fullTextUrlList` for open-access URLs). If a URL is returned, fetch it.
    - For preprints: use the appropriate reader — `read_biorxiv_paper`, `read_medrxiv_paper`, or `read_arxiv_paper` as applicable to the domain.
-   - For your top 50 papers by relevance, also call `fetch_article_fulltext(doi)` and update `text_access` to `fulltext` if successful.
 
    Set `text_access` to `fulltext` (paper body retrieved) or `abstract_only` (only abstract retrieved). If neither was retrieved, do NOT include the paper — move it to `search_failures` instead.
 
@@ -464,9 +454,9 @@ When gathering evidence (Phase 2 of orchestrator), produce STRUCTURED output —
 6. **Before saving, verify your count.** `len(set(f['doi'] for f in findings))` must be ≥ `min_papers_per_cluster` per section covered (read this value from the `evidence_parameters` in your delegation task; default 70). If below target, you are over-filtering — go back and include replication studies, negative results, and cross-area extensions.
 
 7. **Before saving, verify extraction rates.** The orchestrator will reject clusters that fall below these thresholds:
-   - **Effect size rate:** ≥30% of findings must have a non-empty, non-null `effect_size` (excluding "not reported", "N/A", "qualitative"). If below 30%, return to abstracts/full text for your top 50 papers and extract any reported numbers.
+   - **Effect size rate:** ≥30% of findings must have a non-empty, non-null `effect_size` (excluding "not reported", "N/A", "qualitative"). If below 30%, return to abstracts/full text for your most-cited papers (prioritize the top ~50 by citation count) and extract any reported numbers.
    - **Sample size rate:** ≥20% of findings must have `n` as an integer > 0. Check abstracts for cell counts, animal counts, recording counts.
-   - **Replication status rate:** ≤70% of findings may have `replication_status` = `replication_unknown`. For your top 50 claims, actively search for replication or contradiction evidence before accepting "unknown."
+   - **Replication status rate:** ≤70% of findings may have `replication_status` = `replication_unknown`. Prioritize your most-cited claims (the top ~50 by citation count) and actively search for replication or contradiction evidence before accepting "unknown."
 
 **figure_data is mandatory:** For each major conflict or convergence, extract quantitative values from each paper's text. Every `figure_data.papers.value` must have a `value_source_sentence`. If the number isn't in the text, exclude that paper from the comparison.
 
@@ -492,5 +482,6 @@ Organize by **debates and open questions**, not just topics. Each section: histo
 - Reserve sequential paper-by-paper exposition for historical narratives where chronology IS the argument.
 
 ---
+
 
 

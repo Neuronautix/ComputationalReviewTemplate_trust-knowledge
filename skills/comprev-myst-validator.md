@@ -143,7 +143,7 @@
     listing offenders as `path:line`.
 
 
-25. **EVIDENCE_PARAMETERS_HONORED** *(Phase 2V, 14V)*:
+25. **EVIDENCE_PARAMETERS_HONORED** *(Phase 14V, 20V)*:
     Read `evidence_parameters` from `gate_scope.json`. For each cluster
     evidence package (`evidence/section_*_evidence_package.json`):
 
@@ -193,3 +193,4 @@ The validator's gate JSON (e.g. `gate_sections_drafted.json` at 7V, `gate_assemb
 **Mandatory:** `structural_results` MUST contain a key for **every numbered check defined in this skill that applies to the current phase**. Omitting a check key is itself a gate failure — the orchestrator MUST treat any missing expected key as `"fail"`. This prevents the silent-skip pattern where the validator agent runs only a subset of checks and reports `gate_passed: true` because the missing checks were never evaluated.
 
 If a check is genuinely not applicable to the current phase, emit `"<CHECK_NAME>": "n/a"` with a one-line `"<CHECK_NAME>_reason"` sibling key explaining why.
+

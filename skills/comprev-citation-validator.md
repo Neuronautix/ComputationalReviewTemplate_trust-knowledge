@@ -28,6 +28,14 @@ Cross-checks:
 7. **NO_ORPHAN_BIB**: Every bib entry cited in ≥1 .md file? (warning, not blocking)
 
 ## Output Schema
+
+The validator emits a phase-specific gate file:
+
+- **Phase 3V** writes `gate_citation_infrastructure.json` (validates `citation_key_map.json`).
+- **Phase 9V** writes `gate_bibliography.json` (validates `references.bib`).
+
+Both files share the same payload schema:
+
 ```json
 {"phase": 3|9, "gate": "pass|fail", "total_entries": N, "per_entry_failures": [...], "cross_check_failures": [...]}
 ```
@@ -44,3 +52,4 @@ whose surname appears in the user's review-request prompt but not in CrossRef
 metadata — these are flagged as suspected contamination and reported in
 `per_entry_failures`. Mechanical cite_key assignment from CrossRef metadata is
 the only allowed path; no author names from memory.
+
