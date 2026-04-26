@@ -159,8 +159,7 @@
       **HARD FAIL** if below.
     - If `evidence_parameters` is absent from `gate_scope.json` or all
       fields are null/default: emit `"EVIDENCE_PARAMETERS_HONORED": "n/a"`
-      with reason "no custom evidence parameters set" (backward
-      compatibility with v24/v25 pipelines).
+      with reason "no custom evidence parameters set".
 
 ## Output Schema
 

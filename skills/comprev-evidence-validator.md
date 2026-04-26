@@ -22,7 +22,7 @@
 7. **CLAIM_DIFFERS_FROM_SOURCE**: `claim` ≠ `claim_source_sentence`? **pass/fail**
 8. **HAS_CITE_KEY**: Finding has non-empty `cite_key` field (assigned during Phase 5, but if present in Phase 2 output, must be valid)? **pass/fail**
 
-## Schema-Compliance Checks (binary; absorbed from orchestrator MANDATORY block)
+## Schema-Compliance Checks (binary)
 
 These verify the evidence JSON structure as a hard requirement; any failure is a gate fail.
 
@@ -30,11 +30,9 @@ These verify the evidence JSON structure as a hard requirement; any failure is a
 - **NULLS_NOT_STRINGS**: JSON values for missing fields are `null`, not the Python string `"None"`. Agents must ensure None→null conversion during JSON serialization. **pass/fail**
 - **FIGURE_DATA_DOIS_UNIQUE**: `figure_data` papers arrays MUST have unique DOIs. Deduplicate before saving. If the same paper appears multiple times in a comparison, keep only the first entry. **pass/fail**
 
-## Compliance Checks (absorbed from `comprev-evidence-gathering.md`)
+## Compliance Checks
 
-These were previously enumerated as a coordinator-side checklist; they are
-binary gate checks owned by this validator. Each returning cluster must
-satisfy every applicable check.
+These are binary gate checks. Each returning cluster must satisfy every applicable check.
 
 - **CONFLICTS_NONEMPTY**: `conflicts[]` non-empty per cluster. **pass/fail**
 - **WEAKEST_EVIDENCE_SUBSTANTIVE**: `weakest_evidence_cited` substantive (not "all strong" / null / empty). **pass/fail**
@@ -51,10 +49,9 @@ satisfy every applicable check.
 - **CONTRADICTION_QUERIES_EXECUTED**: For each major topic, at least one query in the actor's search log explicitly searches for papers that challenge or revise the textbook narrative (e.g. "[mechanism X] challenged OR revised OR incorrect OR reconsidered", "[established claim] alternative OR reinterpretation"). **pass/fail**
 - **FALSE_CONSENSUS_RISKS_IDENTIFIED**: `evidence_gaps[]` includes at least one entry per cluster with a claim that is "widely stated but primary experimental evidence is thin or absent." **pass/fail**
 
-## Anti-Fabrication Checks (NEW in v27)
+## Anti-Fabrication Checks
 
-These three checks were not previously enforced by any validator; they are
-introduced in v27 to catch the failure modes observed in the prior run.
+These checks catch fabrication signals in evidence packages.
 
 - **SHAPE_NOT_UNIFORM**: Per-cluster paper counts must NOT be uniform within ±5
   papers across all clusters. (Catches the "12 × 166 papers per cluster"
