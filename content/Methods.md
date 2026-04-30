@@ -5,7 +5,7 @@
 :label: fig-methods-pipeline
 :width: 100%
 
-Overview of the 20-phase Expert Review Pipeline v27. Green boxes indicate LITREVIEW agents (scientific judgment), blue boxes indicate DATAML agents (mechanical work), and the gray box is the coordinator. Red dashed lines mark information barriers where actor-critic separation is enforced. Orange diamonds indicate gate checkpoints where the coordinator verifies compliance before advancing.
+Overview of the 21-phase Expert Review Pipeline v28. Green boxes indicate LITREVIEW agents (scientific judgment), blue boxes indicate DATAML agents (mechanical work), and the gray box is the coordinator. Red dashed lines mark information barriers where actor-critic separation is enforced. Orange diamonds indicate gate checkpoints where the coordinator verifies compliance before advancing. Phase 21 (Deploy Polish) is the post-deployment UX gate — runs after the Phase 20 push to `main` confirms a green build.
 :::
 
 
@@ -77,7 +77,7 @@ Each evidence package was stored as a versioned artifact linked to its cluster, 
 (sec-methods-pipeline)=
 ## Pipeline Execution
 
-The review was produced through a 20-phase pipeline. Key execution metadata from completed phases:
+The review was produced through a 21-phase pipeline. Key execution metadata from completed phases:
 
 | Phase | Description | Status | Key Outputs |
 |-------|-------------|--------|-------------|
@@ -108,7 +108,7 @@ Figure generation notebooks are preserved in `figures/notebooks/` and can be re-
 
 The full pipeline is encoded as nineteen version-controlled skill files committed
 to this repository under [`skills/`](./skills): thirteen worker skills that produce
-content and six validator skills that gate each phase with named pass/fail checks.
+content and seven validator skills that gate each phase with named pass/fail checks.
 Each skill is a markdown specification that was loaded by the relevant agent at the
 relevant phase — re-running a phase from scratch requires only the skill plus the
 upstream artifacts. Information barriers are enforced by *omission*: writer agents
@@ -118,7 +118,7 @@ by their gate frames and never by the actor frames they evaluate.
 
 | Skill | Role | Phase(s) |
 |---|---|---|
-| `comprev-orchestrator-v27.md` | Coordinator protocol governing phase routing, delegation, and gate artifacts | 0–20 (all) |
+| `comprev-orchestrator-v28.md` | Coordinator protocol governing phase routing, delegation, and gate artifacts | 0–21 (all) |
 | `comprev-scoping.md` | Worker protocol for LITREVIEW scoping: clusters, sections, length targets, evidence parameters, plan content | 1 |
 | `comprev-evidence-gathering.md` | Worker protocol for LITREVIEW evidence-gathering frames (one per topic cluster) | 2 |
 | `comprev-reviewer-agent.md` | Universal LITREVIEW core — how to evaluate literature and write review prose | 2, 4, 6–8, 10–12, 16, 18 |
@@ -136,7 +136,8 @@ by their gate frames and never by the actor frames they evaluate.
 | `comprev-curation-validator.md` | Per-section evidence package size and content gate | 5V |
 | `comprev-citation-validator.md` | citation_key_map (Phase 3) and BibTeX (Phase 9) — DOI resolution, CrossRef matching, key uniqueness, author match | 3V, 9V |
 | `comprev-triples-validator.md` | Citation-triples extraction-completeness gate | 15V |
-| `comprev-myst-validator.md` | MyST build, structural, figure, heading, plugin-directive, and evidence-population gate | 7V, 14V, 19V, 20V |
+| `comprev-myst-validator.md` | MyST build, structural, figure, heading, plugin-directive, and evidence-population gate; directive whitelist, repo-wide forbidden-lexicon, and author-identity placeholder checks | 7V, 14V, 19V, 20V |
+| `comprev-deploy-polish.md` | Post-deployment UX gate: tier-A static checks (forbidden lexicon, author identity, directive rendering, frontmatter leak, figure dropdown, asset paths, plugin data, internal links) run against the built Pages-artifact tarball; tier-B live-URL checks (per-page HTTP, external link health) with manual-checklist fallback when the deployed site is sandbox-inaccessible | 21 |
 
 To re-run this pipeline against a different topic, clone the
 [ComputationalReviewTemplate](https://github.com/AllenNeuralDynamics/ComputationalReviewTemplate)

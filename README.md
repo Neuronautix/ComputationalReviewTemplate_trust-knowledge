@@ -1,12 +1,12 @@
 # Computational Review Template
 
-Template repository for producing comprehensive AI-assisted critical literature reviews using the Expert Review Pipeline v27.
+Template repository for producing comprehensive AI-assisted critical literature reviews using the Expert Review Pipeline v28.
 
 ## Pipeline Overview
 
-![Expert Review Pipeline v27](figures/fig_methods_pipeline.png)
+![Expert Review Pipeline v28](figures/fig_methods_pipeline.png)
 
-The pipeline executes 20 phases with **actor-critic separation** — section writers cannot see how they will be critiqued, figure auditors cannot see the argument arc, and citation verifiers cannot see the fix protocol. This prevents agents from gaming evaluation criteria.
+The pipeline executes 21 phases with **actor-critic separation** — 20 production phases (scoping through repository push) followed by Phase 21 deploy-polish, a post-deployment UX gate — section writers cannot see how they will be critiqued, figure auditors cannot see the argument arc, and citation verifiers cannot see the fix protocol. This prevents agents from gaming evaluation criteria.
 
 ## Quick Start
 
@@ -19,8 +19,8 @@ Start a comprehensive critical literature review titled: "[YOUR TITLE]"
 
 The three files in skills/ define the complete pipeline:
 
-skills/comprev-orchestrator-v27.md — The coordinator protocol. Read this FIRST.
-It defines the routing across 20 phases, gate artifacts, and the session protocol.
+skills/comprev-orchestrator-v28.md — The coordinator protocol. Read this FIRST.
+It defines the routing across 21 phases, gate artifacts, and the session protocol.
 Per-phase rules live in the agent skills, which the coordinator loads on demand.
 
 skills/comprev-reviewer-agent.md — The worker skill for LITREVIEW agents.
@@ -50,7 +50,7 @@ N. Conclusion
 
 ## What's Included
 
-### Skills (19 files in `skills/`)
+### Skills (20 files in `skills/`)
 
 The pipeline is split into role-specific skills with **information barriers** to enforce actor-critic separation. Worker skills produce content; validator skills run after each phase as blinded gates that emit named pass/fail checks into the gate JSON.
 
@@ -58,7 +58,7 @@ The pipeline is split into role-specific skills with **information barriers** to
 
 | Skill | Phase | Role | Barrier |
 |-------|-------|------|---------|
-| `comprev-orchestrator-v27` | All | Coordinator | Sees everything |
+| `comprev-orchestrator-v28` | All | Coordinator | Sees everything |
 | `comprev-scoping` | 1 | LITREVIEW | No barriers (first phase, sees user prompt) |
 | `comprev-evidence-gathering` | 2 | LITREVIEW | Cannot see critic/writing criteria |
 | `comprev-scaffold` | 4 | LITREVIEW | Cannot see critic criteria |
@@ -72,7 +72,7 @@ The pipeline is split into role-specific skills with **information barriers** to
 | `comprev-reviewer-agent` | 2, 4, 6–8, 10–12, 16, 18 | LITREVIEW | Evidence & writing procedures |
 | `comprev-figure-construction` | 7 | LITREVIEW | Figure production |
 
-**Validator skills (6):**
+**Validator skills (7):**
 
 | Skill | Phase | Role | What it gates |
 |-------|-------|------|---------------|
@@ -81,7 +81,8 @@ The pipeline is split into role-specific skills with **information barriers** to
 | `comprev-curation-validator` | 5V | DATAML | Per-section evidence package size, conflict and figure-data presence |
 | `comprev-citation-validator` | 3V, 9V | DATAML | citation_key_map (Phase 3) and BibTeX (Phase 9) — DOI resolution, CrossRef matching, key uniqueness, author match |
 | `comprev-triples-validator` | 15V | DATAML | One triple per `{cite:p}`/`{cite:t}` occurrence, no sampling |
-| `comprev-myst-validator` | 7V, 14V, 19V, 20V | DATAML | MyST build, structural checks, figure/heading consistency, plugin-directive invocation, evidence-package population |
+| `comprev-myst-validator` | 7V, 14V, 19V, 20V | DATAML | MyST build, structural checks, figure/heading consistency, plugin-directive invocation, evidence-package population, directive whitelist (7V/19V), repo-wide forbidden-lexicon glob (19V), author-identity placeholder check (20V) |
+| `comprev-deploy-polish` | 21 | DATAML | Post-deployment UX gate: tier-A static checks against built Pages-artifact tarball; tier-B live-URL checks (per-page HTTP, external link health) with manual-checklist fallback when deploy URL is sandbox-inaccessible |
 
 ### Plugins (3 files in `plugins/`)
 
@@ -114,6 +115,8 @@ Pre-configured pages that the pipeline populates:
 **Act 2 — Drafting & Criticism** (Phases 7–13): Draft sections in parallel (max 4 agents), run blinded 6-track criticism, build bibliography from CrossRef, perform 6-pass integration for consistency, write introduction/conclusion/abstract, run blinded bookend critic on intro/conclusion, and generate the methods section.
 
 **Act 3 — Assembly, Verification & Deploy** (Phases 14–20): Assemble the complete document, exhaustively extract citation triples (every citation occurrence), verify ALL citations with full-text-first claim checking (DOI resolution, title/author/metadata match, full-text claim verification with supporting passage audit trail), prepare and execute fixes for non-verified citations, apply fixes, and push to GitHub.
+
+**Act 4 — Deploy Polish** (Phase 21): Post-deployment UX gate. Tier-A static checks (forbidden lexicon, author identity, directive rendering, frontmatter leak, figure dropdown completeness, asset paths, plugin data binding, internal link health) run against the built Pages-artifact tarball downloaded via the GitHub API — works on private repositories. Tier-B live-URL checks (per-page HTTP, external link health) downshift to a user-runnable manual checklist when the deployed site is unreachable from the validator sandbox.
 
 ### Evidence Parameters
 
