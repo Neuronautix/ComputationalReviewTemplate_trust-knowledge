@@ -13,7 +13,7 @@
 6. **NO_PROCESS_LANGUAGE**: Zero "scaffold", "evidence package", "orchestrator" in prose? **pass/fail**
 
 6a. **DIRECTIVE_WHITELIST_VIOLATION** *(Phase 7V, 19V)*: Every `:::{name}` directive in
-    `content/*.md` body files matches the whitelist documented in `comprev-orchestrator-v27`
+    `content/*.md` body files matches the whitelist documented in `comprev-orchestrator-v28`
     §Directive Whitelist (`figure`, `dropdown`, `admonition`, `warning`, `authorship-explorer`
     in frontmatter only, `evidence-explorer`). Any `:::{contents}`, `:::{toctree}`,
     `:::{include}`, or `:::{tableofcontents}` in body sections is a hard fail — the build
@@ -23,7 +23,7 @@
 7. **CITE_KEYS_EXIST**: Every `{cite:p}` and `{cite:t}` key in references.bib? **pass/fail**
 8. **NO_BARE_AUTHOR_NAMES**: Zero "X and colleagues" or "X et al." without adjacent `{cite:t}`? **pass/fail**
 
-9. **FORBIDDEN_LEXICON**: Zero matches across the **repository-wide glob** `content/*.md content/*.yml content/*.yaml manuscript.tex` for the forbidden review-text vocabulary: Operon, scaffold, evidence package, framework failure, adversarial search, verdict, orchestrator, batch, sub-agent, revision manifest, prediction error, replication scorecard (as section title), paper weight, epistemic checkpoint. The glob explicitly covers Methods, frontmatter, authors.yml, provenance, verification summaries, and the LaTeX manuscript — not just body sections, where v27 deployments saw leakage. Allowed scientific uses ("phase" oscillation, "convergence" convergent evidence, "scaffold" developmental scaffolding, "recursive" recursive processing) are NOT flagged — match on whole-token boundaries with the explicit forbidden senses only. Per-phase exclusions (e.g., omitting `verification_summary.md` because it cites the lexicon literally) MUST be declared in the gate JSON under `forbidden_lexicon.scoped_exclusions[]` with a justification string. **pass/fail**
+9. **FORBIDDEN_LEXICON**: Zero matches across the **repository-wide glob** `content/*.md content/*.yml content/*.yaml manuscript.tex` for the forbidden review-text vocabulary: Operon, scaffold, evidence package, framework failure, adversarial search, verdict, orchestrator, batch, sub-agent, revision manifest, prediction error, replication scorecard (as section title), paper weight, epistemic checkpoint. The glob explicitly covers Methods, frontmatter, authors.yml, provenance, verification summaries, and the LaTeX manuscript — not just body sections, where source-only checks previously missed leakage. Allowed scientific uses ("phase" oscillation, "convergence" convergent evidence, "scaffold" developmental scaffolding, "recursive" recursive processing) are NOT flagged — match on whole-token boundaries with the explicit forbidden senses only. Per-phase exclusions (e.g., omitting `verification_summary.md` because it cites the lexicon literally) MUST be declared in the gate JSON under `forbidden_lexicon.scoped_exclusions[]` with a justification string. **pass/fail**
 
 ## Build Checks (Phase 14, 19, 20)
 
@@ -47,7 +47,7 @@
     `content/authors.yml`, `myst.yml` `authors:` block, or any author-byline block in
     `content/*.md`. Forbidden tokens (case-insensitive substring match on `name:` values
     and byline text): `Human Supervisor`, `Anonymous`, `TBD`, `[NAME]`, `<...>` template
-    angle-brackets, `Author N` patterns. v27 deployments shipped with `Human Supervisor`
+    angle-brackets, `Author N` patterns. Earlier deployments shipped with `Human Supervisor`
     bylines; this check is the regression guard. **pass/fail**
 19. **ALL_PLUGINS_LISTED**: myst.yml lists all 4 plugins? **pass/fail**
 20. **HEADING_STYLE_CONSISTENT**: Run `audit_headings()` (defined in `comprev-critic.md`)

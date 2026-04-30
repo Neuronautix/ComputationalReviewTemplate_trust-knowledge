@@ -1,4 +1,4 @@
-# Expert Review Orchestrator v27
+# Expert Review Orchestrator v28
 
 ## Purpose
 Coordinator-level skill governing how specialist agents compose outputs into unified long-form scientific reviews (30–200+ pages).
@@ -163,7 +163,7 @@ This puts the full phase rules in kernel memory (usable for delegation templates
 import json, os
 
 # Read orchestrator into kernel memory (NOT into context)
-orch_path = os.path.expandvars(".../skills/orchestrator_v27.md")
+orch_path = os.path.expandvars(".../skills/orchestrator_v28.md")
 with open(orch_path) as f:
     orch_lines = f.readlines()
 

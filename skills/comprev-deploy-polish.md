@@ -156,8 +156,6 @@ On any FAIL, the validator emits a structured fix-list keyed by check:
 
 ## Cross-references
 
-- `comprev-orchestrator-v27` §Phase 21 row (Phase Index)
-- `comprev-orchestrator-v27` §Forbidden-Lexicon Scope
-- `comprev-orchestrator-v27` §Directive Whitelist
-- `comprev-orchestrator-v27` §Author Identity Check
-- `comprev-orchestrator-v27` §Live Reproducibility Manifest
+- `comprev-orchestrator-v28` §Phase 21 row (Phase Index) — phase wiring + gate transitions
+- `comprev-orchestrator-v28` §Directive Whitelist — source-side companion of `DIRECTIVE_RENDERED_OK`
+- `comprev-myst-validator` checks #9, #18 — repo-wide forbidden-lexicon and author-identity rules that this phase re-runs against rendered HTML
