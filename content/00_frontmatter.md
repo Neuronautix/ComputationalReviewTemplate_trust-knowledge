@@ -21,7 +21,7 @@ supervision.
 **What the AI did:** Replace this placeholder with a one-paragraph description of what
 the pipeline did (e.g., searched literature databases, extracted evidence from N
 candidate papers, drafted M sections and Methods, produced K figures, ran actor-critic
-separation across the 20-phase pipeline).
+separation across the 21-phase pipeline).
 :::
 
 :::{warning}

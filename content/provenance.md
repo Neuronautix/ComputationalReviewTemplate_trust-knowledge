@@ -9,4 +9,4 @@ This review was produced using the Expert Review Orchestrator v28 pipeline.
 
 ## Phase Execution
 
-The pipeline executes 20 phases — see the orchestrator skill for details.
+The pipeline executes 21 phases — see the orchestrator skill for details.

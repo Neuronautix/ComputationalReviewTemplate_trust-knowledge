@@ -157,7 +157,7 @@ All pipeline artifacts are preserved and versioned, enabling full reproduction o
 - **Critic reports:** Reports documenting MUST_FIX, SHOULD_CAVEAT, and SUGGESTION items.
 - **Bibliography:** Validated BibTeX entries with full DOI traceability.
 - **Integration log:** Tracked changes including orphan citation removal, terminology standardization, and structural fixes.
-- **Phase ledger:** Records the status and gate artifact for each of the 20 pipeline phases.
+- **Phase ledger:** Records the status and gate artifact for each of the 21 pipeline phases.
 
 The pipeline used no manual curation steps. All evidence extraction, section drafting, critic review, and integration were performed computationally, with gate artifacts serving as checkpoints between phases.
 
