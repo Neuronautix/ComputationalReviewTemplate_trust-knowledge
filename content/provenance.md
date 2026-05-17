@@ -1,7 +1,7 @@
 (sec-provenance)=
 # Pipeline Provenance
 
-This review was produced using the Expert Review Orchestrator v28 pipeline.
+This review was produced using the Expert Review Orchestrator v29 pipeline.
 
 ## Pipeline Summary
 

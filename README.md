@@ -1,10 +1,10 @@
 # Computational Review Template
 
-Template repository for producing comprehensive AI-assisted critical literature reviews using the Expert Review Pipeline v28.
+Template repository for producing comprehensive AI-assisted critical literature reviews using the Expert Review Pipeline v29.
 
 ## Pipeline Overview
 
-![Expert Review Pipeline v28](figures/fig_methods_pipeline.png)
+![Expert Review Pipeline v29](figures/fig_methods_pipeline.png)
 
 The pipeline executes 21 phases with **actor-critic separation** — 20 production phases (scoping through repository push) followed by Phase 21 deploy-polish, a post-deployment UX gate — section writers cannot see how they will be critiqued, figure auditors cannot see the argument arc, and citation verifiers cannot see the fix protocol. This prevents agents from gaming evaluation criteria.
 
@@ -19,7 +19,7 @@ Start a comprehensive critical literature review titled: "[YOUR TITLE]"
 
 The three files in skills/ define the complete pipeline:
 
-skills/comprev-orchestrator-v28.md — The coordinator protocol. Read this FIRST.
+skills/comprev-orchestrator-v29.md — The coordinator protocol. Read this FIRST.
 It defines the routing across 21 phases, gate artifacts, and the session protocol.
 Per-phase rules live in the agent skills, which the coordinator loads on demand.
 
@@ -58,7 +58,7 @@ The pipeline is split into role-specific skills with **information barriers** to
 
 | Skill | Phase | Role | Barrier |
 |-------|-------|------|---------|
-| `comprev-orchestrator-v28` | All | Coordinator | Sees everything |
+| `comprev-orchestrator-v29` | All | Coordinator | Sees everything |
 | `comprev-scoping` | 1 | LITREVIEW | No barriers (first phase, sees user prompt) |
 | `comprev-evidence-gathering` | 2 | LITREVIEW | Cannot see critic/writing criteria |
 | `comprev-scaffold` | 4 | LITREVIEW | Cannot see critic criteria |

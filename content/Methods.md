@@ -5,7 +5,7 @@
 :label: fig-methods-pipeline
 :width: 100%
 
-Overview of the 21-phase Expert Review Pipeline v28. Green boxes indicate LITREVIEW agents (scientific judgment), blue boxes indicate DATAML agents (mechanical work), and the gray box is the coordinator. Red dashed lines mark information barriers where actor-critic separation is enforced. Orange diamonds indicate gate checkpoints where the coordinator verifies compliance before advancing. Phase 21 (Deploy Polish) is the post-deployment UX gate — runs after the Phase 20 push to `main` confirms a green build.
+Overview of the 21-phase Expert Review Pipeline v29. Green boxes indicate LITREVIEW agents (scientific judgment), blue boxes indicate DATAML agents (mechanical work), and the gray box is the coordinator. Red dashed lines mark information barriers where actor-critic separation is enforced. Orange diamonds indicate gate checkpoints where the coordinator verifies compliance before advancing. Phase 21 (Deploy Polish) is the post-deployment UX gate — runs after the Phase 20 push to `main` confirms a green build.
 :::
 
 
@@ -118,7 +118,7 @@ by their gate frames and never by the actor frames they evaluate.
 
 | Skill | Role | Phase(s) |
 |---|---|---|
-| `comprev-orchestrator-v28.md` | Coordinator protocol governing phase routing, delegation, and gate artifacts | 0–21 (all) |
+| `comprev-orchestrator-v29.md` | Coordinator protocol governing phase routing, delegation, and gate artifacts | 0–21 (all) |
 | `comprev-scoping.md` | Worker protocol for LITREVIEW scoping: clusters, sections, length targets, evidence parameters, plan content | 1 |
 | `comprev-evidence-gathering.md` | Worker protocol for LITREVIEW evidence-gathering frames (one per topic cluster) | 2 |
 | `comprev-reviewer-agent.md` | Universal LITREVIEW core — how to evaluate literature and write review prose | 2, 4, 6–8, 10–12, 16, 18 |
