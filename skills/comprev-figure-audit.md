@@ -70,15 +70,27 @@ This blinding is the mechanism that breaks narrative bias. The scaffold says "sh
 **Gate:**
 - PASS: comparison proceeds to Phase 7 unchanged.
 - CAVEAT: comparison proceeds but `mandatory_caption_caveats` are added to the section evidence package and the Phase 7 writer MUST include them in the figure caption.
-- SPLIT: coordinator restructures the comparison into comparable subgroups before Phase 7. If restructuring reduces a comparison below 3 entries, merge it into a related comparison or flag for the scaffold to remove the figure.
-- REDESIGN: comparison does NOT proceed to Phase 7. Coordinator must either redesign the comparison (e.g., use a different taxonomic level, restrict to a common scope) or remove it from the scaffold and adjust the section figure count.
+- SPLIT: comparison is restructured into comparable subgroups before Phase 7. Two routes are permitted:
+  - **Route 1 (rebuild).** Coordinator re-delegates the figure to a figure-construction child for a full rebuild as multi-panel.
+  - **Route 2 (inline restructure).** Coordinator downgrades the verdict to `CAVEAT_FORCED` and writes the critic's `suggested_restructure` into the section package's `figure_data[]` entry as a `mandatory_caption_caveats` string prefixed with `Phase 7 writer:`. The Phase 7 writer implements the restructure inline (multi-panel layout via `gridspec`, table-form figure, or restricted scope) using the existing source data.
+  - Route 2 is allowed only when `suggested_restructure` describes a concrete restructure a writer can implement without new evidence. If `suggested_restructure` requires new measurement, new study selection, or data the section package does not already contain, only Route 1 is acceptable.
+- REDESIGN: comparison does NOT proceed to Phase 7 unchanged. Same Route 1 / Route 2 choice as SPLIT — coordinator either re-delegates for full rebuild, or downgrades to `CAVEAT_FORCED` with the inline restructure plan, applying the same Route-2 eligibility rule.
+
+Both downgrade paths must be recorded in `gate_figure_audit.json` under `verdict_counts_post_resolution` with explicit keys `CAVEAT_FORCED_FROM_SPLIT` and `CAVEAT_FORCED_FROM_REDESIGN`.
 
 
-**Study label verification:** For each paper entry in figure_data comparisons, verify that 
-the study label (author name + year) can be traced to the DOI via the citation_key_map. 
-If a study label contains an author name not present in the CrossRef metadata for that DOI 
-→ flag as potential fabrication. This catches fabricated data points like "Bhatt et al. 2005" 
-that have no corresponding real paper.
+**Study label verification:** For each paper entry in figure_data comparisons, verify that
+the study label (author name + year) can be traced to the DOI via the citation_key_map.
+If a study label contains an author name not present in the CrossRef metadata for that DOI
+→ flag as potential fabrication.
+
+**Fabrication-flag resolution.** A fabrication flag is RESOLVED when one of:
+
+  - (a) The Phase 7 figure caption cites the paper via the **canonical cite_key** (resolved from the DOI through `citation_key_map`) and the DOI itself is correct — even if the figure's row label uses a colloquial author tag (e.g., a senior-author shortcut). Phase 16 verification recomputes the cite-key→DOI relationship and will surface a real misattribution as MISATTRIBUTED at that phase.
+  - (b) The colloquial row label is replaced with the canonical first-author surname matching the DOI's CrossRef metadata.
+  - (c) The figure is rebuilt without the conflicting label.
+
+Mark each fabrication flag's resolution path explicitly in the section package as `fabrication_flag_resolution: "cite_key_canonical" | "label_replaced" | "figure_rebuilt"`.
 
 **Compliance:** Every figure_data comparison must pass through Phase 6. No comparison may reach Phase 7 without a verdict. This is not optional — it is a gate.
 

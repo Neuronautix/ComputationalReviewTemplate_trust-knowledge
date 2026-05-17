@@ -232,10 +232,26 @@ Phase 2 evidence gathering is the only phase in the pipeline that empirically pr
 **On continuation entry, the agent receives:**
 - A standard Phase 2 delegation task with one extra block: `continuation_state` containing the previous search-state and evidence-artifact IDs.
 - The agent MUST: load the previous evidence JSON, load the seen-DOI list, skip every pass already in `passes_completed`, and deduplicate every new hit against the seen-DOI list before adding it.
-- The agent appends to the same `findings`, `conflicts`, `figure_data` arrays — does NOT reset them.
-- The continuation child runs under the same 40-findings budget, measured against findings *added in this child* (not the cumulative count). If the cluster still hasn't saturated after this child's 40 are added, the agent emits another `continuation_required: true` and the coordinator forks again.
 
-**Why 40, not 30 or 50?** 30 is the existing checkpoint cadence — a child must be able to hit 30 and still have headroom to finalize the schema (homogeneity_check, figure_data, conflicts). 50 puts the heaviest children too close to the empirical compaction threshold (the chained frames in the VIP v2 audit hit rollover at ~100+ cumulative findings spread across 100–150 messages). 40 leaves a safe buffer.
+**Append-only preservation (HARD RULE).** A continuation child MUST treat existing `findings`, `conflicts`, and `figure_data` arrays as append-only. On startup, snapshot the prior counts; before `submit_output`, assert:
+
+```python
+import json
+prior = json.loads(prior_evidence_blob)
+prior_conflicts_n   = len(prior.get("conflicts", []))
+prior_figure_data_n = len(prior.get("figure_data", []))
+prior_findings_n    = len(prior.get("findings", []))
+
+# … child does its work, building `final` …
+
+assert len(final["findings"])    >= prior_findings_n,    "findings array shrank"
+assert len(final["conflicts"])   >= prior_conflicts_n,   "conflicts array shrank"
+assert len(final["figure_data"]) >= prior_figure_data_n, "figure_data array shrank"
+```
+
+These three assertions are gate checks, not documented exits — a child that fails them MUST be re-forked. The 40-findings budget is measured against *findings added in this child*, not the cumulative count. If the cluster still hasn't saturated after this child's 40 are added, the agent emits another `continuation_required: true` and the coordinator forks again.
+
+**Why 40.** 30 is the existing checkpoint cadence — a child must be able to hit 30 and still have headroom to finalize the schema (homogeneity_check, figure_data, conflicts). 50 puts the heaviest children too close to the compaction threshold. 40 leaves a safe buffer.
 
 ## Evidence Schema
 

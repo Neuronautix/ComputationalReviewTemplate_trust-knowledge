@@ -34,6 +34,7 @@ Phase 1V DATAML validator delegation. Coordinator delegates: *"Load
 | `SECTIONS_COVER_TOC` | Every section heading in the user's TOC has at least one matching entry in `sections[]` (substring match on title). | All TOC headings represented |
 | `PLAN_CONTENT_PHASE_COUNT` | `plan_content[]` length == 21; phase names match the canonical Phase Index; `depends_on` chains are valid (Phase N depends on N-1). | Structure valid |
 | `PLAN_AGENTS_VALID` | Every delegation in `plan_content` uses `DATAML` or `LITREVIEW` only; coordinator never appears as an agent. | No `Coordinator` agent anywhere |
+| `CLUSTER_SECTION_MAPPING_CONSISTENT` | `cluster_to_section_assignment` is present and equivalent to `clusters[].section_targets` and `sections[].cluster_ids` (bidirectional). For each cluster, the section list at `cluster_to_section_assignment[cluster_id]` matches `clusters[i].section_targets`. For each section in any cluster's targets, `sections[k].cluster_ids` includes the cluster. | Three views agree |
 
 ## Output Schema
 
@@ -51,7 +52,8 @@ Phase 1V DATAML validator delegation. Coordinator delegates: *"Load
     "CLUSTERS_NONEMPTY": "pass",
     "SECTIONS_COVER_TOC": "pass",
     "PLAN_CONTENT_PHASE_COUNT": "pass",
-    "PLAN_AGENTS_VALID": "pass"
+    "PLAN_AGENTS_VALID": "pass",
+    "CLUSTER_SECTION_MAPPING_CONSISTENT": "pass"
   },
   "failures": [
     {"check": "...", "detail": "..."}

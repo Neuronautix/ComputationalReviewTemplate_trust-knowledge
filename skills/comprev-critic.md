@@ -198,11 +198,31 @@ for sec_num, writer_id in section_to_writer_id.items():
 - MINOR findings are logged in the review metadata but do not block.
 - **Conflict survival threshold:** If conflicts_represented / conflicts_in_package < 0.5, send back to the section writer: "More than half the conflicts in your evidence package are absent from the section. The following conflicts must be represented: [list]. Revise to include both sides of each."
 
-- **Coverage gate (HARD — runs after every MUST_FIX revision pass):** Each `coverage_review` entry with `classification: "SHOULD_CITE"` is a MUST_FIX. After each writer revision the coordinator re-counts:
+- **Cite-key extraction (canonical helper).** Every cite-key counting check in this pipeline — Phase 8 coverage, Phase 11 master-citation, Phase 14V/19V citation-resolution — uses this helper, which decomposes multi-key directives. A directive like `` {cite:p}`Key1, Key2` `` contributes two keys, not one.
+
   ```python
-  unresolved = [r for r in coverage_review if r['classification'] == 'SHOULD_CITE'
-                and r['cite_key'] not in cited_keys_in_revised_section
-                and r['cite_key'] not in writer_waivers]   # waivers writer added with documented reason
+  import re
+
+  def extract_cite_keys(md_text):
+      """Return the set of cite_keys referenced by {cite:p}/{cite:t} in md_text."""
+      keys = set()
+      for m in re.finditer(r"\{cite:[pt]\}`([^`]+)`", md_text):
+          for k in m.group(1).split(","):
+              k = k.strip()
+              if k:
+                  keys.add(k)
+      return keys
+  ```
+
+  Inline grep that does not decompose on `,` is forbidden — it under-counts and triggers spurious round-trips.
+
+- **Coverage gate (HARD — runs after every MUST_FIX revision pass):** Each `coverage_review` entry with `classification: "SHOULD_CITE"` is a MUST_FIX. After each writer revision the coordinator re-counts using `extract_cite_keys`:
+  ```python
+  cited = extract_cite_keys(revised_section_md)
+  unresolved = [r for r in coverage_review
+                if r['classification'] == 'SHOULD_CITE'
+                and r['cite_key'] not in cited
+                and r['cite_key'] not in writer_waivers]
   assert len(unresolved) == 0, f"{len(unresolved)} SHOULD_CITE papers unaddressed"
   ```
   When the writer pushes back with a waiver on a SHOULD_CITE item, the critic re-reviews on the next pass and may either accept the waiver (move it into `WAIVED_*` on its next coverage_review) or escalate the disagreement to the coordinator with a one-line rebuttal. The coordinator's tie-breaker after 3 critic-writer rounds: accept the writer's waiver, log the unresolved item to the Phase 8 gate artifact's `coverage_disputes` field, and proceed. Disputes are visible to Phase 16 for downstream verification.

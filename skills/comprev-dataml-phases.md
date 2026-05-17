@@ -32,7 +32,7 @@ MUST emit real names (or no entry at all) — not `Human Supervisor`, `Anonymous
 flag violations via `AUTHOR_IDENTITY_NOT_PLACEHOLDER`.
 
 **Directive whitelist.** Section-body MyST directives are restricted to the
-whitelist documented in `comprev-orchestrator-v28` §Directive Whitelist.
+whitelist documented in `comprev-orchestrator-v29` §Directive Whitelist.
 Notably, section writers and assemblers MUST NOT emit `{contents}`,
 `{toctree}`, or `{include}` directives in body files — the project-level
 `myst.yml` and Phase 14 assembly emit the global TOC. Phase 7V and 19V
@@ -165,7 +165,7 @@ scaffold extract for each section containing ONLY:
 - The cross-cutting elements (terminology, abbreviations, voice guide)
 - The opening and closing constraints
 
-Target: <20KB per extract. Save as `section_NN_scaffold_extract.json`.
+Target: <20KB per extract. Save as `scaffold_section_NN.json` (distinct filename stem from the `evidence_section_NN.json` packages — preventing confusion at delegation time).
 
 *(Per-section scaffold extracts built by DATAML — each <20KB)*
 
@@ -207,6 +207,22 @@ These groupings are suggestions, not mandates — the section writer may reorgan
 ```
 
 **Citation discipline:** Evidence packages must only contain papers from Phase 2 outputs. Do not introduce new citations during curation. If a gap is identified that requires additional evidence, flag it for a supplementary Phase 2 search rather than filling it from LLM memory.
+
+**Canonical schema (HARD RULE).** Every per-section package MUST follow this top-level shape:
+
+| key | type | content |
+|---|---|---|
+| `section_id` | string | `section_NN` |
+| `section_title` | string | verbatim from `gate_scope.json` |
+| `cluster_source` | string | `cluster_NN` |
+| `findings` | array of OBJECTS | each entry has `cite_key`, `doi`, `claim`, `claim_source_sentence`, `evidence`, `effect_size`, `n`, `study_system`, `replication_status`, `text_access`, `argument_role` |
+| `argument_groups` | object | each value has `thesis`, `supporting_findings` (cite_key STRINGS), `counter_findings` (cite_key STRINGS), `synthesis` |
+| `conflicts` | array of objects | canonical six-field schema `paper_a_doi/paper_b_doi/paper_a_claim/paper_b_claim/nature_of_conflict/resolution_status` |
+| `figure_data` | array of objects | each `comparison_id`, `papers` (array of objects), `metric`, `audit_verdict` |
+
+The hard rule: `findings` is the canonical array of finding objects. `argument_groups[*].supporting_findings` and `counter_findings` are arrays of **cite_key strings** that reference `findings` by key — they are NOT finding objects. Downstream consumers (Phase 7 writers, evidence-explorer plugin, validators) MUST resolve `argument_groups[*].supporting_findings` to objects by lookup against `findings`, never by treating the array entries as objects themselves.
+
+**Output filename convention.** Use `evidence_section_NN.json` for the per-section package and `scaffold_section_NN.json` for the per-section scaffold extract. The two filename stems must not be confusable.
 
 **Gate:** Every package must contain:
 - **Paper count (tiered by section importance):**
@@ -510,7 +526,28 @@ Copy all `.md` section files, figures, evidence, and provenance to the repositor
 
 *(Assembly file-copy logic delegated to DATAML — see Phase 14 task description)*
 
-Verify MyST build: install mystmd (`npm install -g mystmd`) then run `myst build --html`. Must complete with zero ⛔ errors. This is a hard gate — do NOT proceed to Phase 20 if the build fails.
+**Bibliography placement (HARD RULE):**
+
+The bibliography file MUST be written to every path declared in `myst.yml`'s `project.bibliography` array. Read `myst.yml` first, parse `project.bibliography`, and write `references.bib` to each declared path. Common layouts place it at `content/references.bib`; do not assume the root.
+
+Before submitting Phase 14, the actor MUST verify, for every path in `project.bibliography`:
+
+```python
+import yaml
+from pathlib import Path
+cfg = yaml.safe_load(Path("myst.yml").read_text())
+for bib_path in cfg.get("project", {}).get("bibliography", []):
+    p = Path(bib_path)
+    assert p.exists(), f"Declared bibliography path does not exist on disk: {bib_path}"
+    assert p.stat().st_size >= 1024, f"Bibliography too small (likely a stub): {bib_path} ({p.stat().st_size} B)"
+    text = p.read_text()
+    n_entries = sum(1 for line in text.splitlines() if line.lstrip().startswith("@"))
+    assert n_entries >= 100, f"Bibliography has only {n_entries} @-entries: {bib_path}"
+```
+
+If `project.bibliography` contains paths the upstream template populated as stubs (typical of templates that ship a 60-byte `% populated at Phase 9` placeholder), the assembler MUST overwrite each stub with the full bibliography produced by Phase 9. Templates with placeholder bibs are the canonical reason `myst build` later emits "Could not link citation" warnings for every cite key.
+
+Verify MyST build: install mystmd (`npm install -g mystmd`) then run `myst build --html`. Must complete with zero ⛔ errors AND zero "Could not link citation" warnings. This is a hard gate — do NOT proceed to Phase 20 if either condition fails.
 
 **8b. LaTeX Assembly:**
 
@@ -613,8 +650,7 @@ any figure referenced in a section .md:
      `missing_notebooks: [<fig_name>, ...]`. The coordinator must route the failure back
      to Phase 6 (figure construction) for the named figures before Phase 14 is retried.
   c. Do NOT mark the phase as passed with a `note` field describing the absence — that
-     pattern silently ships a non-reproducible repository and was the failure mode
-     observed in pipeline runs prior to this revision.
+     pattern silently ships a non-reproducible repository.
 
 If notebooks exist but are stubs (e.g., contain only "see main workspace" or no code
 cells), treat them as missing and apply the missing-notebook policy above.
@@ -641,13 +677,16 @@ Phase 14 MUST NOT rewrite myst.yml from scratch. Instead:
 **MANDATORY — Site infrastructure:**
 Phase 14 MUST also:
 - **Split evidence database into per-section files for the evidence-explorer plugin.**
-  The evidence-explorer plugin reads `evidence/section_XX_evidence_package.json` files
-  (XX = 02 through 13), NOT the combined `evidence_database.json`. Phase 14 MUST:
-  1. Read the combined evidence database (or section_evidence_packages.json from Phase 5)
-  2. For each section 02–13, extract that section's findings, conflicts, and figure_data
-  3. Save as `evidence/section_XX_evidence_package.json` with required keys:
-     `section_title`, `findings`, `conflicts`, `figure_data`, `unique_papers`, `total_findings`
-  4. Verify all 12 files exist and are non-empty before proceeding
+  The evidence-explorer plugin reads `evidence/evidence_section_NN.json` files,
+  one per section in `gate_scope.json`'s `sections` list (same canonical filename
+  convention as Phase 5). Phase 14 MUST:
+  1. Read the combined evidence database (or per-section packages from Phase 5)
+  2. Read `gate_scope.json` to determine the section range (`n_sections = len(scope["sections"])`)
+  3. For each section `1..n_sections`, extract that section's findings, conflicts, and figure_data
+  4. Save as `evidence/evidence_section_NN.json` with required keys:
+     `section_id`, `section_title`, `findings` (array of finding **objects**, not cite_key strings),
+     `argument_groups` (object), `conflicts`, `figure_data`, `unique_papers`, `total_findings`
+  5. Verify all `n_sections` files exist and are non-empty before proceeding
 a) Create `content/evidence_database.md` with `:::{evidence-explorer}` directive
 b) Create `content/provenance.md` with pipeline summary from gate artifacts
 c) Add `:::{authorship-explorer}` with `:authors: ../authors.yml` to `content/00_frontmatter.md` ONLY (after the abstract, before the body)
@@ -674,11 +713,17 @@ before handing off to the validator. Treat these as a hard gate:
 
 2. **Evidence package population.** After the per-section split:
    ```python
-   for xx in range(2, 14):
-       p = pathlib.Path(f"evidence/section_{xx:02d}_evidence_package.json")
+   n_sections = len(json.load(open("gate_scope.json"))["sections"])
+   for xx in range(1, n_sections + 1):
+       p = pathlib.Path(f"evidence/evidence_section_{xx:02d}.json")
        assert p.exists() and p.stat().st_size > 1024, p
        data = json.loads(p.read_text())
-       assert "section_title" in data and "findings" in data, p
+       assert "section_id" in data and "findings" in data, p
+       # findings must be an array of finding OBJECTS, not cite_key strings —
+       # downstream consumers (evidence-explorer plugin) assign per-entry
+       # metadata onto each finding and crash on primitive strings.
+       assert all(isinstance(f, dict) for f in data["findings"]), \
+           f"{p}: findings array contains non-object entries"
    ```
    If any file is missing, undersized, or malformed, re-run the split
    (don't proceed with empty placeholders — the evidence-explorer widget
@@ -692,8 +737,8 @@ before handing off to the validator. Treat these as a hard gate:
 
 These three checks correspond to validator checks `PLUGIN_DIRECTIVES_INVOKED`
 (#21), `EVIDENCE_PACKAGES_POPULATED` (#22), and the existing build/structural
-checks. Running them at Phase 14 *before* validator handoff catches the
-silent-render failure mode that produced the v1.0 dead widgets.
+checks. Running them at Phase 14 before validator handoff catches the
+silent-render condition where a plugin loads but no markdown invokes it.
 
 **Plugin deployment notes:**
 - All MyST plugins MUST use the anywidget pattern: directive → transform that converts to `node.type='anywidget'` with `.esm` and `.model` properties

@@ -232,22 +232,75 @@ reason a scientist does not fabricate measurements to complete a graph.
 - Restrained palette: 2-4 colors for most figures
 - Follow the document style guide colors when provided by the orchestrator
 
-The canonical color palette and style settings are defined in
-`scripts/shared_style.py` in the repository. All figure notebooks
-import from this module:
+Every figure notebook ships its style via `figures/notebooks/shared_style.py`. The file is small, deterministic, and identical across all notebooks in the repository — every figure imports from it. If a writer's notebook needs a color not defined here, the writer adds the key to `shared_style.py` (not to the notebook) so subsequent figures stay consistent.
+
+**Canonical `figures/notebooks/shared_style.py` (ship this file alongside the notebooks):**
+
+```python
+"""Shared figure style for the review.
+
+All figure notebooks import COLORS and apply_style from this module so that
+the published figures share palette, font, line weights, and DPI. Add new
+palette keys here, not in individual notebooks.
+"""
+
+import matplotlib.pyplot as plt
+
+COLORS = {
+    # Categorical primaries (colorblind-accessible; ColorBrewer Set1 reduced)
+    "primary_blue":     "#377EB8",
+    "primary_red":      "#E41A1C",
+    "primary_green":    "#4DAF4A",
+    "primary_purple":   "#984EA3",
+    "primary_orange":   "#FF7F00",
+    "primary_brown":    "#A65628",
+
+    # Semantic
+    "highlight_orange": "#FF7F00",   # alias of primary_orange for clarity in code
+    "neutral_gray":     "#7F7F7F",
+    "light_gray":       "#CCCCCC",
+    "background":       "#FFFFFF",
+
+    # Evidence-tier markers used by cross-study figures
+    "fulltext_marker":  "#4DAF4A",
+    "abstract_marker":  "#FFB347",
+    "conflict_marker":  "#E41A1C",
+}
+
+
+def apply_style():
+    """Set matplotlib rcParams to the document standard."""
+    plt.rcParams.update({
+        "font.family":      "DejaVu Sans",      # available in every matplotlib install
+        "font.size":         10,
+        "axes.labelsize":    11,
+        "axes.titlesize":    12,
+        "xtick.labelsize":    9,
+        "ytick.labelsize":    9,
+        "legend.fontsize":    9,
+        "figure.titlesize":  13,
+        "axes.linewidth":     0.75,
+        "lines.linewidth":    1.5,
+        "savefig.dpi":      300,
+        "savefig.facecolor": "white",
+        "figure.facecolor":  "white",
+        "axes.facecolor":    "white",
+    })
+
+
+def save_figure(fig, path):
+    """Save a figure to disk at the document standard (300 DPI, white bg)."""
+    fig.savefig(path, dpi=300, bbox_inches="tight", facecolor="white")
+```
+
+Notebooks import as:
 
 ```python
 from shared_style import COLORS, apply_style, save_figure
 apply_style()
 ```
 
-Cell-type colors (when applicable to the review domain):
-- Category A: `#E41A1C` (red)
-- Category B: `#377EB8` (blue)
-- Category C: `#4DAF4A` (green)
-- Category D: `#984EA3` (purple)
-- Category F: `#FF7F00` (orange)
-- Category E: `#A65628` (brown)
+**HARD RULE.** Every figure notebook must be runnable in a vanilla SciPy environment (stdlib + `numpy`, `pandas`, `scipy`, `matplotlib`, `seaborn`, `networkx`, `sklearn`). The only project-local import permitted is `shared_style`, which MUST exist alongside the notebooks at `figures/notebooks/shared_style.py` and MUST define every symbol the notebook references. Phase 14V's `FIGURE_NOTEBOOK_SELF_CONTAINED` check fails the build if a notebook imports anything else, or references `shared_style.X` for a symbol that `shared_style.py` does not export.
 
 ### Clutter Reduction
 - Remove chart junk: unnecessary gridlines, box borders, background shading

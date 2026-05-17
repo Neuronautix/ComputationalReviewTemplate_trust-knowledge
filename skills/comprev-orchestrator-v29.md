@@ -1,4 +1,4 @@
-# Expert Review Orchestrator v28
+# Expert Review Orchestrator v29
 
 ## Purpose
 Coordinator-level skill governing how specialist agents compose outputs into unified long-form scientific reviews (30–200+ pages).
@@ -74,7 +74,7 @@ The coordinator uses this table to delegate each phase. The full delegation temp
 | 12 | **critic** | LITREVIEW | `comprev-critic` + `comprev-reviewer-agent` | bookend critic report | `gate_bookend_critic.json`: MUST_FIX=0 |
 | 13 | **actor** | DATAML | `comprev-dataml-phases` | Methods.md | `gate_methods.json`: 8 subsections |
 | 14 | **actor** | DATAML | `comprev-dataml-phases` | assembled manuscript | all files collected, toc updated |
-| 14V | **validator** | DATAML | `comprev-myst-validator` | `gate_assembly.json` | myst build passes, structural checks, **`EVIDENCE_PACKAGES_POPULATED`** (each `evidence/section_XX_evidence_package.json` ≥1 KB and parses with `section_title` key), **`REVIEW_REQUEST_CAPTURED`** (`provenance/review_request.{md,txt}` exist, no scaffold placeholders remain, `gate_scope.json` carries `review_request_path`, `content/Methods.md` includes the prompt block), **`PLUGIN_DIRECTIVES_INVOKED`** (every plugin directive registered in `myst.yml` has ≥1 `:::{name}` invocation in `content/*.md` and zero bare-`{name}` role-syntax mis-invocations), **`FIGURE_DROPDOWN_MATCH`** (`:::{dropdown} 📓 Figure code` count == `:::{figure}` count per section), **`FIGURE_NOTEBOOK_MATCH`** (every figure has a non-stub `.ipynb`), **`HEADING_STYLE_CONSISTENT`** (zero problems from `audit_headings`: no manual number prefixes, no wrapped headings, no en-/em-dashes, H1 and H2 styles match within each section, body sections share one H1 style). `structural_results` MUST contain a key for every check defined in the validator skill — missing key ⇒ fail. HARD FAIL — never downgrade to a `note`. |
+| 14V | **validator** | DATAML | `comprev-myst-validator` | `gate_assembly.json` | myst build passes, structural checks, **`BIBLIOGRAPHY_PATH_MATCHES_MYSTYML`** (every path in `myst.yml` `project.bibliography` exists, is ≥1 KB, and has ≥100 `@`-entries), **`BIB_CITE_KEYS_RESOLVE`** (when myst build is deferred, every `{cite:p}/{cite:t}/\citep/\citet` key in `content/*.md` and `latex/manuscript.tex` resolves in the declared bibliography), **`EVIDENCE_PACKAGES_POPULATED`** (each `evidence/evidence_section_NN.json` ≥1 KB and parses with `section_id` + `findings` array of objects), **`EVIDENCE_FINDINGS_ARE_OBJECTS`** (findings array contains objects, not cite_key strings), **`REVIEW_REQUEST_CAPTURED`** (`provenance/review_request.{md,txt}` exist, no scaffold placeholders remain, `gate_scope.json` carries `review_request_path`, `content/Methods.md` includes the prompt block), **`PLUGIN_DIRECTIVES_INVOKED`** (every plugin directive registered in `myst.yml` has ≥1 `:::{name}` invocation in `content/*.md` and zero bare-`{name}` role-syntax mis-invocations), **`FIGURE_DROPDOWN_MATCH`** (`:::{dropdown} 📓 Figure code` count == `:::{figure}` count per section), **`FIGURE_NOTEBOOK_MATCH`** (every figure has a non-stub `.ipynb`), **`FIGURE_NOTEBOOK_SELF_CONTAINED`** (every notebook is runnable in a vanilla SciPy environment; any project-local import must be `shared_style` resolvable to a `figures/notebooks/shared_style.py` with the required symbols), **`HEADING_STYLE_CONSISTENT`** (zero problems from `audit_headings`: no manual number prefixes, no wrapped headings, no en-/em-dashes, H1 and H2 styles match within each section, body sections share one H1 style), **`NO_WRITER_SCRATCHPAD`**, **`CITE_DIRECTIVE_SYNTAX_CLEAN`**. `structural_results` MUST contain a key for every check defined in the validator skill — missing key ⇒ fail. HARD FAIL — never downgrade to a `note`. |
 | 15 | **actor** | DATAML | `comprev-dataml-phases` | citation_triples.json | all triples extracted |
 | 15V | **validator** | DATAML | `comprev-triples-validator` | validation report | exhaustive count, sentences in files, keys in bib |
 | 16 | **critic** | LITREVIEW | `comprev-verification` + `comprev-reviewer-agent` | verification results | ALL triples deep-checked |
@@ -163,7 +163,7 @@ This puts the full phase rules in kernel memory (usable for delegation templates
 import json, os
 
 # Read orchestrator into kernel memory (NOT into context)
-orch_path = os.path.expandvars(".../skills/orchestrator_v28.md")
+orch_path = os.path.expandvars(".../skills/orchestrator_v29.md")
 with open(orch_path) as f:
     orch_lines = f.readlines()
 
@@ -237,7 +237,7 @@ After plan approval, execute all phases continuously. No `ask_user` between phas
 
 ### Plan Step Status Protocol (CRITICAL)
 
-**The plan UI shows step statuses to the user in real time.** Incorrect status updates cause the user to see "all phases complete" while agents are still running — a confirmed failure mode from prior runs.
+**The plan UI shows step statuses to the user in real time.** Incorrect status updates cause the user to see "all phases complete" while agents are still running. Mark steps with the truth as of the current tool call, not with an optimistic projection.
 
 **Rules:**
 1. Call `update_step_status(step=..., status="in_progress")` when you **delegate** the step (issue the `delegate_to` or `send_message`).
@@ -309,7 +309,7 @@ Phase 2 children run under a **40-findings-per-frame budget** defined in `compre
 
 ### Delegation Task Construction (CRITICAL)
 
-Two confirmed failure modes from prior runs require explicit mitigation:
+Two failure modes require explicit mitigation:
 
 **Failure mode A: Context compaction leaks into task descriptions.**
 When the coordinator's context compacts mid-pipeline, the next `delegate_to` call may receive the compaction summary as its `task` parameter instead of the actual Phase instructions. The child agent then gets "This session is being continued from a previous conversation..." as its task.
@@ -342,6 +342,40 @@ for i, task_str in enumerate(verifier_tasks):
     delegate_to(agent="LITREVIEW", task=task_str)
 ```
 
+
+### Canonical Artifact Maps Across Phases
+
+Every validator gate JSON that produces post-fix content artifacts (Phase 7V, 14V, 19V) MUST include an explicit `section_md_vids_final` map (and `section_tex_vids_final` where applicable) listing the canonical artifact version_id for each filename it certified. The keys are filenames, not artifact_ids:
+
+```json
+{
+  "phase": 14,
+  "gate": "pass",
+  "section_md_vids_final": {
+    "01_introduction.md": "...",
+    "02_anatomy_primer.md": "...",
+    "...": "...",
+    "Methods.md": "..."
+  },
+  "section_tex_vids_final": {
+    "01_introduction.md": "...",
+    "...": "..."
+  }
+}
+```
+
+**Phase 20 push rule.** The repository-push task receives `section_md_vids_final` from the most recent validator gate (typically `gate_assembly.json` at 14V, augmented by Phase 19V for any fix-pass updates) and uses those VIDs verbatim. The push task MUST NOT call `operon.artifacts(filename=..., latest=True)` to look up "the latest" content. A chronologically-later writer save can leapfrog a coordinator-side or validator-side fix; "latest" is not synonymous with "canonical." If Phase 19V's gate is present, its `section_md_vids_final` supersedes the corresponding entries in Phase 14V's; merge by giving 19V precedence per filename.
+
+Phase 20V re-verifies the deployed content matches the canonical map by comparing the live repo's file contents against the artifacts referenced by VID in `gate_assembly.json` / `gate_phase19v.json`.
+
+### Save-after-write race
+
+When a python kernel writes a small file via `Path("foo").write_text(...)` and the next tool call is `save_artifacts(files=["foo"], language="python")`, the harness may see an empty or pre-write filesystem snapshot and return `File not found`. Two reliable mitigations:
+
+1. **Prefer `language="bash"` for save-immediately-after-write.** The bash worker re-stats the file at execution time.
+2. **If you must use `language="python"`:** insert a `sleep(1)` between `write_text` and `save_artifacts`, or issue a no-op bash call (`bash ls foo`) between them to force a filesystem barrier.
+
+The race is harmless but burns turns. The pattern applies to every gate JSON, ledger update, and small metadata file.
 
 ### Gate Validation Protocol
 

@@ -1,6 +1,6 @@
 # Section Writing Protocol
 
-> **Template provides:** `scripts/shared_style.py` is available for figure styling. Import it in your figure code: `from shared_style import COLORS, apply_style, save_figure`. Widget assets (`authorship-widget.mjs`, `evidence-explorer-widget.mjs`) are already deployed in `content/`. Do not recreate them.
+> **Template provides:** `figures/notebooks/shared_style.py` is the canonical figure style module (full content listed in `comprev-figure-construction.md`). Every figure notebook imports `from shared_style import COLORS, apply_style, save_figure` — never define palette keys inline in a notebook. If you need a new palette key, add it to `shared_style.py` so all figures stay consistent. Widget assets (`authorship-widget.mjs`, `evidence-explorer-widget.mjs`) are already deployed in `content/`. Do not recreate them.
 
 
 Phase 7 delegation template for section writers. Draft one section of the review in MyST markdown with figures, citations, and evidence synthesis.
@@ -410,6 +410,15 @@ When `comprev-figure-construction` is loaded (Phase 7):
 FORBIDDEN in review text: Operon, scaffold, evidence package, framework failure, adversarial search, verdict, orchestrator, batch, sub-agent, revision manifest, prediction error, replication scorecard (as section title), paper weight, epistemic checkpoint.
 
 Allowed scientific uses: "phase" (oscillation), "convergence" (convergent evidence), "scaffold" (developmental scaffolding), "recursive" (recursive processing).
+
+**No writer-thinking in prose.** Internal reasoning never appears in the section body. Phrases like "Wait, I need to reconsider", "Let me re-read", "Let me reconsider", "The rules say", "The original has", "I need to keep", "I'll rewrite", "OK, let me" are immediate fails — they signal an LLM scratchpad leaking through. Use the appropriate kernel cell to think; only the finished prose goes into `section_NN.md`. Phase 7V's `NO_WRITER_SCRATCHPAD` check catches any leakage.
+
+**Citation directive syntax (CRITICAL).** Two malformations are rejected by `CITE_DIRECTIVE_SYNTAX_CLEAN`:
+
+  - `` `{cite:t}`Key` `` — a stray backtick BEFORE `{cite:t}` opens a literal code span and the directive renders as text.
+  - `` {cite:t}Key` `` — a missing opening backtick AFTER the directive renders as text.
+
+The exact form is `` {cite:p}`Key` `` for parenthetical and `` {cite:t}`Key` `` for textual. One opening backtick, one closing backtick, nothing else immediately adjacent.
 
 **Test:** Could a reader tell this was produced by an automated system? If yes → fail.
 

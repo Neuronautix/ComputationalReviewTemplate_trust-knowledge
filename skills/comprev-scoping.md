@@ -122,6 +122,10 @@ Return via `submit_output` (saved as artifact `scope.json`):
   "sections": [
     {"id": "section_02", "title": "...", "cluster_ids": ["cluster_01"], "scope_notes": "..."}
   ],
+  "cluster_to_section_assignment": {
+    "cluster_01": ["section_01", "section_02"],
+    "cluster_02": ["section_03"]
+  },
   "evidence_parameters": {
     "min_papers_per_cluster": 70,
     "saturation_criterion": "<2% new unique in last 100",
@@ -133,6 +137,8 @@ Return via `submit_output` (saved as artifact `scope.json`):
   ]
 }
 ```
+
+**`cluster_to_section_assignment` (HARD RULE).** This is the authoritative mapping consumed by Phase 5 (evidence curation), Phase 7 (section drafting), and Phase 14 (assembly). It MUST be derivable from `clusters[].section_targets` and equivalent to `sections[].cluster_ids` (inverse mapping); the redundancy is intentional so downstream phases can read either direction by direct dict lookup rather than re-deriving from joins. A cluster may map to multiple sections (e.g., a foundational cluster split between an introduction and a body section) and a section may draw from multiple clusters. Phase 1V's scope validator asserts the two views are consistent.
 
 ## Guardrails
 

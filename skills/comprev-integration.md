@@ -83,7 +83,34 @@ check_gate('gate_integration.json')
 
 **Citation discipline:** Introduction and conclusion may ONLY cite papers already cited in the body sections.
 
-**Post-writing critic (Phase 12):** After Phase 11 completes, the coordinator launches a blinded bookend critic (Phase 12, specified in `comprev-critic.md`). The critic is a different child frame from the Phase 11 writer. It checks all novel claim-citation pairs (those not inherited from body sections) against paper abstracts. MUST_FIX findings are sent back to the Phase 11 writer for revision before the pipeline advances to Phase 13 (Methods). The master citation list from Phase 10f must be provided to the writer. Do not introduce new references.
+**Master citation list (HARD RULE).** Before drafting, compute the body-only master citation set:
+
+```python
+import re
+from pathlib import Path
+
+master = set()
+for md in sorted(Path("content").glob("[0-9][0-9]_*.md")):
+    # body sections only — skip 00_frontmatter; the integrator decides which file
+    # numbers count as bodies, but conventionally 01..(n_sections-0) are bodies.
+    text = md.read_text()
+    for m in re.finditer(r"\{cite:[pt]\}`([^`]+)`", text):
+        for k in m.group(1).split(","):
+            master.add(k.strip())
+```
+
+The Introduction and Conclusion may cite ONLY from `master`. Before `submit_output`, assert:
+
+```python
+intro_keys = {k.strip() for m in re.finditer(r"\{cite:[pt]\}`([^`]+)`", intro_text) for k in m.group(1).split(",")}
+concl_keys = {k.strip() for m in re.finditer(r"\{cite:[pt]\}`([^`]+)`", concl_text) for k in m.group(1).split(",")}
+novel = (intro_keys | concl_keys) - master
+assert not novel, f"Bookend introduces {len(novel)} novel keys: {sorted(novel)[:10]}"
+```
+
+Each cite-key block is decomposed on `,` so multi-key directives like `` {cite:p}`Key1, Key2` `` are counted correctly.
+
+**Post-writing critic (Phase 12):** After Phase 11 completes, the coordinator launches a blinded bookend critic (Phase 12, specified in `comprev-critic.md`). The critic is a different child frame from the Phase 11 writer. It re-runs the master-citation check above as a safety net, and inspects every claim against paper abstracts. MUST_FIX findings are sent back to the Phase 11 writer for revision before the pipeline advances to Phase 13 (Methods).
 
 - **Introduction:** Receives 1-paragraph summaries of all sections + central argument + master citation list. Frames problem, explains why review is needed, previews argument arc naturally.
 - **Conclusion:** Receives section summaries + key findings including conflicts and gaps + master citation list. Synthesizes (not summarizes), acknowledges limitations, identifies open questions.
@@ -172,7 +199,7 @@ FORBIDDEN in review text: Operon, scaffold, evidence package, framework failure,
 
 Allowed scientific uses: "phase" (oscillation), "convergence" (convergent evidence), "scaffold" (developmental scaffolding), "recursive" (recursive processing).
 
-**Test:** Could a reader tell this was produced by an automated system? If yes → fail.
+**Scope.** The check applies to every text artifact Phase 10/11 emits: body sections, `00_frontmatter.md` (including the AI-Disclosure admonition), and the abstract. The AI-Disclosure block describes the pipeline using neutral terms — "directed specialist tools", "data-curation and literature-review components", "Phase 8 assessments" — not internal vocabulary. The frontmatter is held to the same `FORBIDDEN_LEXICON` standard as the bodies; the validator at Phase 14V scans frontmatter, Methods, authors.yml, and the LaTeX manuscript on the same pass.
 
-This applies to Phase 9 introduction/conclusion writing, Phase 13 methods, and Phase 11 cross-section integration.
+**Test:** Could a reader tell this was produced by an automated system? If yes → fail.
 
