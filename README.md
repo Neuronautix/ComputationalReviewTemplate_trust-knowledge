@@ -159,3 +159,20 @@ Phase 5 curation floors scale proportionally with your evidence density target.
 
 MIT
 
+## How to Cite
+
+If you use this template in your research, please cite:
+
+```bibtex
+@software{lecoq_2026_21213212,
+  author       = {Jérôme Lecoq},
+  title        = {AllenNeuralDynamics/ComputationalReviewTemplate},
+  year         = 2026,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.21213212},
+  url          = {https://doi.org/10.5281/zenodo.21213212}
+}
+```
+
+> Lecoq, J. (2026). *AllenNeuralDynamics/ComputationalReviewTemplate* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.21213212
+
