@@ -1,10 +1,10 @@
 function badgeClass(score) {
-  if (score == null || Number.isNaN(Number(score))) return 'tc-badge tc-pending';
+  if (score == null || Number.isNaN(Number(score))) return 'tc-score tc-pending';
   const n = Number(score);
-  if (n >= 85) return 'tc-badge tc-high';
-  if (n >= 70) return 'tc-badge tc-moderate';
-  if (n >= 50) return 'tc-badge tc-low';
-  return 'tc-badge tc-critical';
+  if (n >= 85) return 'tc-score tc-high';
+  if (n >= 70) return 'tc-score tc-moderate';
+  if (n >= 50) return 'tc-score tc-low';
+  return 'tc-score tc-critical';
 }
 
 function escapeHtml(value) {
@@ -108,6 +108,32 @@ function summaryTitle(score) {
   return `TRUST ${Number(score)}`;
 }
 
+function trustBandText(score) {
+  if (score == null || Number.isNaN(Number(score))) return 'Pending';
+  const n = Number(score);
+  if (n >= 85) return 'Very high';
+  if (n >= 70) return 'High';
+  if (n >= 50) return 'Moderate';
+  return 'Low';
+}
+
+function scoreBandClass(score) {
+  if (score == null || Number.isNaN(Number(score))) return 'tc-band-pending';
+  const n = Number(score);
+  if (n >= 85) return 'tc-band-high';
+  if (n >= 50) return 'tc-band-moderate';
+  return 'tc-band-low';
+}
+
+function claimClassLabel(claimType) {
+  const t = String(claimType || '').toLowerCase();
+  if (t === 'empirical' || t === 'comparative' || t === 'causal') return 'Cited fact';
+  if (t === 'methodological' || t === 'definition') return 'Method note';
+  if (t === 'review_synthesis' || t === 'speculation') return 'Inference';
+  if (t === 'limitation') return 'Limitation';
+  return 'Claim';
+}
+
 function render({ model, el }) {
   const claimId = model.get('claimId');
   const claimText = model.get('claimText') || '';
@@ -120,21 +146,14 @@ function render({ model, el }) {
   const citationContexts = safeJsonParse(model.get('citationContexts'), []);
   const rationale = safeJsonParse(model.get('rationale'), null);
   const humanReviewRequired = model.get('humanReviewRequired') === true;
+  const interactionMode = String(model.get('interactionMode') || 'slideout').toLowerCase();
 
-  const details = document.createElement('details');
-  details.className = 'tc-root';
+  const scoreText = trustScore == null || Number.isNaN(Number(trustScore)) ? '??' : String(Number(trustScore));
+  const trustBand = trustBandText(trustScore);
+  const bandClass = scoreBandClass(trustScore);
+  const classLabel = claimClassLabel(claimType);
 
-  const summary = document.createElement('summary');
-  summary.className = 'tc-summary';
-  summary.innerHTML = `
-    <span class="tc-kicker">Trust claim-tag</span>
-    <span class="tc-title">${summaryTitle(trustScore)}</span>
-    <span class="${badgeClass(trustScore)}">${escapeHtml(trustLabel)}</span>
-  `;
-
-  const box = document.createElement('div');
-  box.className = 'tc-box';
-  box.innerHTML = `
+  const detailHtml = `
     <div class="tc-row"><strong>Claim ID:</strong> ${escapeHtml(claimId || 'placeholder')}</div>
     <div class="tc-row"><strong>Claim meaning:</strong> ${escapeHtml(claimType || 'unspecified')} | ${escapeHtml(modality || 'unspecified')}</div>
     <div class="tc-row"><strong>Evidence status:</strong> ${escapeHtml(evidenceRelation)}</div>
@@ -146,13 +165,74 @@ function render({ model, el }) {
     ${renderRationale(rationale)}
     <div class="tc-subhead">Citation contexts</div>
     ${renderCitationContexts(citationContexts)}
+    <div class="tc-row tc-muted"><strong>Validator label:</strong> ${escapeHtml(trustLabel)}</div>
   `;
 
-  details.appendChild(summary);
-  details.appendChild(box);
+  const cardHtml = `
+    <span class="tc-rail-line" aria-hidden="true"></span>
+    <span class="${badgeClass(trustScore)}">${escapeHtml(scoreText)}</span>
+    <span class="tc-summary-main">
+      <span class="tc-summary-head">${escapeHtml(classLabel)}</span>
+      <span class="tc-summary-sub ${bandClass}">${escapeHtml(summaryTitle(trustScore))} - ${escapeHtml(trustBand)}</span>
+    </span>
+  `;
 
   el.innerHTML = '';
-  el.appendChild(details);
+
+  if (interactionMode === 'details') {
+    const details = document.createElement('details');
+    details.className = 'tc-root';
+    const summary = document.createElement('summary');
+    summary.className = 'tc-summary';
+    summary.innerHTML = cardHtml;
+    const box = document.createElement('div');
+    box.className = 'tc-box';
+    box.innerHTML = detailHtml;
+    details.appendChild(summary);
+    details.appendChild(box);
+    el.appendChild(details);
+    return;
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'tc-root tc-slideout-root';
+
+  const cardButton = document.createElement('button');
+  cardButton.type = 'button';
+  cardButton.className = 'tc-summary tc-card-btn';
+  cardButton.setAttribute('aria-expanded', 'false');
+  cardButton.innerHTML = cardHtml;
+
+  const panel = document.createElement('aside');
+  panel.className = 'tc-slideout';
+  panel.setAttribute('aria-hidden', 'true');
+  panel.innerHTML = `
+    <div class="tc-slideout-header">
+      <strong>Trust claim details</strong>
+      <button type="button" class="tc-close" aria-label="Close trust details">Close</button>
+    </div>
+    <div class="tc-box">${detailHtml}</div>
+  `;
+
+  const closeBtn = panel.querySelector('.tc-close');
+
+  function closePanel() {
+    wrapper.classList.remove('is-open');
+    cardButton.setAttribute('aria-expanded', 'false');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+
+  cardButton.addEventListener('click', () => {
+    const open = wrapper.classList.toggle('is-open');
+    cardButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+    panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+  });
+
+  if (closeBtn) closeBtn.addEventListener('click', closePanel);
+
+  wrapper.appendChild(cardButton);
+  wrapper.appendChild(panel);
+  el.appendChild(wrapper);
 }
 
 export default { render };

@@ -12,6 +12,7 @@ const trustClaimDirective = {
     modality: { type: String },
     score: { type: String },
     'kb-path': { type: String },
+    interaction: { type: String },
   },
   run(data) {
     return [{
@@ -23,6 +24,7 @@ const trustClaimDirective = {
       modality: data.options?.modality || '',
       provisionalScore: data.options?.score || null,
       kbPath: data.options?.['kb-path'] || '../knowledge/claim_graph.json',
+      interaction: data.options?.interaction || 'slideout',
     }];
   },
 };
@@ -79,6 +81,7 @@ const trustClaimTransform = {
           citationContexts: JSON.stringify(citationContexts),
           rationale: kbClaim?.trust_score?.components || null,
           humanReviewRequired: kbClaim?.human_review_required || false,
+          interactionMode: node.interaction || 'slideout',
         };
       }
 
