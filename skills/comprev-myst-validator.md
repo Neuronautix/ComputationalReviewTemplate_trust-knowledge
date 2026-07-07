@@ -276,10 +276,10 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     Missing or invalid JSON is a hard fail. **pass/fail**
 
 27. **TRUST_CLAIM_TAG_LINKAGE** *(Phase 14V, 19V, 20V)*:
-    For every `:::{trust-claim} <claim_id>` in `content/*.md`:
-    - if `<claim_id> != claim-id-placeholder`, it must resolve in `knowledge/claim_graph.json` `claims[].claim_id`
+    For every `:::{trust-claim}` in `content/*.md`:
+    - if `:claim-id: != claim-id-placeholder`, it must resolve in `knowledge/claim_graph.json` `claims[].claim_id`
     - resolved claim must include `trust_score.overall_score` and `trust_score.trust_label`
-    - directive options must include `:claim:` and `:cites:`
+    - directive options must include `:claim-id:`, `:claim:`, and `:cites:`
     Unresolved IDs or missing score fields are a hard fail. **pass/fail**
 
 ## Output Schema

@@ -57,7 +57,8 @@ Each Phase 7 delegation template MUST include the Phase 6 verdicts artifact: `{{
 - Cross-references: `` {ref}`sec-target-label` `` — no wrapping parentheses
 - Important claims MUST use `trust-claim` directive blocks with provisional metadata only:
   ```markdown
-  :::{trust-claim} claim-id-placeholder
+  :::{trust-claim}
+  :claim-id: claim-id-placeholder
   :claim: "The claim sentence as written."
   :cites: Key2020, Key2022
   :claim-type: empirical

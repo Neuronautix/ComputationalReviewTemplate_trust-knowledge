@@ -735,7 +735,8 @@ Phase 14 MUST also:
   3. Insert tags immediately after the paragraph containing an exact or normalized match to `claim_text`.
   4. Use this canonical block:
     ```markdown
-    :::{trust-claim} <claim_id>
+    :::{trust-claim}
+    :claim-id: <claim_id>
     :claim: "<claim_text>"
     :cites: KeyA, KeyB
     :claim-type: <claim_type>

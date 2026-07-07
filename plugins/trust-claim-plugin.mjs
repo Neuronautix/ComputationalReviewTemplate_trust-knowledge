@@ -5,6 +5,7 @@ const trustClaimDirective = {
   name: 'trust-claim',
   doc: 'Render a claim-level TRUST margin tag with expandable evidence context.',
   options: {
+    'claim-id': { type: String },
     claim: { type: String },
     cites: { type: String },
     'claim-type': { type: String },
@@ -15,7 +16,7 @@ const trustClaimDirective = {
   run(data) {
     return [{
       type: 'trust-claim',
-      claimId: data.args?.[0] || data.options?.['claim-id'] || null,
+      claimId: data.options?.['claim-id'] || null,
       claimText: data.options?.claim || '',
       cites: data.options?.cites || '',
       claimType: data.options?.['claim-type'] || '',
