@@ -47,7 +47,7 @@ jobs:
 
       - name: Build MyST site
         env:
-          BASE_URL: /ComputationalReviewTemplate
+          BASE_URL: /ComputationalReviewTemplate_trust-knowledge
         run: myst build --html
 
       - name: Upload Pages artifact
