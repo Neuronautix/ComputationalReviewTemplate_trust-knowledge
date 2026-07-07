@@ -80,6 +80,7 @@ The coordinator uses this table to delegate each phase. The full delegation temp
 | 15 | **actor** | DATAML | `comprev-dataml-phases` | citation_triples.json | all triples extracted |
 | 15V | **validator** | DATAML | `comprev-triples-validator` | validation report | exhaustive count, sentences in files, keys in bib |
 | 16 | **critic** | LITREVIEW | `comprev-verification` + `comprev-reviewer-agent` | verification results | ALL triples deep-checked |
+| 16T | **validator** | DATAML | `comprev-trust-score-validator` | `gate_trust_scores.json` | TRUST component scoring complete, formula/label integrity, cap-rule enforcement, updated claim graph |
 | 17 | **actor** | DATAML | `comprev-dataml-phases` | fix_requests.json | fix requests for non-VERIFIED triples |
 | 17V | **validator** | DATAML | `comprev-triples-validator` | validation report | full coverage, context exists |
 | 18 | **actor** | LITREVIEW | `comprev-fix-execution` + `comprev-reviewer-agent` | fix diffs | fixes executed |
@@ -117,7 +118,8 @@ Each phase transition requires a named gate artifact. The coordinator saves it b
 | 14 → 14V | (assembled manuscript) | LaTeX + content/*.md + figures + notebooks present |
 | 14V → 15 | `gate_assembly.json` | All build/structural assertions passed |
 | 15 → 16 | `citation_triples.json` | Triple count, batch IDs, schema version |
-| 16 → 17 | (verification reports) | Per-triple verdicts, MUST_FIX count |
+| 16 → 16T | (verification reports) | Per-triple verdicts, MUST_FIX count |
+| 16T → 17 | `gate_trust_scores.json` | Trust scoring gate passed and claim graph refreshed with capped scores where required |
 | 17 → 18 | `fix_requests.json` | Fix-request count, target files, contexts |
 | 18 → 19 | (fix diffs) | Applied diffs, reverse-order verification |
 | 19 → 19V | (updated files) | Patched .md and .bib |

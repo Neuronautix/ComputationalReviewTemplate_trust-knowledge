@@ -52,7 +52,7 @@ N. Conclusion
 
 ## What's Included
 
-### Skills (20 files in `skills/`)
+### Skills (21 files in `skills/`)
 
 The pipeline is split into role-specific skills with **information barriers** to enforce actor-critic separation. Worker skills produce content; validator skills run after each phase as blinded gates that emit named pass/fail checks into the gate JSON.
 
@@ -74,7 +74,7 @@ The pipeline is split into role-specific skills with **information barriers** to
 | `comprev-reviewer-agent` | 2, 4, 6–8, 10–12, 16, 18 | LITREVIEW | Evidence & writing procedures |
 | `comprev-figure-construction` | 7 | LITREVIEW | Figure production |
 
-**Validator skills (7):**
+**Validator skills (8):**
 
 | Skill | Phase | Role | What it gates |
 |-------|-------|------|---------------|
@@ -83,6 +83,7 @@ The pipeline is split into role-specific skills with **information barriers** to
 | `comprev-curation-validator` | 5V | DATAML | Per-section evidence package size, conflict and figure-data presence |
 | `comprev-citation-validator` | 3V, 9V | DATAML | citation_key_map (Phase 3) and BibTeX (Phase 9) — DOI resolution, CrossRef matching, key uniqueness, author match |
 | `comprev-triples-validator` | 15V | DATAML | One triple per `{cite:p}`/`{cite:t}` occurrence, no sampling |
+| `comprev-trust-score-validator` | 16T | DATAML | Dedicated TRUST scoring gate: component scoring, cap-rule enforcement, and claim-graph refresh |
 | `comprev-myst-validator` | 7V, 14V, 19V, 20V | DATAML | MyST build, structural checks, figure/heading consistency, plugin-directive invocation, evidence-package population, directive whitelist (7V/19V), repo-wide forbidden-lexicon glob (19V), author-identity placeholder check (20V) |
 | `comprev-deploy-polish` | 21 | DATAML | Post-deployment UX gate: tier-A static checks against built Pages-artifact tarball; tier-B live-URL checks (per-page HTTP, external link health) with manual-checklist fallback when deploy URL is sandbox-inaccessible |
 

@@ -726,6 +726,25 @@ Phase 14 MUST also:
   4. Write `knowledge/claim_graph.json` and `knowledge/claim_index.json` with one entry per claim id.
   5. Mark unresolved claim ids with `validation_status: needs_human_review`.
 
+- **Auto-insert omitted low-priority trust tags.**
+  1. Read `knowledge/claim_seed_index.json` and select claims where `section_id` matches the current section file.
+  2. Classify missing tags as low-priority insertion candidates only when all are true:
+    - claim not already represented by an existing `:::{trust-claim}` in that section,
+    - claim `claim_type` is one of `review_synthesis`, `limitation`, or `speculation`,
+    - claim has at least one citation key and non-empty `claim_text`.
+  3. Insert tags immediately after the paragraph containing an exact or normalized match to `claim_text`.
+  4. Use this canonical block:
+    ```markdown
+    :::{trust-claim} <claim_id>
+    :claim: "<claim_text>"
+    :cites: KeyA, KeyB
+    :claim-type: <claim_type>
+    :modality: <modality>
+    :::
+    ```
+  5. Do NOT inject writer-facing final trust labels or cap reasons in section markdown.
+  6. Log every insertion to `knowledge/trust_tag_autoinsert_log.json` with file path, claim_id, and insertion anchor text.
+
 - **Trust tag linkage assertions (hard gate before validator handoff).**
   - Every `:::{trust-claim}` tag must reference either an existing `claim_id` or `claim-id-placeholder`.
   - Every non-placeholder claim id must resolve in `knowledge/claim_graph.json`.
