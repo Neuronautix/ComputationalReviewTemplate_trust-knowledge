@@ -6,13 +6,17 @@ import { resolve, dirname } from 'node:path';
 
 // Minimal, dependency-free YAML parser for MyST author files.
 //
-// MyST bundles its own dependencies, so `require('yaml')` cannot resolve from a
-// plugin, and this template is meant to run with a bare `npx myst` (no
-// package.json / npm install). Rather than add an install step, we parse the
-// block-style subset that author files actually use: nested mappings, sequences
-// of scalars or mappings, quoted/plain scalars, booleans, numbers, and null.
-// Not supported (and not used by author files): flow collections (`[a, b]`),
-// anchors/aliases, multi-line block scalars (`|`, `>`), and complex keys.
+// MyST bundles its own dependencies, so `require('yaml')` cannot be resolved
+// from a plugin, and this template is designed to run with a bare `npx myst`
+// (no package.json / npm install). Rather than reintroduce that install step,
+// we parse the YAML subset that author files actually use:
+//   - block mappings and sequences, nested to any depth
+//   - single-line flow collections: `[a, b]` and `{id: x, name: y}`
+//   - scalars: double/single-quoted strings, booleans, integers, floats, null
+//   - `#` line/inline comments and `---`/`...` document markers
+// Genuinely unsupported constructs — multi-line block scalars (`|`, `>`),
+// anchors/aliases (`&`, `*`), and multi-line flow collections — throw, so the
+// caller's try/catch surfaces a clear error rather than silently mis-parsing.
 function parseMiniYaml(text) {
   const stripComment = (s) => {
     let inS = false;
@@ -41,19 +45,92 @@ function parseMiniYaml(text) {
     return { key: m[1], value: m[2] === undefined ? '' : m[2] };
   };
 
-  const parseScalar = (raw) => {
+  // Coerce a single atomic scalar token to its JS value.
+  const coerce = (raw) => {
     const v = raw.trim();
-    if (v === '' || v === '~' || v === 'null' || v === 'Null' || v === 'NULL') return null;
-    if (v === 'true' || v === 'True' || v === 'TRUE') return true;
-    if (v === 'false' || v === 'False' || v === 'FALSE') return false;
+    if (v === '' || v === '~' || /^(null|Null|NULL)$/.test(v)) return null;
+    if (/^(true|True|TRUE)$/.test(v)) return true;
+    if (/^(false|False|FALSE)$/.test(v)) return false;
     if (v[0] === '"') {
-      try { return JSON.parse(v); } catch { /* fall through */ }
+      try { return JSON.parse(v); } catch { /* fall through to manual unescape */ }
       return v.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
     }
     if (v[0] === "'") return v.slice(1, -1).replace(/''/g, "'");
     if (/^[-+]?\d+$/.test(v)) return parseInt(v, 10);
     if (/^[-+]?(\d*\.\d+|\d+\.\d*)$/.test(v)) return parseFloat(v);
+    if (v[0] === '&' || v[0] === '*') throw new Error('YAML anchors/aliases are not supported');
     return v;
+  };
+
+  // Parse a single-line flow collection: [ ... ] or { ... } (recursively).
+  const parseFlow = (input) => {
+    const s = input;
+    let i = 0;
+    const ws = () => { while (i < s.length && /\s/.test(s[i])) i += 1; };
+    const readToken = (isKey) => {
+      ws();
+      const q = s[i];
+      if (q === '"' || q === "'") {
+        i += 1;
+        let out = '';
+        while (i < s.length) {
+          if (q === '"' && s[i] === '\\') { out += s[i + 1] ?? ''; i += 2; continue; }
+          if (q === "'" && s[i] === "'" && s[i + 1] === "'") { out += "'"; i += 2; continue; }
+          if (s[i] === q) { i += 1; break; }
+          out += s[i]; i += 1;
+        }
+        return out;
+      }
+      const start = i;
+      const stop = isKey ? ',]}:' : ',]}';
+      while (i < s.length && !stop.includes(s[i])) i += 1;
+      const t = s.slice(start, i).trim();
+      return isKey ? t : coerce(t);
+    };
+    const value = () => {
+      ws();
+      if (s[i] === '[') return seq();
+      if (s[i] === '{') return map();
+      return readToken(false);
+    };
+    function seq() {
+      const arr = [];
+      i += 1; ws();
+      if (s[i] === ']') { i += 1; return arr; }
+      for (;;) {
+        arr.push(value()); ws();
+        if (s[i] === ',') { i += 1; continue; }
+        if (s[i] === ']') { i += 1; return arr; }
+        throw new Error('malformed flow sequence');
+      }
+    }
+    function map() {
+      const obj = {};
+      i += 1; ws();
+      if (s[i] === '}') { i += 1; return obj; }
+      for (;;) {
+        const k = readToken(true); ws();
+        if (s[i] !== ':') throw new Error('malformed flow mapping');
+        i += 1;
+        obj[k] = value(); ws();
+        if (s[i] === ',') { i += 1; continue; }
+        if (s[i] === '}') { i += 1; return obj; }
+        throw new Error('malformed flow mapping');
+      }
+    }
+    const result = value();
+    ws();
+    if (i < s.length) throw new Error('trailing characters after flow collection');
+    return result;
+  };
+
+  const parseScalar = (raw) => {
+    const v = raw.trim();
+    if (v === '|' || v === '>' || /^[|>][+-]?\d*$/.test(v)) {
+      throw new Error('multi-line block scalars (| or >) are not supported');
+    }
+    if (v[0] === '[' || v[0] === '{') return parseFlow(v);
+    return coerce(v);
   };
 
   let pos = 0;
