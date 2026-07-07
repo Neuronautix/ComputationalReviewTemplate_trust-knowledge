@@ -134,6 +134,216 @@ function claimClassLabel(claimType) {
   return 'Claim';
 }
 
+const WIDGET_STYLES = `
+  :host {
+    display: block;
+    float: right;
+    clear: none;
+    width: min(18rem, 32vw);
+    margin: 0.2rem 0 0.85rem 0.9rem;
+    padding: 0;
+  }
+
+  .tc-root {
+    display: block;
+    float: none;
+    clear: none;
+    width: 100%;
+    margin: 0;
+    padding-left: 0.6rem;
+    position: relative;
+    z-index: 4;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+
+  .tc-root::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #2563eb 0%, #0ea5e9 100%);
+  }
+
+  .tc-summary {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: stretch;
+    gap: 0.45rem;
+    cursor: pointer;
+    list-style: none;
+    border: 1px solid #cfd8e3;
+    border-radius: 0.5rem;
+    background: #f5f8fc;
+    padding: 0.34rem 0.44rem;
+    min-height: 54px;
+    max-height: 54px;
+  }
+
+  .tc-card-btn {
+    all: unset;
+    box-sizing: border-box;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: stretch;
+    gap: 0.45rem;
+    cursor: pointer;
+    border: 1px solid #cfd8e3;
+    border-radius: 0.5rem;
+    background: #f5f8fc;
+    padding: 0.34rem 0.44rem;
+    min-height: 54px;
+    max-height: 54px;
+  }
+
+  .tc-card-btn:hover { background: #eef4fb; }
+  .tc-summary::-webkit-details-marker { display: none; }
+
+  .tc-rail-line { width: 2px; background: #0284c7; border-radius: 999px; flex: 0 0 auto; }
+
+  .tc-summary-main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .tc-summary-head {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #0f172a;
+    line-height: 1.05;
+  }
+
+  .tc-summary-sub { font-size: 0.69rem; font-weight: 650; line-height: 1.1; }
+  .tc-band-high { color: #005ea8; }
+  .tc-band-moderate { color: #8a5a00; }
+  .tc-band-low { color: #9f1d1d; }
+  .tc-band-pending { color: #475569; }
+
+  .tc-score {
+    align-self: center;
+    border-radius: 0.32rem;
+    padding: 0.18rem 0.42rem;
+    font-size: 0.75rem;
+    min-width: 2rem;
+    text-align: center;
+    font-weight: 800;
+  }
+
+  .tc-high { background: #0077c8; color: #fff; }
+  .tc-moderate { background: #f2a900; color: #1f1500; }
+  .tc-low, .tc-critical { background: #d64545; color: #fff; }
+  .tc-pending { background: #e5e7eb; color: #374151; }
+
+  .tc-box {
+    margin-top: 0.36rem;
+    border: 1px solid #d8e3f0;
+    border-radius: 0.5rem;
+    padding: 0.52rem 0.58rem;
+    background: #f7f9fc;
+    font-size: 0.78rem;
+    color: #111827;
+    line-height: 1.42;
+  }
+
+  .tc-row { margin-bottom: 0.25rem; }
+  .tc-subhead {
+    margin: 0.42rem 0 0.3rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .tc-list { margin: 0.1rem 0 0.34rem 1rem; padding: 0; }
+  .tc-list li { margin: 0.06rem 0; }
+  .tc-context-row, .tc-rationale-row {
+    border-top: 1px solid #dbeafe;
+    padding-top: 0.3rem;
+    margin-top: 0.3rem;
+  }
+  .tc-rationale-head { display: flex; justify-content: space-between; gap: 0.4rem; }
+  .tc-mini-score { color: #334155; font-weight: 700; }
+  .tc-passage { color: #1e293b; margin: 0.12rem 0; }
+  .tc-muted { color: #607083; font-size: 0.68rem; }
+  .tc-empty { color: #64748b; }
+  .tc-box a { color: #1d4ed8; text-decoration: underline; }
+
+  .tc-slideout {
+    position: absolute;
+    top: 0;
+    right: calc(100% + 0.7rem);
+    width: min(27rem, 50vw);
+    background: #fff;
+    border: 1px solid #d8e3f0;
+    border-radius: 0.55rem;
+    box-shadow: 0 16px 28px rgba(2, 12, 24, 0.14);
+    padding: 0.4rem;
+    opacity: 0;
+    transform: translateX(-8px);
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+    z-index: 30;
+  }
+
+  .tc-slideout-root.is-open .tc-slideout {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .tc-slideout-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.1rem 0.2rem 0.35rem;
+    font-size: 0.72rem;
+    color: #0f172a;
+  }
+
+  .tc-close {
+    border: 1px solid #cfd8e3;
+    background: #fff;
+    color: #334155;
+    border-radius: 0.35rem;
+    font-size: 0.68rem;
+    padding: 0.12rem 0.35rem;
+    cursor: pointer;
+  }
+
+  .tc-close:hover { background: #f3f6fb; }
+
+  @media (max-width: 980px) {
+    :host {
+      float: none;
+      width: auto;
+      margin: 0.45rem 0 0.85rem;
+    }
+
+    .tc-root {
+      width: auto;
+      margin: 0;
+    }
+
+    .tc-slideout {
+      position: static;
+      width: auto;
+      margin-top: 0.4rem;
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+      box-shadow: none;
+    }
+  }
+`;
+
 function render({ model, el }) {
   const claimId = model.get('claimId');
   const claimText = model.get('claimText') || '';
@@ -177,7 +387,12 @@ function render({ model, el }) {
     </span>
   `;
 
-  el.innerHTML = '';
+  const root = el.shadowRoot || el.attachShadow({ mode: 'open' });
+  root.innerHTML = '';
+
+  const style = document.createElement('style');
+  style.textContent = WIDGET_STYLES;
+  root.appendChild(style);
 
   if (interactionMode === 'details') {
     const details = document.createElement('details');
@@ -190,7 +405,7 @@ function render({ model, el }) {
     box.innerHTML = detailHtml;
     details.appendChild(summary);
     details.appendChild(box);
-    el.appendChild(details);
+    root.appendChild(details);
     return;
   }
 
@@ -232,7 +447,7 @@ function render({ model, el }) {
 
   wrapper.appendChild(cardButton);
   wrapper.appendChild(panel);
-  el.appendChild(wrapper);
+  root.appendChild(wrapper);
 }
 
 export default { render };
