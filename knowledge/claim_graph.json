@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "generated_by_phase": "bootstrap",
+  "claims": [],
+  "edges": [],
+  "summary": {
+    "total_claims": 0,
+    "high_trust": 0,
+    "moderate_trust": 0,
+    "low_trust": 0,
+    "critical_or_unreliable": 0,
+    "needs_human_review": 0
+  }
+}

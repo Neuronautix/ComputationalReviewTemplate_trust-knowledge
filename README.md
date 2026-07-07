@@ -2,13 +2,13 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21213212.svg)](https://doi.org/10.5281/zenodo.21213212)
 
-Template repository for producing comprehensive AI-assisted critical literature reviews using the Expert Review Pipeline v29.
+Template repository for producing comprehensive AI-assisted critical literature reviews using the Expert Review Pipeline with TRUST claim tagging and claim-knowledge-base construction.
 
 ## Pipeline Overview
 
 ![Expert Review Pipeline v29](figures/fig_methods_pipeline.png)
 
-The pipeline executes 21 phases with **actor-critic separation** — 20 production phases (scoping through repository push) followed by Phase 21 deploy-polish, a post-deployment UX gate — section writers cannot see how they will be critiqued, figure auditors cannot see the argument arc, and citation verifiers cannot see the fix protocol. This prevents agents from gaming evaluation criteria.
+The pipeline executes 21 phases with **actor-critic separation** — 20 production phases (scoping through repository push) followed by Phase 21 deploy-polish, a post-deployment UX gate — section writers cannot see how they will be critiqued, figure auditors cannot see the argument arc, and citation verifiers cannot see the fix protocol. This prevents agents from gaming evaluation criteria while the TRUST layer remains validator-driven.
 
 ## Quick Start
 
@@ -86,13 +86,23 @@ The pipeline is split into role-specific skills with **information barriers** to
 | `comprev-myst-validator` | 7V, 14V, 19V, 20V | DATAML | MyST build, structural checks, figure/heading consistency, plugin-directive invocation, evidence-package population, directive whitelist (7V/19V), repo-wide forbidden-lexicon glob (19V), author-identity placeholder check (20V) |
 | `comprev-deploy-polish` | 21 | DATAML | Post-deployment UX gate: tier-A static checks against built Pages-artifact tarball; tier-B live-URL checks (per-page HTTP, external link health) with manual-checklist fallback when deploy URL is sandbox-inaccessible |
 
-### Plugins (3 files in `plugins/`)
+### Plugins (4 files in `plugins/`)
 
 | Plugin | What it does |
 |--------|-------------|
 | `authorship-plugin.mjs` | Renders interactive CRediT authorship widget |
 | `evidence-explorer-plugin.mjs` | Loads evidence packages into interactive browser |
 | `figure-lightbox-plugin.mjs` | Click-to-zoom lightbox for inline figures |
+| `trust-claim-plugin.mjs` | Renders margin trust claim-tags with expandable evidence and score context |
+
+### Knowledge Base (`knowledge/`)
+
+The TRUST upgrade adds a repository-level claim knowledge model:
+- `knowledge/schemas/claim_context.schema.json` - canonical claim object schema
+- `knowledge/schemas/trust_score.schema.json` - TRUST component and overall scoring schema
+- `knowledge/schemas/claim_graph.schema.json` - graph-level schema for claim relations
+- `knowledge/TRUST_RUBRIC.md` - mechanical scoring rubric and score-cap rules
+- `knowledge/examples/claim_context.example.json` - concrete claim-context example
 
 ### Content placeholders (`content/`)
 

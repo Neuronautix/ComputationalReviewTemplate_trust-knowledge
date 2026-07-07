@@ -3,7 +3,7 @@
 > **Template-aware:** This pipeline assumes the repo was created from `ComputationalReviewTemplate`. All directory structure, plugins, widgets, `myst.yml`, `deploy.yml`, and `authors.yml` already exist. Phase 14 UPDATES existing files (adds section entries to `myst.yml` toc, populates `content/provenance.md`). Phase 20 pushes content into the existing structure — it does NOT create directories or deploy infrastructure.
 
 
-Delegation templates for all DATAML mechanical phases: citation infrastructure (3), evidence curation (5), bibliography (9), methods (13), document assembly (14), citation triples (15), fix preparation (17), fix application (19), and repository push (20).
+Delegation templates for all DATAML mechanical phases: citation infrastructure (3), evidence curation (5), claim-KB seed construction (5b), bibliography (9), methods (13), document assembly (14), citation triples (15), fix preparation (17), fix application (19), and repository push (20).
 
 **Information barrier:** No information barrier. DATAML performs mechanical work (database queries, JSON manipulation, file assembly, git operations). Seeing all phase templates does not bias scientific judgment because DATAML does not make scientific judgments.
 
@@ -291,6 +291,40 @@ The total finding count summed across all per-section evidence packages MUST be 
 
 **MANDATORY — Conflict coverage (`ALL_CONFLICTS_ASSIGNED`):**
 Every conflict in the Phase 2 cluster evidence MUST appear in ≥1 per-section evidence package. Conflicts cannot be silently lost during cluster→section reassignment. If a conflict's two papers are split across sections that don't both surface it, replicate the conflict entry into each affected section's package.
+
+
+## Phase 5b: Claim KB Seed Construction
+
+**Agent:** DATAML
+
+This phase is mechanical and validator-driven. It creates a deterministic claim seed index from curated per-section evidence packages.
+
+**Inputs:**
+- `evidence/evidence_section_NN.json` files from Phase 5
+- `gate_scope.json`
+- `citation_key_map` and `author_name_table`
+
+**Outputs:**
+- `knowledge/claim_seed_index.json`
+- `knowledge/claim_graph.json` (initial graph state)
+
+**Required claim seed fields (minimum):**
+- `claim_id` (deterministic hash of section id + normalized claim text + sorted citation keys)
+- `section_id`, `source_file`, `paragraph_index`, `sentence_index`
+- `claim_text`, `normalized_claim`, `claim_type`, `modality`, `claim_polarity`
+- `citation_keys`, `dois`
+- `citation_contexts[]` with `cite_key`, `doi`, `role`, `supporting_passage`, `passage_source`, `direction_match`, `notes`
+- `evidence_relation`, `conflicts`, `knowledge_edges`
+- `trust_score` object with component scaffolding from `knowledge/schemas/trust_score.schema.json`
+- `created_by_phase`, `updated_by_phase`, `validation_status`, `human_review_required`
+
+**Mechanical rules:**
+- No writer-authored final trust labels are accepted in this phase.
+- For empirical claims, missing DOI implies `human_review_required: true` and a trust cap candidate.
+- Preserve citation passage provenance exactly as provided by curation/verification artifacts.
+
+**GATE ARTIFACT:**
+- Save `gate_claim_kb_seeded.json` with counts, schema-validation status, deterministic-ID checks, and missing-DOI counts.
 
 
 ## Phase 9: Bibliography
@@ -684,6 +718,18 @@ Phase 14 MUST also:
   2. Read `gate_scope.json` to determine the section range (`n_sections = len(scope["sections"])`)
   3. For each section `1..n_sections`, extract that section's findings, conflicts, and figure_data
   4. Save as `evidence/evidence_section_NN.json` with required keys:
+
+- **Refresh trust claim graph artifacts.**
+  1. Read all `:::{trust-claim}` directives from `content/*.md`.
+  2. Resolve each directive's claim id against `knowledge/claim_seed_index.json`.
+  3. Merge latest citation verification metadata into claim contexts.
+  4. Write `knowledge/claim_graph.json` and `knowledge/claim_index.json` with one entry per claim id.
+  5. Mark unresolved claim ids with `validation_status: needs_human_review`.
+
+- **Trust tag linkage assertions (hard gate before validator handoff).**
+  - Every `:::{trust-claim}` tag must reference either an existing `claim_id` or `claim-id-placeholder`.
+  - Every non-placeholder claim id must resolve in `knowledge/claim_graph.json`.
+  - Every resolved claim entry must include `trust_score.overall_score` and `trust_score.trust_label`.
      `section_id`, `section_title`, `findings` (array of finding **objects**, not cite_key strings),
      `argument_groups` (object), `conflicts`, `figure_data`, `unique_papers`, `total_findings`
   5. Verify all `n_sections` files exist and are non-empty before proceeding
