@@ -1,5 +1,23 @@
 {
   "schema_version": "1.0.0",
-  "generated_by_phase": "bootstrap",
-  "claims": []
+  "generated_by_phase": "phase_5b_claim_seed",
+  "claims": [
+    {
+      "claim_id": "clm_2f4c95c6017f8e0a",
+      "section_id": "sec-introduction",
+      "claim_text": "Fast-spiking interneuron activation increases temporal precision and constrains runaway cortical excitation.",
+      "normalized_claim": "fast spiking interneuron activation increase temporal precision constrain runaway cortical excitation",
+      "claim_type": "empirical",
+      "modality": "likely",
+      "citation_keys": [
+        "Cardin2009",
+        "Atallah2012"
+      ],
+      "dois": [
+        "10.1038/nature08417",
+        "10.1038/nn.3446"
+      ],
+      "validation_status": "validated"
+    }
+  ]
 }

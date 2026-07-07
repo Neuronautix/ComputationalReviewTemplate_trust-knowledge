@@ -1,13 +1,175 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "1970-01-01T00:00:00Z",
-  "generated_by_phase": "bootstrap",
-  "claims": [],
-  "edges": [],
+  "generated_at": "2026-07-07T00:00:00Z",
+  "generated_by_phase": "phase_16T_trust_score_validation",
+  "claims": [
+    {
+      "claim_id": "clm_2f4c95c6017f8e0a",
+      "section_id": "sec-introduction",
+      "source_file": "content/01_introduction.md",
+      "paragraph_index": 1,
+      "sentence_index": 1,
+      "claim_text": "Fast-spiking interneuron activation increases temporal precision and constrains runaway cortical excitation.",
+      "normalized_claim": "fast spiking interneuron activation increase temporal precision constrain runaway cortical excitation",
+      "claim_type": "empirical",
+      "claim_scope": {
+        "biological": "mouse visual cortex",
+        "computational": "gain and temporal control",
+        "clinical": null,
+        "methodological": "optogenetics and electrophysiology",
+        "conceptual": "inhibitory stabilization"
+      },
+      "claim_polarity": "positive",
+      "modality": "likely",
+      "entities": [
+        {
+          "name": "fast-spiking interneurons",
+          "entity_type": "concept",
+          "identifier": null
+        },
+        {
+          "name": "mouse",
+          "entity_type": "species",
+          "identifier": "NCBITaxon:10090"
+        }
+      ],
+      "citation_keys": [
+        "Cardin2009",
+        "Atallah2012"
+      ],
+      "dois": [
+        "10.1038/nature08417",
+        "10.1038/nn.3446"
+      ],
+      "citation_contexts": [
+        {
+          "cite_key": "Cardin2009",
+          "doi": "10.1038/nature08417",
+          "role": "direct_support",
+          "supporting_passage": "Optogenetic stimulation of fast-spiking cells increased spike timing precision and reduced network variability.",
+          "passage_source": "full_text",
+          "direction_match": true,
+          "notes": "Primary direct evidence."
+        },
+        {
+          "cite_key": "Atallah2012",
+          "doi": "10.1038/nn.3446",
+          "role": "partial_support",
+          "supporting_passage": "Inhibitory responses scaled with excitatory drive and constrained gain under sensory stimulation.",
+          "passage_source": "abstract",
+          "direction_match": true,
+          "notes": "Convergent support in a related paradigm."
+        }
+      ],
+      "evidence_relation": "directly_supported",
+      "conflicts": [],
+      "knowledge_edges": [
+        {
+          "subject": "fast-spiking interneuron activation",
+          "predicate": "increases",
+          "object": "temporal precision",
+          "qualifier": "during cortical responses",
+          "edge_source": "claim_text"
+        },
+        {
+          "subject": "fast-spiking interneuron activation",
+          "predicate": "constrains",
+          "object": "runaway cortical excitation",
+          "qualifier": null,
+          "edge_source": "claim_text"
+        }
+      ],
+      "trust_score": {
+        "components": {
+          "traceability": {
+            "score": 4,
+            "rationale": "Two citations with DOI-level linkage and supporting passages are available.",
+            "evidence": [
+              "Cardin2009:10.1038/nature08417",
+              "Atallah2012:10.1038/nn.3446"
+            ],
+            "failure_modes": [
+              "missing passage source",
+              "non-resolving citation key"
+            ],
+            "recommended_fix": "Require passage extraction for every cited empirical claim."
+          },
+          "robustness": {
+            "score": 3,
+            "rationale": "Convergent support from independent studies using related methods.",
+            "evidence": [
+              "multiple independent papers",
+              "same direction of effect"
+            ],
+            "failure_modes": [
+              "single-study support"
+            ],
+            "recommended_fix": "Add additional replication studies if available."
+          },
+          "uncertainty_calibration": {
+            "score": 3,
+            "rationale": "Claim is phrased as likely rather than definitive and matches evidence scope.",
+            "evidence": [
+              "modality=likely",
+              "no overclaiming language"
+            ],
+            "failure_modes": [
+              "definitive wording with partial evidence"
+            ],
+            "recommended_fix": "Keep modality calibrated to evidence depth."
+          },
+          "source_integrity": {
+            "score": 4,
+            "rationale": "Primary DOI-indexed sources with no integrity flags.",
+            "evidence": [
+              "CrossRef-resolving DOI references",
+              "primary experimental sources"
+            ],
+            "failure_modes": [
+              "metadata-only source",
+              "retracted reference"
+            ],
+            "recommended_fix": "Exclude low-integrity or unresolved sources."
+          },
+          "transferability_scope_control": {
+            "score": 2,
+            "rationale": "Evidence is specific to mouse cortical systems and should not be over-generalized.",
+            "evidence": [
+              "species and region constrained"
+            ],
+            "failure_modes": [
+              "cross-species overextension"
+            ],
+            "recommended_fix": "Keep explicit scope qualifiers in prose."
+          }
+        },
+        "overall_score": 80,
+        "trust_label": "moderate_trust",
+        "capped": false,
+        "cap_reason": null,
+        "computed_from": "validator",
+        "manual_override_justification": null
+      },
+      "human_review_required": false,
+      "created_by_phase": "phase_5b_claim_seed",
+      "updated_by_phase": "phase_16T_trust_score_validation",
+      "validation_status": "validated"
+    }
+  ],
+  "edges": [
+    {
+      "source_claim_id": "clm_2f4c95c6017f8e0a",
+      "relation": "supports",
+      "target": "Cardin2009",
+      "target_type": "citation",
+      "weight": 0.9,
+      "notes": "Primary direct support"
+    }
+  ],
   "summary": {
-    "total_claims": 0,
+    "total_claims": 1,
     "high_trust": 0,
-    "moderate_trust": 0,
+    "moderate_trust": 1,
     "low_trust": 0,
     "critical_or_unreliable": 0,
     "needs_human_review": 0
