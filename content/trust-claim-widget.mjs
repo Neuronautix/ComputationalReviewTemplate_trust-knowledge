@@ -137,17 +137,14 @@ function claimClassLabel(claimType) {
 const WIDGET_STYLES = `
   :host {
     display: block;
-    float: right;
-    clear: none;
-    width: min(18rem, 32vw);
-    margin: 0.2rem 0 0.85rem 0.9rem;
+    width: 14rem;
+    max-width: 100%;
+    margin: 0;
     padding: 0;
   }
 
   .tc-root {
     display: block;
-    float: none;
-    clear: none;
     width: 100%;
     margin: 0;
     padding-left: 0.6rem;
@@ -320,26 +317,38 @@ const WIDGET_STYLES = `
 
   .tc-close:hover { background: #f3f6fb; }
 
-  @media (max-width: 980px) {
+  @media (max-width: 1023px) {
     :host {
-      float: none;
-      width: auto;
-      margin: 0.45rem 0 0.85rem;
+      width: 100%;
+      margin: 0.35rem 0 0.5rem;
     }
 
     .tc-root {
-      width: auto;
+      width: 100%;
       margin: 0;
     }
 
+    /* On narrow screens the card stacks inline below its paragraph and the
+       details expand in-flow on tap (no absolute slideout / margin lane). */
     .tc-slideout {
       position: static;
       width: auto;
-      margin-top: 0.4rem;
-      opacity: 1;
+      margin-top: 0;
       transform: none;
-      pointer-events: auto;
       box-shadow: none;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      pointer-events: none;
+      transition: none;
+    }
+
+    .tc-slideout-root.is-open .tc-slideout {
+      opacity: 1;
+      max-height: none;
+      overflow: visible;
+      pointer-events: auto;
+      margin-top: 0.4rem;
     }
   }
 `;
