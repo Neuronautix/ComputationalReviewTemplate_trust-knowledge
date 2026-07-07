@@ -3,9 +3,116 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
-import { createRequire } from 'node:module';
 
-const require = createRequire(import.meta.url);
+// Minimal, dependency-free YAML parser for MyST author files.
+//
+// MyST bundles its own dependencies, so `require('yaml')` cannot resolve from a
+// plugin, and this template is meant to run with a bare `npx myst` (no
+// package.json / npm install). Rather than add an install step, we parse the
+// block-style subset that author files actually use: nested mappings, sequences
+// of scalars or mappings, quoted/plain scalars, booleans, numbers, and null.
+// Not supported (and not used by author files): flow collections (`[a, b]`),
+// anchors/aliases, multi-line block scalars (`|`, `>`), and complex keys.
+function parseMiniYaml(text) {
+  const stripComment = (s) => {
+    let inS = false;
+    let inD = false;
+    for (let i = 0; i < s.length; i += 1) {
+      const c = s[i];
+      if (c === "'" && !inD) inS = !inS;
+      else if (c === '"' && !inS) inD = !inD;
+      else if (c === '#' && !inS && !inD && i > 0 && /\s/.test(s[i - 1])) return s.slice(0, i);
+    }
+    return s;
+  };
+
+  const tokens = [];
+  for (const rawLine of String(text).split(/\r?\n/)) {
+    const trimmed = rawLine.trim();
+    if (trimmed === '' || trimmed === '---' || trimmed === '...' || trimmed.startsWith('#')) continue;
+    const indent = rawLine.length - rawLine.replace(/^\s*/, '').length;
+    const content = stripComment(rawLine.slice(indent)).replace(/\s+$/, '');
+    if (content !== '') tokens.push({ indent, content });
+  }
+
+  const splitKeyValue = (content) => {
+    const m = /^([A-Za-z0-9_.\-]+):(?:\s+([\s\S]*))?$/.exec(content);
+    if (!m) return null;
+    return { key: m[1], value: m[2] === undefined ? '' : m[2] };
+  };
+
+  const parseScalar = (raw) => {
+    const v = raw.trim();
+    if (v === '' || v === '~' || v === 'null' || v === 'Null' || v === 'NULL') return null;
+    if (v === 'true' || v === 'True' || v === 'TRUE') return true;
+    if (v === 'false' || v === 'False' || v === 'FALSE') return false;
+    if (v[0] === '"') {
+      try { return JSON.parse(v); } catch { /* fall through */ }
+      return v.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
+    if (v[0] === "'") return v.slice(1, -1).replace(/''/g, "'");
+    if (/^[-+]?\d+$/.test(v)) return parseInt(v, 10);
+    if (/^[-+]?(\d*\.\d+|\d+\.\d*)$/.test(v)) return parseFloat(v);
+    return v;
+  };
+
+  let pos = 0;
+  const isSeqItem = (tk) => tk.content === '-' || tk.content.startsWith('- ');
+
+  function parseBlock(indent) {
+    if (pos >= tokens.length) return null;
+    return isSeqItem(tokens[pos]) ? parseSeq(indent) : parseMap(indent);
+  }
+
+  function parseMap(indent) {
+    const obj = {};
+    while (pos < tokens.length) {
+      const tk = tokens[pos];
+      if (tk.indent !== indent || isSeqItem(tk)) break;
+      const kv = splitKeyValue(tk.content);
+      if (!kv) { pos += 1; continue; }
+      if (kv.value === '') {
+        pos += 1;
+        obj[kv.key] = pos < tokens.length && tokens[pos].indent > indent
+          ? parseBlock(tokens[pos].indent)
+          : null;
+      } else {
+        obj[kv.key] = parseScalar(kv.value);
+        pos += 1;
+      }
+    }
+    return obj;
+  }
+
+  function parseSeq(indent) {
+    const arr = [];
+    while (pos < tokens.length) {
+      const tk = tokens[pos];
+      if (tk.indent !== indent || !isSeqItem(tk)) break;
+      if (tk.content === '-') {
+        pos += 1;
+        arr.push(pos < tokens.length && tokens[pos].indent > indent
+          ? parseBlock(tokens[pos].indent)
+          : null);
+      } else {
+        const itemContent = tk.content.slice(2);
+        const itemIndent = indent + 2;
+        if (splitKeyValue(itemContent)) {
+          // Sequence item is a mapping whose first key sits on the dash line;
+          // rewrite the token to that key's column and let parseMap consume it.
+          tokens[pos] = { indent: itemIndent, content: itemContent };
+          arr.push(parseMap(itemIndent));
+        } else {
+          arr.push(parseScalar(itemContent));
+          pos += 1;
+        }
+      }
+    }
+    return arr;
+  }
+
+  return tokens.length ? parseBlock(tokens[0].indent) : null;
+}
 
 const authorshipDirective = {
   name: 'authorship-explorer',
@@ -79,8 +186,7 @@ const authorshipTransform = {
 
         try {
           const raw = readFileSync(yamlPath, 'utf-8');
-          const { parse } = require('yaml');
-          const fullData = parse(raw);
+          const fullData = parseMiniYaml(raw);
 
           // Helper: resolve affiliation ID strings to full objects
           function resolveAffiliations(data) {
@@ -107,7 +213,7 @@ const authorshipTransform = {
             try {
               const altPath = resolve(docDir, node.authorsAltPath);
               const altRaw = readFileSync(altPath, 'utf-8');
-              const altData = parse(altRaw);
+              const altData = parseMiniYaml(altRaw);
               altContributors = resolveAffiliations(altData);
             } catch (altErr) {
               console.warn(`authorship-plugin: Alt authors error: ${altErr.message}`);
@@ -121,7 +227,7 @@ const authorshipTransform = {
             try {
               const alt2Path = resolve(docDir, node.authorsAlt2Path);
               const alt2Raw = readFileSync(alt2Path, 'utf-8');
-              const alt2Data = parse(alt2Raw);
+              const alt2Data = parseMiniYaml(alt2Raw);
               alt2Contributors = resolveAffiliations(alt2Data);
             } catch (alt2Err) {
               console.warn(`authorship-plugin: Alt2 authors error: ${alt2Err.message}`);
