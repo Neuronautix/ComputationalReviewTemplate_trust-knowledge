@@ -1,4 +1,4 @@
-# Expert Review Orchestrator v30
+# Expert Review Orchestrator v29
 
 ## Purpose
 Coordinator-level skill governing how specialist agents compose outputs into unified long-form scientific reviews (30–200+ pages).
@@ -37,7 +37,7 @@ Before `generate_plan`, the coordinator runs Phase 1 to produce the scope and pl
 
 1. **Capture user prompt verbatim.** The coordinator copies the user's submitted task description, byte-for-byte, into a buffer that the Phase 1 DATAML materialiser will write to `provenance/review_request.txt`.
 
-2. **Phase 1 LITREVIEW (scoping actor).** Delegate to a LITREVIEW agent loaded with `comprev-scoping`. The agent reads the captured prompt, defines clusters/sections/length targets, parses `evidence_parameters`, and returns `scope.json` containing the scope decisions plus a `plan_content` list of 20 phase entries ready for `generate_plan`. The LITREVIEW agent does NOT call `generate_plan` itself.
+2. **Phase 1 LITREVIEW (scoping actor).** Delegate to a LITREVIEW agent loaded with `comprev-scoping`. The agent reads the captured prompt, defines clusters/sections/length targets, parses `evidence_parameters`, and returns `scope.json` containing the scope decisions plus a `plan_content` list of 21 phase entries ready for `generate_plan`. The LITREVIEW agent does NOT call `generate_plan` itself.
 
 3. **Phase 1 DATAML (materialiser).** Delegate to a DATAML actor loaded with `comprev-dataml-phases` (Phase 1 Scoping Materialisation section). The actor materialises `provenance/review_request.txt` (verbatim bytes), `provenance/review_request.md` (three-section render), and `gate_scope.json` (derived from `scope.json` with `review_request_path`). No template placeholders may remain.
 
@@ -469,6 +469,7 @@ Section-body MyST directives are restricted to a documented whitelist. Section w
 | `:::{warning}` | section bodies | Same constraints as admonition |
 | `:::{authorship-explorer}` | frontmatter only | Plugin-registered |
 | `:::{evidence-explorer}` | section bodies | Plugin-registered |
+| `:::{trust-claim}` | section bodies | Claim-level TRUST tag; final scores come only from Phase 16T |
 
 Notably **forbidden** in section bodies (the assembler emits global versions): `:::{contents}`, `:::{toctree}`, `:::{include}`, `:::{tableofcontents}`. These build a per-section TOC that conflicts with the project-level `myst.yml` TOC and pollutes the rendered manuscript.
 

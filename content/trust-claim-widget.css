@@ -56,6 +56,12 @@
   background: #eef4fb;
 }
 
+.tc-summary:focus-visible,
+.tc-card-btn:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .tc-summary::-webkit-details-marker {
   display: none;
 }
@@ -110,6 +116,37 @@
 .tc-critical { background: #d64545; color: #ffffff; }
 .tc-pending { background: #e5e7eb; color: #374151; }
 
+/* These selectors intentionally live outside the widget's shadow root. The
+   build plugin emits a precise inline anchor when it can prove the text match;
+   runtime text-quote matches use semantic <mark> nodes for the same effect. */
+.trust-claim-target.tc-is-highlighted,
+.tc-is-highlighted,
+mark.tc-runtime-highlight {
+  color: inherit;
+  background: #fef08a;
+  border-radius: 0.16rem;
+  box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.32);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-color 100ms ease, box-shadow 100ms ease;
+}
+
+html[data-theme="dark"] .trust-claim-target.tc-is-highlighted,
+html[data-theme="dark"] .tc-is-highlighted,
+html[data-theme="dark"] mark.tc-runtime-highlight {
+  color: inherit;
+  background: #854d0e;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-claim-target.tc-is-highlighted,
+  .tc-is-highlighted,
+  mark.tc-runtime-highlight {
+    transition: none;
+  }
+}
+
 .tc-box {
   margin-top: 0.36rem;
   border: 1px solid #d8e3f0;
@@ -153,7 +190,21 @@
   color: #334155;
   font-weight: 700;
 }
-.tc-passage { color: #1e293b; margin: 0.12rem 0; }
+.tc-passage {
+  color: #1e293b;
+  margin: 0.16rem 0 0;
+  padding-left: 0.48rem;
+  border-left: 2px solid #bfdbfe;
+}
+.tc-passage-record { margin-top: 0.28rem; }
+.tc-doi { margin-top: 0.28rem; }
+.tc-component-evidence {
+  margin: 0.16rem 0 0 1rem;
+  padding: 0;
+  color: #475569;
+  font-size: 0.68rem;
+}
+.tc-component-evidence li { margin: 0.04rem 0; }
 .tc-muted { color: #607083; font-size: 0.68rem; }
 .tc-empty { color: #64748b; }
 

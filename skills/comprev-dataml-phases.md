@@ -309,7 +309,10 @@ This phase is mechanical and validator-driven. It creates a deterministic claim 
 - `knowledge/claim_graph.json` (initial graph state)
 
 **Required claim seed fields (minimum):**
-- `claim_id` (deterministic hash of section id + normalized claim text + sorted citation keys)
+- `claim_id` (first 16 lowercase hex characters of SHA-256 over
+  `section_id + "\\n" + canonical_claim_text`, prefixed with `clm_`; canonical text is
+  Unicode NFKC-normalized, trimmed, and has internal whitespace collapsed). Citation keys
+  are deliberately excluded so adding or correcting evidence does not change claim identity.
 - `section_id`, `source_file`, `paragraph_index`, `sentence_index`
 - `claim_text`, `normalized_claim`, `claim_type`, `modality`, `claim_polarity`
 - `citation_keys`, `dois`

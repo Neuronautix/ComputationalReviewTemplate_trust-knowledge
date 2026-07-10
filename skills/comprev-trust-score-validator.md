@@ -57,7 +57,10 @@ when any trigger is present:
 6. **CAP_RULE_ENFORCED**: if any trigger exists and no explicit override justification, `overall_score <= 60`.
 7. **EMPIRICAL_DOI_RULE**: empirical claims with missing DOI are capped and flagged for human review.
 8. **PROVENANCE_FIELDS_PRESENT**: `created_by_phase`, `updated_by_phase`, and `validation_status` present on every claim.
-9. **CLAIM_ID_STABLE**: deterministic `claim_id` recomputes from section id + normalized claim + sorted citation keys.
+9. **CLAIM_ID_STABLE**: deterministic `claim_id` recomputes as `clm_` plus the first 16
+   lowercase hex characters of SHA-256 over `section_id + "\\n" + canonical_claim_text`.
+   Canonical text is the exact claim text after Unicode NFKC normalization, trimming, and
+   whitespace collapse. Citation keys are excluded so evidence corrections preserve identity.
 
 ## Output Artifacts
 

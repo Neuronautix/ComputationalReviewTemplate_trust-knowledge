@@ -66,11 +66,13 @@ Each Phase 7 delegation template MUST include the Phase 6 verdicts artifact: `{{
   :::
   ```
 - No double backticks except in code blocks
-- Include `{authorship-explorer}` directive at end of file (before any code dropdowns)
+- Do not include `{authorship-explorer}` in a section file; Phase 14 adds it to the frontmatter only.
 
 **MANDATORY — TRUST tag discipline:**
 - Add trust-claim tags only for important synthesis claims, not every sentence.
-- `:claim:` text must match the corresponding claim sentence in prose.
+- `:claim:` must be an exact contiguous plain-text excerpt of the immediately preceding
+  prose paragraph after inline Markdown formatting is removed. Paraphrases are forbidden:
+  the renderer uses this exact quote to highlight the scored text.
 - `:cites:` must contain only cite keys present in the section evidence package.
 - Writers MUST NOT assign final TRUST labels or cap overrides. Final trust scoring is validator-driven.
 
@@ -281,7 +283,9 @@ The coordinator delegates this to DATAML as a mechanical validation step. For ea
 
 9. **Trust-claim integrity:** Every `:::{trust-claim}` block must include `:claim:`, `:cites:`,
   `:claim-type:`, and `:modality:`. Reject writer-assigned final fields such as
-  `:trust-label:` or `:cap-reason:`.
+  `:score:`, `:trust-label:`, or `:cap-reason:`. After stripping inline Markdown from the
+  immediately preceding paragraph, require the canonicalized `:claim:` value to be one exact
+  contiguous substring; reject paraphrases and ambiguous duplicate matches.
 
 If ANY check fails, `send_message` back to the writer with the specific regex matches and line numbers.
 10. **No uncited mechanistic claims:** Grep for mechanistic verbs without adjacent citations.

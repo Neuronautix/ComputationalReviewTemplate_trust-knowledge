@@ -1,0 +1,38 @@
+{
+  "schema_version": "2.0.0",
+  "rubric_version": "2.0.0",
+  "gate_id": "phase_16T_trust_score_validation",
+  "status": "pass",
+  "validated_at": "2026-07-10T09:20:00Z",
+  "validator": "node scripts/validate-trust.js",
+  "inputs": [
+    "content/01_introduction.md",
+    "content/references.bib",
+    "knowledge/claim_graph.json",
+    "knowledge/claim_seed_index.json"
+  ],
+  "outputs": [
+    "knowledge/claim_index.json",
+    "knowledge/trust_score_report.json",
+    "provenance/gate_trust_scores.json"
+  ],
+  "checks": {
+    "deterministic_claim_ids": true,
+    "exact_prose_anchors": true,
+    "atom_level_citation_attribution": true,
+    "bibliography_key_doi_alignment": true,
+    "component_rule_integrity": true,
+    "score_formula_integrity": true,
+    "label_integrity": true,
+    "cap_integrity": true,
+    "edge_integrity": true,
+    "derived_artifact_integrity": true
+  },
+  "counts": {
+    "claims": 4,
+    "citation_contexts": 5,
+    "verified_passages": 15,
+    "failures": 0
+  },
+  "failures": []
+}

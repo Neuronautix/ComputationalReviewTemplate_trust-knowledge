@@ -1,0 +1,61 @@
+{
+  "schema_version": "2.0.0",
+  "rubric_version": "2.0.0",
+  "generated_at": "2026-07-10T09:20:00Z",
+  "source": "knowledge/claim_graph.json",
+  "formula": "raw_score=5*sum(component_scores); overall_score=min(raw_score,60) when capped",
+  "claims": [
+    {
+      "claim_id": "clm_7659634fb095cdce",
+      "component_scores": { "traceability": 4, "robustness": 3, "uncertainty_calibration": 4, "source_integrity": 4, "transferability_scope_control": 4 },
+      "component_rules": { "traceability": "T4_ATOM_LEVEL", "robustness": "R3_CONVERGENT", "uncertainty_calibration": "U4_EXACT_CALIBRATION", "source_integrity": "S4_VERIFIED_PRIMARY", "transferability_scope_control": "X4_SCOPE_MATCHED" },
+      "raw_score": 95,
+      "overall_score": 95,
+      "trust_label": "high_trust",
+      "capped": false,
+      "cap_reasons": []
+    },
+    {
+      "claim_id": "clm_3ea62e8a65cbdb75",
+      "component_scores": { "traceability": 4, "robustness": 4, "uncertainty_calibration": 4, "source_integrity": 4, "transferability_scope_control": 4 },
+      "component_rules": { "traceability": "T4_ATOM_LEVEL", "robustness": "R4_ORIGINATING_SOURCE", "uncertainty_calibration": "U4_EXACT_CALIBRATION", "source_integrity": "S4_VERIFIED_PRIMARY", "transferability_scope_control": "X4_SCOPE_MATCHED" },
+      "raw_score": 100,
+      "overall_score": 100,
+      "trust_label": "high_trust",
+      "capped": false,
+      "cap_reasons": []
+    },
+    {
+      "claim_id": "clm_451ccab1daf492e4",
+      "component_scores": { "traceability": 4, "robustness": 4, "uncertainty_calibration": 4, "source_integrity": 4, "transferability_scope_control": 4 },
+      "component_rules": { "traceability": "T4_ATOM_LEVEL", "robustness": "R4_ORIGINATING_SOURCE", "uncertainty_calibration": "U4_EXACT_CALIBRATION", "source_integrity": "S4_VERIFIED_PRIMARY", "transferability_scope_control": "X4_SCOPE_MATCHED" },
+      "raw_score": 100,
+      "overall_score": 100,
+      "trust_label": "high_trust",
+      "capped": false,
+      "cap_reasons": []
+    },
+    {
+      "claim_id": "clm_111c57f0f206705d",
+      "component_scores": { "traceability": 4, "robustness": 4, "uncertainty_calibration": 4, "source_integrity": 4, "transferability_scope_control": 4 },
+      "component_rules": { "traceability": "T4_ATOM_LEVEL", "robustness": "R4_ORIGINATING_SOURCE", "uncertainty_calibration": "U4_EXACT_CALIBRATION", "source_integrity": "S4_VERIFIED_PRIMARY", "transferability_scope_control": "X4_SCOPE_MATCHED" },
+      "raw_score": 100,
+      "overall_score": 100,
+      "trust_label": "high_trust",
+      "capped": false,
+      "cap_reasons": []
+    }
+  ],
+  "summary": {
+    "total_claims": 4,
+    "mean_overall_score": 98.75,
+    "minimum_overall_score": 95,
+    "maximum_overall_score": 100,
+    "high_trust": 4,
+    "moderate_trust": 0,
+    "low_trust": 0,
+    "critical_or_unreliable": 0,
+    "capped_claims": 0,
+    "needs_human_review": 0
+  }
+}

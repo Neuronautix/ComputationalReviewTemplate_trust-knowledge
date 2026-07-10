@@ -27,7 +27,207 @@ function safeJsonParse(value, fallback) {
   }
 }
 
-function renderCitationContexts(contexts) {
+function normalizeCharacter(character) {
+  if (/\s/u.test(character)) return ' ';
+  if (/[\u2018\u2019\u201A\u201B]/u.test(character)) return "'";
+  if (/[\u201C\u201D\u201E\u201F]/u.test(character)) return '"';
+  if (/[\u2010-\u2015\u2212]/u.test(character)) return '-';
+  if (character === '\u00AD') return '';
+  return character.normalize('NFKC');
+}
+
+/** Normalize typography/whitespace while retaining offsets into source text. */
+export function normalizeTextWithMap(value) {
+  const source = String(value || '');
+  let text = '';
+  const starts = [];
+  const ends = [];
+
+  for (let rawStart = 0; rawStart < source.length;) {
+    const codePoint = source.codePointAt(rawStart);
+    const character = String.fromCodePoint(codePoint);
+    const rawEnd = rawStart + character.length;
+    const normalized = normalizeCharacter(character);
+    for (const outputCharacter of normalized) {
+      if (outputCharacter === ' ' && text.endsWith(' ')) {
+        ends[ends.length - 1] = rawEnd;
+        continue;
+      }
+      text += outputCharacter;
+      starts.push(rawStart);
+      ends.push(rawEnd);
+    }
+    rawStart = rawEnd;
+  }
+
+  return { text, starts, ends };
+}
+
+function normalizedSelector(value) {
+  return normalizeTextWithMap(value).text.trim();
+}
+
+/** Return raw offsets only when a quote and its context identify one match. */
+export function findTextQuote(text, quote, prefix = '', suffix = '') {
+  const haystack = normalizeTextWithMap(text);
+  const exact = normalizedSelector(quote);
+  if (!exact) return null;
+  const before = normalizedSelector(prefix);
+  const after = normalizedSelector(suffix);
+  const matches = [];
+  let from = 0;
+
+  while (from <= haystack.text.length - exact.length) {
+    const index = haystack.text.indexOf(exact, from);
+    if (index === -1) break;
+    const prefixMatches = !before || haystack.text.slice(0, index).trimEnd().endsWith(before);
+    const suffixMatches = !after || haystack.text.slice(index + exact.length).trimStart().startsWith(after);
+    if (prefixMatches && suffixMatches) matches.push(index);
+    from = index + 1;
+  }
+
+  if (matches.length !== 1) return null;
+  const normalizedStart = matches[0];
+  return {
+    start: haystack.starts[normalizedStart],
+    end: haystack.ends[normalizedStart + exact.length - 1],
+  };
+}
+
+const activeHighlights = new WeakMap();
+
+function collectTextNodes(element) {
+  const doc = element.ownerDocument;
+  const showText = doc.defaultView?.NodeFilter?.SHOW_TEXT ?? 4;
+  const walker = doc.createTreeWalker(element, showText);
+  const nodes = [];
+  let node = walker.nextNode();
+  while (node) {
+    const parentName = node.parentElement?.tagName?.toLowerCase();
+    if (parentName !== 'script' && parentName !== 'style') nodes.push(node);
+    node = walker.nextNode();
+  }
+  return nodes;
+}
+
+function markTextRange(element, range, anchorName) {
+  const doc = element.ownerDocument;
+  const textNodes = collectTextNodes(element);
+  const segments = [];
+  let offset = 0;
+
+  for (const node of textNodes) {
+    const nodeStart = offset;
+    const nodeEnd = nodeStart + node.data.length;
+    const start = Math.max(range.start, nodeStart);
+    const end = Math.min(range.end, nodeEnd);
+    if (start < end) {
+      segments.push({ node, start: start - nodeStart, end: end - nodeStart });
+    }
+    offset = nodeEnd;
+  }
+
+  if (segments.length === 0) return null;
+  const marks = [];
+  // Reverse processing keeps all offsets valid even when adjacent text nodes
+  // share a parent and are normalized during cleanup.
+  for (const segment of segments.reverse()) {
+    const after = segment.node.splitText(segment.end);
+    const selected = segment.node.splitText(segment.start);
+    const mark = doc.createElement('mark');
+    mark.className = 'tc-runtime-highlight';
+    mark.dataset.trustClaimAnchor = anchorName;
+    selected.parentNode.replaceChild(mark, selected);
+    mark.appendChild(selected);
+    marks.push(mark);
+    // Retain the split tail in the DOM. `after` is deliberately referenced so
+    // linters do not mistake splitText for a discarded mutation.
+    void after;
+  }
+
+  return () => {
+    for (const mark of marks) {
+      if (!mark.parentNode) continue;
+      const parent = mark.parentNode;
+      while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+      parent.removeChild(mark);
+      parent.normalize();
+    }
+  };
+}
+
+function previousContentSibling(el) {
+  const aside = el.closest?.('.trust-claim-aside');
+  let candidate = aside?.previousElementSibling || null;
+  while (candidate?.classList?.contains('trust-claim-aside')) {
+    candidate = candidate.previousElementSibling;
+  }
+  return candidate;
+}
+
+/**
+ * Highlight the exact build-time anchor or a unique runtime text quote.
+ * Explicit target ids may select their entire element; inferred paragraphs may
+ * not, which prevents a paraphrased claim from highlighting unrelated prose.
+ */
+export function activateConcernedText(el, selector) {
+  const doc = el.ownerDocument;
+  activeHighlights.get(doc)?.();
+
+  const targetAnchor = selector.targetAnchor
+    ? doc.getElementById(selector.targetAnchor)
+    : null;
+  const explicitTarget = selector.targetId
+    ? doc.getElementById(selector.targetId)
+    : null;
+  const scope = selector.scopeAnchor
+    ? doc.getElementById(selector.scopeAnchor)
+    : null;
+
+  let cleanup = null;
+  let highlighted = false;
+
+  if (targetAnchor) {
+    targetAnchor.classList.add('tc-is-highlighted');
+    cleanup = () => targetAnchor.classList.remove('tc-is-highlighted');
+    highlighted = true;
+  } else if (explicitTarget && !selector.quote) {
+    explicitTarget.classList.add('tc-is-highlighted');
+    cleanup = () => explicitTarget.classList.remove('tc-is-highlighted');
+    highlighted = true;
+  } else {
+    const quoteScope = explicitTarget || scope || previousContentSibling(el);
+    if (quoteScope && selector.quote) {
+      const range = findTextQuote(
+        quoteScope.textContent || '',
+        selector.quote,
+        selector.prefix,
+        selector.suffix,
+      );
+      if (range) {
+        cleanup = markTextRange(
+          quoteScope,
+          range,
+          selector.targetAnchor || selector.scopeAnchor || selector.targetId || 'runtime',
+        );
+        highlighted = Boolean(cleanup);
+      }
+    }
+  }
+
+  if (!cleanup) cleanup = () => {};
+  let active = true;
+  const coordinatedCleanup = () => {
+    if (!active) return;
+    active = false;
+    cleanup();
+    if (activeHighlights.get(doc) === coordinatedCleanup) activeHighlights.delete(doc);
+  };
+  activeHighlights.set(doc, coordinatedCleanup);
+  return { highlighted, cleanup: coordinatedCleanup };
+}
+
+export function renderCitationContexts(contexts) {
   if (!Array.isArray(contexts) || contexts.length === 0) {
     return '<div class="tc-empty">No citation contexts available yet.</div>';
   }
@@ -35,16 +235,43 @@ function renderCitationContexts(contexts) {
     const doi = ctx.doi
       ? `<a href="https://doi.org/${escapeHtml(ctx.doi)}" target="_blank" rel="noopener">${escapeHtml(ctx.doi)}</a>`
       : 'No DOI';
-    const passage = escapeHtml(ctx.supporting_passage || 'No supporting passage captured.');
     const citeKey = escapeHtml(ctx.cite_key || 'Unknown key');
     const role = escapeHtml(ctx.role || 'unverified');
-    const source = escapeHtml(ctx.passage_source || 'unknown');
+    const sourceType = escapeHtml(ctx.source_type || 'unknown');
+    const bibliographyStatus = escapeHtml(ctx.bibliography_status || 'unverified');
+    const integrityStatus = escapeHtml(ctx.integrity_status || 'not_checked');
+    const contextAtoms = Array.isArray(ctx.supports_claim_atoms)
+      ? ctx.supports_claim_atoms.map(escapeHtml).join(', ')
+      : 'none';
+    const passages = Array.isArray(ctx.passages) && ctx.passages.length > 0
+      ? ctx.passages
+      : (ctx.supporting_passage ? [{
+        text: ctx.supporting_passage,
+        passage_source: ctx.passage_source || 'unknown',
+        locator: ctx.passage_source || 'unknown',
+        verification_status: 'legacy',
+        supports_claim_atoms: ctx.supports_claim_atoms || [],
+      }] : []);
+    const passageHtml = passages.length > 0
+      ? passages.map((passage) => {
+        const atoms = Array.isArray(passage.supports_claim_atoms)
+          ? passage.supports_claim_atoms.map(escapeHtml).join(', ')
+          : 'none';
+        return `
+          <div class="tc-passage-record">
+            <div class="tc-muted">${escapeHtml(passage.passage_source || 'unknown')} · ${escapeHtml(passage.locator || 'no locator')} · ${escapeHtml(passage.verification_status || 'unverified')} · atoms ${atoms}</div>
+            <blockquote class="tc-passage">${escapeHtml(passage.text || 'No passage text captured.')}</blockquote>
+          </div>
+        `;
+      }).join('')
+      : '<div class="tc-empty">No supporting passage captured.</div>';
     return `
       <div class="tc-context-row">
         <div><strong>${citeKey}</strong> (${role})</div>
-        <div class="tc-muted">Source: ${source} | Direction match: ${ctx.direction_match === true ? 'yes' : 'no'}</div>
-        <div class="tc-passage">${passage}</div>
-        <div class="tc-muted">${doi}</div>
+        <div class="tc-muted">${sourceType} · bibliography ${bibliographyStatus} · integrity ${integrityStatus} · direction ${ctx.direction_match === true ? 'match' : 'mismatch'}</div>
+        <div class="tc-muted">Attributed claim atoms: ${contextAtoms}</div>
+        ${passageHtml}
+        <div class="tc-muted tc-doi">${doi}</div>
       </div>
     `;
   }).join('');
@@ -90,10 +317,16 @@ function renderRationale(components) {
     if (!item || typeof item !== 'object') continue;
     const score = Number.isInteger(item.score) ? item.score : 'n/a';
     const rationale = escapeHtml(item.rationale || 'No rationale provided.');
+    const ruleId = escapeHtml(item.rule_id || 'unversioned-rule');
+    const evidence = Array.isArray(item.evidence) && item.evidence.length > 0
+      ? `<ul class="tc-component-evidence">${item.evidence.map((entry) => `<li>${escapeHtml(entry)}</li>`).join('')}</ul>`
+      : '<div class="tc-muted">No component evidence references recorded.</div>';
     rows.push(`
       <div class="tc-rationale-row">
         <div class="tc-rationale-head"><strong>${label}</strong> <span class="tc-mini-score">${score}/4</span></div>
+        <div class="tc-muted">Rule: ${ruleId}</div>
         <div class="tc-muted">${rationale}</div>
+        ${evidence}
       </div>
     `);
   }
@@ -108,20 +341,20 @@ function summaryTitle(score) {
   return `TRUST ${Number(score)}`;
 }
 
-function trustBandText(score) {
-  if (score == null || Number.isNaN(Number(score))) return 'Pending';
+export function trustBandText(score) {
+  if (score == null || Number.isNaN(Number(score))) return 'Pending validation';
   const n = Number(score);
-  if (n >= 85) return 'Very high';
-  if (n >= 70) return 'High';
-  if (n >= 50) return 'Moderate';
-  return 'Low';
+  if (n >= 85) return 'High trust';
+  if (n >= 70) return 'Moderate trust';
+  if (n >= 50) return 'Low trust';
+  return 'Critical / unreliable';
 }
 
 function scoreBandClass(score) {
   if (score == null || Number.isNaN(Number(score))) return 'tc-band-pending';
   const n = Number(score);
   if (n >= 85) return 'tc-band-high';
-  if (n >= 50) return 'tc-band-moderate';
+  if (n >= 70) return 'tc-band-moderate';
   return 'tc-band-low';
 }
 
@@ -198,6 +431,11 @@ const WIDGET_STYLES = `
   }
 
   .tc-card-btn:hover { background: #eef4fb; }
+  .tc-summary:focus-visible,
+  .tc-card-btn:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+  }
   .tc-summary::-webkit-details-marker { display: none; }
 
   .tc-rail-line { width: 2px; background: #0284c7; border-radius: 999px; flex: 0 0 auto; }
@@ -267,10 +505,35 @@ const WIDGET_STYLES = `
   }
   .tc-rationale-head { display: flex; justify-content: space-between; gap: 0.4rem; }
   .tc-mini-score { color: #334155; font-weight: 700; }
-  .tc-passage { color: #1e293b; margin: 0.12rem 0; }
+  .tc-passage {
+    color: #1e293b;
+    margin: 0.16rem 0 0;
+    padding-left: 0.48rem;
+    border-left: 2px solid #bfdbfe;
+  }
+  .tc-passage-record { margin-top: 0.28rem; }
+  .tc-doi { margin-top: 0.28rem; }
+  .tc-component-evidence {
+    margin: 0.16rem 0 0 1rem;
+    padding: 0;
+    color: #475569;
+    font-size: 0.68rem;
+  }
+  .tc-component-evidence li { margin: 0.04rem 0; }
   .tc-muted { color: #607083; font-size: 0.68rem; }
   .tc-empty { color: #64748b; }
   .tc-box a { color: #1d4ed8; text-decoration: underline; }
+  .tc-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 
   .tc-slideout {
     position: absolute;
@@ -353,7 +616,64 @@ const WIDGET_STYLES = `
   }
 `;
 
+function bindHighlightLifecycle(trigger, el, selector, status) {
+  let hovered = false;
+  let focused = false;
+  let activeCleanup = null;
+
+  function activate() {
+    activeCleanup?.();
+    const result = activateConcernedText(el, selector);
+    activeCleanup = result.cleanup;
+    status.textContent = result.highlighted
+      ? 'The exact text scored by this TRUST tag is highlighted.'
+      : 'The exact text for this TRUST tag could not be located.';
+  }
+
+  function deactivate() {
+    if (hovered || focused) return;
+    activeCleanup?.();
+    activeCleanup = null;
+    status.textContent = '';
+  }
+
+  function onMouseEnter() {
+    hovered = true;
+    activate();
+  }
+  function onMouseLeave() {
+    hovered = false;
+    deactivate();
+  }
+  function onFocus() {
+    focused = true;
+    activate();
+  }
+  function onBlur() {
+    focused = false;
+    deactivate();
+  }
+
+  trigger.addEventListener('mouseenter', onMouseEnter);
+  trigger.addEventListener('mouseleave', onMouseLeave);
+  trigger.addEventListener('focus', onFocus);
+  trigger.addEventListener('blur', onBlur);
+
+  return () => {
+    hovered = false;
+    focused = false;
+    activeCleanup?.();
+    activeCleanup = null;
+    trigger.removeEventListener('mouseenter', onMouseEnter);
+    trigger.removeEventListener('mouseleave', onMouseLeave);
+    trigger.removeEventListener('focus', onFocus);
+    trigger.removeEventListener('blur', onBlur);
+  };
+}
+
 function render({ model, el }) {
+  if (typeof el.__trustClaimCleanup === 'function') el.__trustClaimCleanup();
+
   const claimId = model.get('claimId');
   const claimText = model.get('claimText') || '';
   const cites = safeJsonParse(model.get('cites'), []);
@@ -366,11 +686,20 @@ function render({ model, el }) {
   const rationale = safeJsonParse(model.get('rationale'), null);
   const humanReviewRequired = model.get('humanReviewRequired') === true;
   const interactionMode = String(model.get('interactionMode') || 'slideout').toLowerCase();
+  const targetSelector = {
+    targetAnchor: model.get('targetAnchor') || '',
+    scopeAnchor: model.get('scopeAnchor') || '',
+    targetId: model.get('targetId') || '',
+    quote: model.get('quote') || '',
+    prefix: model.get('prefix') || '',
+    suffix: model.get('suffix') || '',
+  };
 
   const scoreText = trustScore == null || Number.isNaN(Number(trustScore)) ? '??' : String(Number(trustScore));
   const trustBand = trustBandText(trustScore);
   const bandClass = scoreBandClass(trustScore);
   const classLabel = claimClassLabel(claimType);
+  const accessibleSummary = `${summaryTitle(trustScore)}, ${trustBand}. ${classLabel}. Hover or focus to highlight the scored text.`;
 
   const detailHtml = `
     <div class="tc-row"><strong>Claim ID:</strong> ${escapeHtml(claimId || 'placeholder')}</div>
@@ -389,7 +718,7 @@ function render({ model, el }) {
 
   const cardHtml = `
     <span class="tc-rail-line" aria-hidden="true"></span>
-    <span class="${badgeClass(trustScore)}">${escapeHtml(scoreText)}</span>
+    <span class="${badgeClass(trustScore)}" aria-hidden="true" title="Highlight scored text">${escapeHtml(scoreText)}</span>
     <span class="tc-summary-main">
       <span class="tc-summary-head">${escapeHtml(classLabel)}</span>
       <span class="tc-summary-sub ${bandClass}">${escapeHtml(summaryTitle(trustScore))} - ${escapeHtml(trustBand)}</span>
@@ -403,11 +732,18 @@ function render({ model, el }) {
   style.textContent = WIDGET_STYLES;
   root.appendChild(style);
 
+  const status = document.createElement('span');
+  status.className = 'tc-sr-only';
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  root.appendChild(status);
+
   if (interactionMode === 'details') {
     const details = document.createElement('details');
     details.className = 'tc-root';
     const summary = document.createElement('summary');
     summary.className = 'tc-summary';
+    summary.setAttribute('aria-label', accessibleSummary);
     summary.innerHTML = cardHtml;
     const box = document.createElement('div');
     box.className = 'tc-box';
@@ -415,6 +751,7 @@ function render({ model, el }) {
     details.appendChild(summary);
     details.appendChild(box);
     root.appendChild(details);
+    el.__trustClaimCleanup = bindHighlightLifecycle(summary, el, targetSelector, status);
     return;
   }
 
@@ -425,11 +762,15 @@ function render({ model, el }) {
   cardButton.type = 'button';
   cardButton.className = 'tc-summary tc-card-btn';
   cardButton.setAttribute('aria-expanded', 'false');
+  cardButton.setAttribute('aria-label', accessibleSummary);
   cardButton.innerHTML = cardHtml;
 
   const panel = document.createElement('aside');
   panel.className = 'tc-slideout';
   panel.setAttribute('aria-hidden', 'true');
+  const panelId = `tc-panel-${String(claimId || 'claim').replace(/[^a-zA-Z0-9_-]+/g, '-')}`;
+  panel.id = panelId;
+  cardButton.setAttribute('aria-controls', panelId);
   panel.innerHTML = `
     <div class="tc-slideout-header">
       <strong>Trust claim details</strong>
@@ -457,6 +798,7 @@ function render({ model, el }) {
   wrapper.appendChild(cardButton);
   wrapper.appendChild(panel);
   root.appendChild(wrapper);
+  el.__trustClaimCleanup = bindHighlightLifecycle(cardButton, el, targetSelector, status);
 }
 
 export default { render };

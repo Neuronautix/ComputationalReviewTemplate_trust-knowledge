@@ -280,7 +280,13 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     - if `:claim-id: != claim-id-placeholder`, it must resolve in `knowledge/claim_graph.json` `claims[].claim_id`
     - resolved claim must include `trust_score.overall_score` and `trust_score.trust_label`
     - directive options must include `:claim-id:`, `:claim:`, and `:cites:`
-    Unresolved IDs or missing score fields are a hard fail. **pass/fail**
+    - `:claim:` must canonicalize to one exact contiguous plain-text match in the immediately
+      preceding paragraph; zero matches, multiple matches, or paraphrase-only similarity fails
+    - `:cites:` keys must equal the resolved claim's `citation_keys` after sorting and must all
+      resolve in the project bibliography
+    - writer-facing directives must not contain `:score:`, `:trust-label:`, or `:cap-reason:`
+    Unresolved IDs, missing score fields, ambiguous anchors, or citation drift are a hard fail.
+    **pass/fail**
 
 ## Output Schema
 
