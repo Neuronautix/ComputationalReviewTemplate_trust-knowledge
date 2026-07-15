@@ -33,6 +33,7 @@ jobs:
         run: |
           node scripts/validate-trust.js
           node scripts/test-trust-validator.js
+          node --test tests/*.test.mjs
 
       - name: Install dependencies
         run: |

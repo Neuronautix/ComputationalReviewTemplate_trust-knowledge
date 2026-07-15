@@ -176,6 +176,31 @@ function splitInlineNode(node, selectionStart, selectionEnd) {
 }
 
 function wrapParagraphSelection(paragraph, range, targetAnchor) {
+  // HTML cannot represent partially overlapping inline spans. Re-splitting a
+  // previously generated target would duplicate its identifier, so leave this
+  // selection for the runtime TextQuoteSelector fallback instead.
+  let offset = 0;
+  let overlapsExistingTarget = false;
+  function inspect(node) {
+    const start = offset;
+    if (typeof node?.value === 'string') {
+      offset += node.value.length;
+    } else if (Array.isArray(node?.children)) {
+      node.children.forEach(inspect);
+    }
+    const end = offset;
+    const classes = String(node?.class || '').split(/\s+/u);
+    if (
+      classes.includes('trust-claim-target')
+      && start < range.end
+      && end > range.start
+    ) {
+      overlapsExistingTarget = true;
+    }
+  }
+  (paragraph.children || []).forEach(inspect);
+  if (overlapsExistingTarget) return false;
+
   const synthetic = { type: 'span', children: paragraph.children || [] };
   const [before, selected, after] = splitInlineNode(synthetic, range.start, range.end);
   if (!selected?.children?.length) return false;
@@ -248,6 +273,7 @@ export function createTrustClaimTransform() {
   return (tree, vfile) => {
     const docDir = vfile?.path ? dirname(vfile.path) : process.cwd();
     let occurrence = 0;
+    const tokenOccurrences = new Map();
 
     function toAnywidget(node, kbClaim, targeting) {
       const claimText = kbClaim?.claim_text || node.claimText || '';
@@ -298,7 +324,10 @@ export function createTrustClaimTransform() {
         occurrence += 1;
         const kbClaim = loadKbClaim(child, docDir);
         const selector = selectorFrom(child, kbClaim);
-        const token = stableToken(child.claimId, `claim-${occurrence}`);
+        const baseToken = stableToken(child.claimId, `claim-${occurrence}`);
+        const tokenOccurrence = (tokenOccurrences.get(baseToken) || 0) + 1;
+        tokenOccurrences.set(baseToken, tokenOccurrence);
+        const token = tokenOccurrence === 1 ? baseToken : `${baseToken}-${tokenOccurrence}`;
         const generatedTarget = `trust-claim-target-${token}`;
         const generatedScope = `trust-claim-scope-${token}`;
         const paragraph = previousParagraph(node.children, index);
