@@ -1,0 +1,119 @@
+name: "Human Review or Commentary"
+description: Submit public peer-review feedback tied to an exact version of this computational review
+labels: ["human-review", "needs-moderation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form creates a public GitHub issue. Do not include private correspondence, confidential research, personal contact details, patient information, or copyrighted full-text articles. Feedback is screened by a human editor before it is represented as an admitted review record.
+
+  - type: input
+    id: review-version
+    attributes:
+      label: Review version
+      description: Give the release version, tag, commit, or permanent version URL you assessed. Do not use only "latest".
+      placeholder: "v1.2.0 or review/example/v1.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: submission-kind
+    attributes:
+      label: Submission type
+      options:
+        - "Peer review — assessment of the work"
+        - "Comment — interpretation or context"
+        - "Correction — a specific error"
+        - "Evidence submission — relevant supporting or conflicting evidence"
+    validations:
+      required: true
+
+  - type: textarea
+    id: target
+    attributes:
+      label: Exact target
+      description: Provide a TRUST claim ID when available. Otherwise quote the exact text and name its section. Write "whole review" only for review-wide feedback.
+      placeholder: |
+        Claim ID: clm_...
+        Section: ...
+        Exact text: "..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stance
+    attributes:
+      label: Relationship to the targeted claim
+      options:
+        - "Qualifies it"
+        - "Supports it"
+        - "Disputes it"
+        - "No position / review-wide"
+    validations:
+      required: true
+
+  - type: textarea
+    id: review-comment
+    attributes:
+      label: Review or comment
+      description: Explain the issue, why it matters, and the change or response you recommend.
+      placeholder: "The current wording... I recommend... because..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Supporting evidence
+      description: List DOI links or stable sources and state what each source supports. Links are treated as untrusted until checked.
+      placeholder: |
+        - https://doi.org/10.xxxx/... — supports ...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: recommendation
+    attributes:
+      label: Overall recommendation
+      description: Use "Not applicable" for comments that are not peer reviews.
+      options:
+        - "Not applicable"
+        - "Accept current version"
+        - "Minor revision"
+        - "Major revision"
+        - "Do not publish in current form"
+    validations:
+      required: true
+
+  - type: textarea
+    id: competing-interests
+    attributes:
+      label: Competing interests
+      description: State any relevant personal, professional, institutional, or financial conflicts, or write "None declared."
+      placeholder: "None declared."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-assistance
+    attributes:
+      label: AI assistance
+      options:
+        - "No AI assistance used to prepare this submission"
+        - "AI assistance used and disclosed in the comment"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: public-record-consent
+    attributes:
+      label: Public record and conduct
+      options:
+        - label: "I understand this issue, my account identity, and my submitted text are public and may be preserved with the review record."
+          required: true
+        - label: "I license my submitted text under CC BY 4.0 so it may be displayed and archived with attribution."
+          required: true
+        - label: "I confirm this submission contains no confidential information, sensitive personal data, or copyrighted full-text article."
+          required: true
+        - label: "I will participate in good faith and accept human moderation of abusive, deceptive, unsafe, or off-topic content."
+          required: true

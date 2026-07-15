@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/computational-review/schemas/human_submission.schema.json",
+  "title": "Public human submission for a computational review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "submission_id",
+    "revision",
+    "created_at",
+    "target",
+    "submitter",
+    "content",
+    "declarations",
+    "moderation",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "submission_id": {
+      "type": "string",
+      "pattern": "^hsub-[a-z0-9][a-z0-9-]{7,63}$"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "submitter": {
+      "$ref": "#/$defs/public_identity"
+    },
+    "content": {
+      "$ref": "#/$defs/content"
+    },
+    "declarations": {
+      "$ref": "#/$defs/declarations"
+    },
+    "moderation": {
+      "$ref": "#/$defs/moderation"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_id",
+        "review_version",
+        "release_manifest_sha256",
+        "selector"
+      ],
+      "properties": {
+        "review_id": {
+          "type": "string",
+          "pattern": "^review-[a-z0-9][a-z0-9-]{2,63}$"
+        },
+        "review_version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "release_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "selector": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind"],
+              "properties": {
+                "kind": {
+                  "const": "review"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "claim_id"],
+              "properties": {
+                "kind": {
+                  "const": "claim"
+                },
+                "claim_id": {
+                  "type": "string",
+                  "pattern": "^clm_[a-f0-9]{16}$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "source_path",
+                "source_sha256",
+                "exact_quote"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "text"
+                },
+                "source_path": {
+                  "type": "string",
+                  "pattern": "^content/(?!.*\\.\\.)[A-Za-z0-9_.\\/-]+\\.md$"
+                },
+                "source_sha256": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "exact_quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                },
+                "prefix": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "suffix": {
+                  "type": "string",
+                  "maxLength": 500
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "public_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity_ref", "display_name", "visibility"],
+      "properties": {
+        "identity_ref": {
+          "type": "string",
+          "pattern": "^identity-[a-z0-9][a-z0-9-]{7,63}$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "visibility": {
+          "enum": ["public", "pseudonymous", "blind_until_decision"]
+        },
+        "orcid": {
+          "type": "string",
+          "pattern": "^https://orcid\\.org/[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9X]{4}$"
+        },
+        "affiliations": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "title", "body_markdown", "stance", "evidence"],
+      "properties": {
+        "kind": {
+          "enum": ["peer_review", "comment", "correction", "evidence_submission"]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 240
+        },
+        "body_markdown": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 50000
+        },
+        "stance": {
+          "enum": ["supports", "disputes", "qualifies", "no_position"]
+        },
+        "recommendation": {
+          "enum": ["accept", "minor_revision", "major_revision", "decline", "not_applicable"]
+        },
+        "confidence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "identifier"],
+            "properties": {
+              "type": {
+                "enum": ["doi", "url", "citation_key", "other"]
+              },
+              "identifier": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "supports": {
+                "type": "string",
+                "maxLength": 2000
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "peer_review"
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["recommendation", "confidence"]
+          }
+        }
+      ]
+    },
+    "declarations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "license",
+        "public_record_consent",
+        "competing_interests",
+        "contains_confidential_information",
+        "ethical_guidelines_acknowledged",
+        "ai_assistance"
+      ],
+      "properties": {
+        "license": {
+          "enum": ["CC-BY-4.0", "CC0-1.0"]
+        },
+        "public_record_consent": {
+          "const": true
+        },
+        "competing_interests": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "contains_confidential_information": {
+          "const": false
+        },
+        "ethical_guidelines_acknowledged": {
+          "const": true
+        },
+        "ai_assistance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["used"],
+          "properties": {
+            "used": {
+              "type": "boolean"
+            },
+            "disclosure": {
+              "type": "string",
+              "maxLength": 5000
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "used": {
+                    "const": true
+                  }
+                },
+                "required": ["used"]
+              },
+              "then": {
+                "required": ["disclosure"]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "moderation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "events"],
+      "properties": {
+        "state": {
+          "enum": [
+            "submitted",
+            "screening",
+            "quarantined",
+            "admitted",
+            "accepted",
+            "rejected",
+            "withdrawn"
+          ]
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["event", "at", "actor_ref"],
+            "properties": {
+              "event": {
+                "enum": [
+                  "submitted",
+                  "screening_started",
+                  "quarantined",
+                  "admitted",
+                  "revision_requested",
+                  "accepted",
+                  "rejected",
+                  "withdrawn",
+                  "corrected"
+                ]
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "actor_ref": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 160
+              },
+              "reason": {
+                "type": "string",
+                "maxLength": 5000
+              },
+              "supersedes_revision": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intake_channel", "source_url", "received_at", "payload_sha256"],
+      "properties": {
+        "intake_channel": {
+          "enum": ["github_issue", "github_pull_request", "archive_portal", "import"]
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "change_set_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  }
+}
