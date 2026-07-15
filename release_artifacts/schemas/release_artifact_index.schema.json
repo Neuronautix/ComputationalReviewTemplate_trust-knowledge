@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/computational-review/schemas/release-artifact-index-1.0.0.json",
+  "title": "Static computational review release artifact index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "generated_at", "release", "immutable_inputs", "artifacts"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "artifact_type": { "const": "computational_review_release_artifact_index" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "release": { "type": "object" },
+    "immutable_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_snapshot_sha256", "to_snapshot_sha256", "from_trust_report_sha256", "to_trust_report_sha256", "capsule_descriptor_sha256"],
+      "properties": {
+        "from_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+        "to_snapshot_sha256": { "$ref": "#/$defs/sha256" },
+        "from_trust_report_sha256": { "$ref": "#/$defs/sha256" },
+        "to_trust_report_sha256": { "$ref": "#/$defs/sha256" },
+        "capsule_descriptor_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 4,
+      "items": { "$ref": "#/$defs/artifact" },
+      "allOf": [
+        { "contains": { "properties": { "role": { "const": "scientific_review_diff" } }, "required": ["role"] } },
+        { "contains": { "properties": { "role": { "const": "scientific_review_diff_human" } }, "required": ["role"] } },
+        { "contains": { "properties": { "role": { "const": "evidence_capsule" } }, "required": ["role"] } },
+        { "contains": { "properties": { "role": { "const": "federated_claims" } }, "required": ["role"] } }
+      ]
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "path", "media_type", "bytes", "sha256"],
+      "properties": {
+        "role": { "enum": ["scientific_review_diff", "scientific_review_diff_human", "evidence_capsule", "federated_claims"] },
+        "path": { "type": "string", "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_.\\/-]+$" },
+        "media_type": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

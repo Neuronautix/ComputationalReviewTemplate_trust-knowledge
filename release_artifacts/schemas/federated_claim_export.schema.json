@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/computational-review/schemas/federated-claim-export-1.0.0.json",
+  "title": "Federated provenance-bearing claim export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["@context", "@id", "@type", "schema:version", "dcterms:created", "prov:wasDerivedFrom", "@graph"],
+  "properties": {
+    "@context": { "type": "object" },
+    "@id": { "type": "string", "format": "uri" },
+    "@type": { "const": "schema:Dataset" },
+    "schema:version": { "type": "string" },
+    "dcterms:created": { "type": "string", "format": "date-time" },
+    "prov:wasDerivedFrom": { "type": "object" },
+    "@graph": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["@id", "@type", "np:hasAssertion", "np:hasProvenance", "np:hasPublicationInfo"],
+        "properties": {
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "const": "np:Nanopublication" },
+          "np:hasAssertion": { "$ref": "#/$defs/named_graph" },
+          "np:hasProvenance": { "$ref": "#/$defs/named_graph" },
+          "np:hasPublicationInfo": { "$ref": "#/$defs/named_graph" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "named_graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["@id", "@graph"],
+      "properties": {
+        "@id": { "type": "string", "format": "uri" },
+        "@graph": { "type": "array", "minItems": 1, "items": { "type": "object" } }
+      }
+    }
+  }
+}

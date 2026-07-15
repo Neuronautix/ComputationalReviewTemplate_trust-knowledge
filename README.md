@@ -87,7 +87,7 @@ The pipeline is split into role-specific skills with **information barriers** to
 | `comprev-myst-validator` | 7V, 14V, 19V, 20V | DATAML | MyST build, structural checks, figure/heading consistency, plugin-directive invocation, evidence-package population, directive whitelist (7V/19V), repo-wide forbidden-lexicon glob (19V), author-identity placeholder check (20V) |
 | `comprev-deploy-polish` | 21 | DATAML | Post-deployment UX gate: tier-A static checks against built Pages-artifact tarball; tier-B live-URL checks (per-page HTTP, external link health) with manual-checklist fallback when deploy URL is sandbox-inaccessible |
 
-### Plugins (4 files in `plugins/`)
+### Plugins (5 files in `plugins/`)
 
 | Plugin | What it does |
 |--------|-------------|
@@ -95,6 +95,7 @@ The pipeline is split into role-specific skills with **information barriers** to
 | `evidence-explorer-plugin.mjs` | Loads evidence packages into interactive browser |
 | `figure-lightbox-plugin.mjs` | Click-to-zoom lightbox for inline figures |
 | `trust-claim-plugin.mjs` | Renders margin trust claim-tags with expandable evidence and score context |
+| `human-review-plugin.mjs` | Pairs accepted human comments with exact versioned claim/text anchors as a separate, non-numeric review layer |
 
 ### Knowledge Base (`knowledge/`)
 
@@ -104,6 +105,33 @@ The TRUST upgrade adds a repository-level claim knowledge model:
 - `knowledge/schemas/claim_graph.schema.json` - graph-level schema for claim relations
 - `knowledge/TRUST_RUBRIC.md` - mechanical scoring rubric and score-cap rules
 - `knowledge/examples/claim_context.example.json` - concrete claim-context example
+
+### Living review infrastructure
+
+The template includes repository-local proofs of concept for iterating a
+published computational review without silently rewriting its knowledge state:
+
+- accepted human submissions are bound to an exact review version, manifest
+  digest, claim ID, or exact text selector;
+- Evidence Radar maps new works and integrity alerts to advisory claim-level
+  proposals without changing citations, prose, or TRUST scores;
+- the autonomous revision planner groups proposals into dependency-ordered,
+  human-gated PR themes;
+- release tooling produces a frozen scientific diff, an RO-Crate 1.3 evidence
+  capsule, and provenance-bearing federated claim JSON-LD; and
+- immutable artifact indexes provide the ingest boundary for a future
+  arXiv-style computational-review registry.
+
+The architecture and authority boundaries are documented in
+`docs/HUMAN_REVIEW_AND_PUBLICATION.md`, `docs/AUTONOMOUS_TRUST_AGENTS.md`,
+`docs/EVIDENCE_RADAR.md`, and `docs/RELEASE_ARTIFACTS.md`.
+
+```bash
+node scripts/validate-community-contracts.js
+node scripts/evidence-radar.mjs --config config/evidence-radar.json --feed tests/fixtures/evidence-radar/feed.json --output evidence-radar-output/proposals.json
+node scripts/plan-review-backlog.mjs evidence-radar-output/proposals.json
+node --test tests/*.test.mjs
+```
 
 ### Content placeholders (`content/`)
 
@@ -158,6 +186,8 @@ Phase 5 curation floors scale proportionally with your evidence density target.
 - **Max 4 parallel agents**: Prevents system resource exhaustion from too many simultaneous heavy agents.
 - **Gate checkpoints**: Each phase transition requires a named gate artifact. The coordinator verifies compliance before advancing.
 - **Full-text citation verification**: Every citation-claim pair is verified against the cited paper's full text (not just abstract). VERIFIED status requires a verbatim supporting passage from the paper. This catches interpretive mismatches where the abstract is topically compatible but the paper's findings contradict the review's claim.
+- **Separate human and computational layers**: Human reviewers may support, dispute, or qualify an exact claim, but their judgments are never averaged into the deterministic TRUST score.
+- **Proposal-only autonomy**: Agents may discover evidence, map anchors, and plan themed revisions; scientific acceptance, TRUST changes, merges, and releases remain human-gated.
 
 ## Customization
 

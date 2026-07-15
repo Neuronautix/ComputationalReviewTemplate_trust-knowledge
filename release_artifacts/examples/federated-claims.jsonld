@@ -1,0 +1,271 @@
+{
+  "@context": {
+    "np": "http://www.nanopub.org/nschema#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "cito": "http://purl.org/spar/cito/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "comprev": "https://w3id.org/computational-review/terms/"
+  },
+  "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims",
+  "@type": "schema:Dataset",
+  "schema:version": "1.1.0",
+  "dcterms:created": "2026-07-01T12:00:00Z",
+  "prov:wasDerivedFrom": {
+    "@id": "urn:sha256:bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7"
+  },
+  "@graph": [
+    {
+      "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb",
+      "@type": "np:Nanopublication",
+      "np:hasAssertion": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb#assertion",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb#claim",
+            "@type": "schema:Claim",
+            "schema:identifier": "clm_bbbbbbbbbbbbbbbb",
+            "schema:text": "Across the sampled population, the intervention is associated with an improved measured outcome.",
+            "comprev:citationKey": [
+              "SourceA",
+              "SourceB"
+            ],
+            "comprev:evidenceRelation": "directly_supported",
+            "comprev:trustOverall": 100,
+            "comprev:trustLabel": "high_trust",
+            "comprev:trustComponents": {
+              "traceability": 4,
+              "robustness": 4,
+              "uncertainty_calibration": 4,
+              "source_integrity": 4,
+              "transferability_scope_control": 4
+            },
+            "cito:isSupportedBy": [
+              {
+                "@id": "https://doi.org/10.1000/source-a"
+              },
+              {
+                "@id": "https://doi.org/10.1000/source-b"
+              }
+            ]
+          },
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb#claim",
+            "cito:supports": {
+              "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd#claim"
+            }
+          },
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb#claim",
+            "cito:disagreesWith": {
+              "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee#claim"
+            }
+          }
+        ]
+      },
+      "np:hasProvenance": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb#provenance",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb#assertion",
+            "prov:wasDerivedFrom": [
+              {
+                "@id": "urn:sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              {
+                "@id": "urn:sha256:bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7"
+              },
+              {
+                "@id": "urn:sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              {
+                "@id": "urn:sha256:356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c"
+              }
+            ],
+            "prov:hadPrimarySource": {
+              "@id": "content/results.md"
+            },
+            "comprev:releaseId": "release-example-v1-1-0"
+          }
+        ]
+      },
+      "np:hasPublicationInfo": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb#publication-info",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb",
+            "dcterms:created": "2026-07-01T12:00:00Z",
+            "dcterms:identifier": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb",
+            "dcterms:isVersionOf": "https://archive.example.org/reviews/review-example",
+            "schema:version": "1.1.0",
+            "comprev:humanDecisionReference": [
+              "decision-example-0001",
+              "decision-example-0003"
+            ],
+            "prov:wasAttributedTo": {
+              "@id": "https://w3id.org/computational-review/software/release-artifacts"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd",
+      "@type": "np:Nanopublication",
+      "np:hasAssertion": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd#assertion",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd#claim",
+            "@type": "schema:Claim",
+            "schema:identifier": "clm_dddddddddddddddd",
+            "schema:text": "The effect estimate is bounded to the prespecified sampled population.",
+            "comprev:citationKey": [
+              "SourceB"
+            ],
+            "comprev:evidenceRelation": "directly_supported",
+            "comprev:trustOverall": 95,
+            "comprev:trustLabel": "high_trust",
+            "comprev:trustComponents": {
+              "traceability": 4,
+              "robustness": 3,
+              "uncertainty_calibration": 4,
+              "source_integrity": 4,
+              "transferability_scope_control": 4
+            },
+            "cito:isSupportedBy": [
+              {
+                "@id": "https://doi.org/10.1000/source-b"
+              }
+            ]
+          },
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd#claim",
+            "comprev:qualifies": {
+              "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_bbbbbbbbbbbbbbbb#claim"
+            }
+          }
+        ]
+      },
+      "np:hasProvenance": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd#provenance",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd#assertion",
+            "prov:wasDerivedFrom": [
+              {
+                "@id": "urn:sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              {
+                "@id": "urn:sha256:bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7"
+              },
+              {
+                "@id": "urn:sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              {
+                "@id": "urn:sha256:356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c"
+              }
+            ],
+            "prov:hadPrimarySource": {
+              "@id": "content/results.md"
+            },
+            "comprev:releaseId": "release-example-v1-1-0"
+          }
+        ]
+      },
+      "np:hasPublicationInfo": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd#publication-info",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd",
+            "dcterms:created": "2026-07-01T12:00:00Z",
+            "dcterms:identifier": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_dddddddddddddddd",
+            "dcterms:isVersionOf": "https://archive.example.org/reviews/review-example",
+            "schema:version": "1.1.0",
+            "comprev:humanDecisionReference": [
+              "decision-example-0003"
+            ],
+            "prov:wasAttributedTo": {
+              "@id": "https://w3id.org/computational-review/software/release-artifacts"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee",
+      "@type": "np:Nanopublication",
+      "np:hasAssertion": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee#assertion",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee#claim",
+            "@type": "schema:Claim",
+            "schema:identifier": "clm_eeeeeeeeeeeeeeee",
+            "schema:text": "The comparator protocol remained unchanged.",
+            "comprev:citationKey": [
+              "ProtocolE"
+            ],
+            "comprev:evidenceRelation": "directly_supported",
+            "comprev:trustOverall": 100,
+            "comprev:trustLabel": "high_trust",
+            "comprev:trustComponents": {
+              "traceability": 4,
+              "robustness": 4,
+              "uncertainty_calibration": 4,
+              "source_integrity": 4,
+              "transferability_scope_control": 4
+            },
+            "cito:isSupportedBy": [
+              {
+                "@id": "https://doi.org/10.1000/protocol-e"
+              }
+            ]
+          }
+        ]
+      },
+      "np:hasProvenance": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee#provenance",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee#assertion",
+            "prov:wasDerivedFrom": [
+              {
+                "@id": "urn:sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              {
+                "@id": "urn:sha256:bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7"
+              },
+              {
+                "@id": "urn:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              {
+                "@id": "urn:sha256:356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c"
+              }
+            ],
+            "prov:hadPrimarySource": {
+              "@id": "content/methods.md"
+            },
+            "comprev:releaseId": "release-example-v1-1-0"
+          }
+        ]
+      },
+      "np:hasPublicationInfo": {
+        "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee#publication-info",
+        "@graph": [
+          {
+            "@id": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee",
+            "dcterms:created": "2026-07-01T12:00:00Z",
+            "dcterms:identifier": "https://archive.example.org/reviews/review-example/versions/1.1.0/claims/clm_eeeeeeeeeeeeeeee",
+            "dcterms:isVersionOf": "https://archive.example.org/reviews/review-example",
+            "schema:version": "1.1.0",
+            "comprev:humanDecisionReference": [],
+            "prov:wasAttributedTo": {
+              "@id": "https://w3id.org/computational-review/software/release-artifacts"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

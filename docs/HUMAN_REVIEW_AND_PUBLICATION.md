@@ -2,6 +2,13 @@
 
 Status: implementation RFC for the Computational Review Template.
 
+Repository proof-of-concept status: the domain contracts, paired read-only
+annotation UI, advisory Evidence Radar, deterministic revision planner,
+scientific version diff, RO-Crate evidence capsule, and federated claim export
+are implemented with offline fixtures and tests. The restricted identity and
+moderation services, production archive operator, persistent-identifier deposit,
+and formal editorial governance remain intentionally unimplemented.
+
 This document defines how computational reviews can receive attributable human
 peer review and be published on an arXiv-style archive without making mutable
 web pages look like immutable scholarly records. `CompReview Archive` is a
