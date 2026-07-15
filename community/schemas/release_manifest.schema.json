@@ -151,7 +151,8 @@
                 "minimum": 1
               },
               "sha256": {
-                "$ref": "#/$defs/sha256"
+                "$ref": "#/$defs/sha256",
+                "description": "SHA-256 of the accepted submission revision serialized as UTF-8 JSON with two-space indentation and one trailing LF."
               }
             }
           }

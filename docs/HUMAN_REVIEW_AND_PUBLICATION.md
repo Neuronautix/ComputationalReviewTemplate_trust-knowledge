@@ -44,6 +44,10 @@ The initial machine-readable contracts are
 and [`release_manifest.schema.json`](../community/schemas/release_manifest.schema.json).
 Run `node scripts/validate-community-contracts.js` to audit both schemas,
 validate their examples, and exercise the negative privacy/integrity fixtures.
+Accepted-submission digests use a platform-independent serialization: UTF-8
+JSON with two-space indentation and exactly one trailing LF. This prevents a
+Windows CRLF checkout from changing the identity of an otherwise identical
+submission revision.
 Public records must not contain email addresses, access tokens, private reviewer
 identities, or moderation notes that identify a confidential reporter.
 
