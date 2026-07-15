@@ -470,10 +470,11 @@ Section-body MyST directives are restricted to a documented whitelist. Section w
 | `:::{authorship-explorer}` | frontmatter only | Plugin-registered |
 | `:::{evidence-explorer}` | section bodies | Plugin-registered |
 | `:::{trust-claim}` | section bodies | Claim-level TRUST tag; final scores come only from Phase 16T |
+| `:::{human-reviews}` | section bodies, opt-in only | Accepted human submissions bound to an exact review version and release-manifest digest. Register `plugins/human-review-plugin.mjs` only after a real, contract-valid accepted record exists; never populate a production review from `community/examples/`. |
 
 Notably **forbidden** in section bodies (the assembler emits global versions): `:::{contents}`, `:::{toctree}`, `:::{include}`, `:::{tableofcontents}`. These build a per-section TOC that conflicts with the project-level `myst.yml` TOC and pollutes the rendered manuscript.
 
-Phase 7V (`comprev-myst-validator`) and Phase 19V re-runs flag any non-whitelisted directive as `DIRECTIVE_WHITELIST_VIOLATION` and send the section back. Plugin-registered directives MUST also appear in `myst.yml` `project.plugins[]` — `PLUGIN_DIRECTIVES_INVOKED` (Phase 14V) is the dual check that ensures every registered plugin gets used.
+Phase 7V (`comprev-myst-validator`) and Phase 19V re-runs flag any non-whitelisted directive as `DIRECTIVE_WHITELIST_VIOLATION` and send the section back. Plugin-registered directives MUST also appear in `myst.yml` `project.plugins[]` — `PLUGIN_DIRECTIVES_INVOKED` (Phase 14V) is the dual check that ensures every registered plugin gets used. Optional plugins such as `human-review-plugin.mjs` remain absent from the template's default `project.plugins[]`; once enabled, their real directive invocation is mandatory under the same gate.
 
 
 ## Coordinator Failure Modes

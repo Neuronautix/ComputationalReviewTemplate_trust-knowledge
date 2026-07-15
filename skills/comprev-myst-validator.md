@@ -66,7 +66,10 @@ Any hit is a fail. Each hit converts a citation into a literal code span and bre
 6a. **DIRECTIVE_WHITELIST_VIOLATION** *(Phase 7V, 19V)*: Every `:::{name}` directive in
     `content/*.md` body files matches the whitelist documented in `comprev-orchestrator-v29`
     §Directive Whitelist (`figure`, `dropdown`, `admonition`, `warning`, `authorship-explorer`
-    in frontmatter only, `evidence-explorer`, `trust-claim`). Any `:::{contents}`, `:::{toctree}`,
+    in frontmatter only, `evidence-explorer`, `trust-claim`, and opt-in `human-reviews`).
+    `human-reviews` is allowed only when `plugins/human-review-plugin.mjs` is registered and its
+    options resolve to real, contract-valid accepted submissions under `community/`; example
+    fixtures MUST NOT be invoked from production `content/*.md`. Any `:::{contents}`, `:::{toctree}`,
     `:::{include}`, or `:::{tableofcontents}` in body sections is a hard fail — the build
     emits a global TOC. Bare-`{name}` role-syntax mis-invocations of plugin directives
     (e.g., `{evidence-explorer}` instead of `:::{evidence-explorer}`) are also failures.
@@ -197,11 +200,17 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     file listed in `myst.yml` `project.plugins`, parse the plugin source
     (`*.mjs`) and extract every `name: '<directive-name>'` literal whose
     value appears in a `directives: [...]` array (i.e., every directive
-    the plugin registers). For each such name:
+    the plugin registers). Optional plugins that are not listed in `myst.yml`
+    are outside this check. In particular, the template ships
+    `human-review-plugin.mjs` as opt-in but does not register it by default.
+    Register it only when at least one real, version-bound accepted submission
+    will be invoked; never add a fabricated fixture merely to satisfy this gate.
+    For each registered directive name:
 
     1. **Invocation present.** At least one `content/*.md` file must
        contain `:::{<directive-name>}` (block fence). Zero invocations
        across the corpus = fail.
+
     2. **No role-syntax mis-invocation.** `grep -rE '^\{<directive-name>\}\s*$'
        content/*.md` must return **zero** matches. A bare `{name}` on
        its own line is *role* syntax — MyST silently fails the role
