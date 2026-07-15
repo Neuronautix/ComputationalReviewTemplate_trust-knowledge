@@ -58,6 +58,8 @@
               "passage_source": "abstract",
               "locator": "Abstract, page 1",
               "verification_status": "verified",
+              "verification_source": "https://www.nature.com/articles/nature08002",
+              "verified_at": "2026-07-10T09:20:00Z",
               "supports_claim_atoms": ["a1"]
             },
             {
@@ -65,12 +67,15 @@
               "passage_source": "abstract",
               "locator": "Abstract, page 1",
               "verification_status": "verified",
+              "verification_source": "https://www.nature.com/articles/nature08002",
+              "verified_at": "2026-07-10T09:20:00Z",
               "supports_claim_atoms": ["a2"]
             }
           ],
           "direction_match": true,
           "supports_claim_atoms": ["a1", "a2"],
-          "independence_group": "cardin_moore_2009",
+          "independence_group": "deisseroth_optogenetics_2009",
+          "independence_basis": "Companion Nature studies share Feng Zhang and Karl Deisseroth; conservatively treated as one collaboration family.",
           "scope_match": "exact",
           "notes": "Direct evidence in mouse barrel cortex for gamma amplification and gamma-phase-dependent response precision."
         },
@@ -89,14 +94,17 @@
               "passage_source": "abstract",
               "locator": "Abstract",
               "verification_status": "verified",
+              "verification_source": "https://www.nature.com/articles/nature07991",
+              "verified_at": "2026-07-10T09:20:00Z",
               "supports_claim_atoms": ["a1"]
             }
           ],
           "direction_match": true,
           "supports_claim_atoms": ["a1"],
-          "independence_group": "sohal_deisseroth_2009",
+          "independence_group": "deisseroth_optogenetics_2009",
+          "independence_basis": "Companion Nature studies share Feng Zhang and Karl Deisseroth; conservatively treated as one collaboration family.",
           "scope_match": "exact",
-          "notes": "Independent convergent support for the gamma-rhythm atom; this source is not attributed to the timing/precision atom."
+          "notes": "Companion-study support for the gamma-rhythm atom; shared authors mean it is not counted as an independent group. This source is not attributed to the timing/precision atom."
         }
       ],
       "evidence_relation": "directly_supported",
@@ -129,12 +137,12 @@
             "recommended_fix": "Preserve passage locators and atom-specific attribution."
           },
           "robustness": {
-            "score": 3,
-            "rule_id": "R3_CONVERGENT",
-            "rationale": "All atoms are supported and two independent groups support the gamma atom, while the timing atom is supported by one group.",
-            "evidence": ["a1:cardin_moore_2009,sohal_deisseroth_2009", "a2:cardin_moore_2009"],
-            "failure_modes": ["single-group timing evidence"],
-            "recommended_fix": "Add an independent direct replication of gamma-phase effects on response precision to reach R4."
+            "score": 2,
+            "rule_id": "R2_SINGLE_GROUP",
+            "rationale": "All atoms are supported, but the companion studies share authors and are conservatively counted as one collaboration family.",
+            "evidence": ["a1:deisseroth_optogenetics_2009", "a2:deisseroth_optogenetics_2009"],
+            "failure_modes": ["no independent collaboration supports every atom"],
+            "recommended_fix": "Add direct support from an author-disjoint collaboration and document its independence basis."
           },
           "uncertainty_calibration": {
             "score": 4,
@@ -161,8 +169,8 @@
             "recommended_fix": "Retain the organism and method qualifiers."
           }
         },
-        "raw_score": 95,
-        "overall_score": 95,
+        "raw_score": 90,
+        "overall_score": 90,
         "trust_label": "high_trust",
         "capped": false,
         "cap_value": null,
@@ -185,8 +193,9 @@
       "normalized_claim": "gebru and colleagues proposed datasheets for datasets a standard document recording a dataset s motivation composition collection process recommended uses and maintenance modelled on the datasheets that accompany electronic components",
       "claim_atoms": [
         { "atom_id": "a1", "text": "Gebru and colleagues proposed datasheets for datasets" },
-        { "atom_id": "a2", "text": "a standard document recording a dataset's motivation, composition, collection process, recommended uses, and maintenance" },
-        { "atom_id": "a3", "text": "modelled on the datasheets that accompany electronic components" }
+        { "atom_id": "a2", "text": "a standard document recording a dataset's motivation, composition, collection process, recommended uses" },
+        { "atom_id": "a3", "text": "maintenance" },
+        { "atom_id": "a4", "text": "modelled on the datasheets that accompany electronic components" }
       ],
       "claim_type": "methodological",
       "claim_scope": {
@@ -214,14 +223,15 @@
           "integrity_checked_at": "2026-07-10T09:20:00Z",
           "integrity_check_source": "https://dl.acm.org/doi/10.1145/3458723",
           "passages": [
-            { "text": "To address this gap, we propose datasheets for datasets.", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "supports_claim_atoms": ["a1"] },
-            { "text": "every dataset be accompanied with a datasheet that documents its motivation, composition, collection process, recommended uses, and so on.", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "supports_claim_atoms": ["a2"] },
-            { "text": "the process of creating, distributing, and maintaining a dataset", "passage_source": "full_text", "locator": "Section 1.1, Objectives", "verification_status": "verified", "supports_claim_atoms": ["a2"] },
-            { "text": "every component, no matter how simple or complex, is accompanied with a datasheet", "passage_source": "full_text", "locator": "Section 2, Electronics", "verification_status": "verified", "supports_claim_atoms": ["a3"] }
+            { "text": "To address this gap, we propose datasheets for datasets.", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "verification_source": "https://dl.acm.org/doi/10.1145/3458723", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a1"] },
+            { "text": "every dataset be accompanied with a datasheet that documents its motivation, composition, collection process, recommended uses, and so on.", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "verification_source": "https://dl.acm.org/doi/10.1145/3458723", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a2"] },
+            { "text": "the process of creating, distributing, and maintaining a dataset", "passage_source": "full_text", "locator": "Section 1.1, Objectives", "verification_status": "verified", "verification_source": "https://dl.acm.org/doi/10.1145/3458723", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a3"] },
+            { "text": "every component, no matter how simple or complex, is accompanied with a datasheet", "passage_source": "full_text", "locator": "Section 2, Electronics", "verification_status": "verified", "verification_source": "https://dl.acm.org/doi/10.1145/3458723", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a4"] }
           ],
           "direction_match": true,
-          "supports_claim_atoms": ["a1", "a2", "a3"],
+          "supports_claim_atoms": ["a1", "a2", "a3", "a4"],
           "independence_group": "gebru_etal_datasheets",
+          "independence_basis": "Single originating source; replication independence is not claimed.",
           "scope_match": "exact",
           "notes": "Originating paper directly supports all elements of the historical method-attribution claim."
         }
@@ -229,12 +239,12 @@
       "evidence_relation": "directly_supported",
       "conflicts": [],
       "knowledge_edges": [
-        { "subject": "datasheets for datasets", "predicate": "documents", "object": "dataset motivation, composition, collection, uses, and maintenance", "qualifier": "machine-learning datasets", "edge_source": "claim_text:a2" }
+        { "subject": "datasheets for datasets", "predicate": "documents", "object": "dataset motivation, composition, collection, uses, and maintenance", "qualifier": "machine-learning datasets", "edge_source": "claim_text:a2,a3" }
       ],
       "trust_score": {
         "rubric_version": "2.0.0",
         "components": {
-          "traceability": { "score": 4, "rule_id": "T4_ATOM_LEVEL", "rationale": "The DOI-linked originating source has verified passages and covers all three atoms.", "evidence": ["gebru2021datasheets:a1,a2,a3"], "failure_modes": ["missing full-text locator"], "recommended_fix": "Keep the atom-to-passage record with the primary source." },
+          "traceability": { "score": 4, "rule_id": "T4_ATOM_LEVEL", "rationale": "The DOI-linked originating source has verified passages and covers all four atoms.", "evidence": ["gebru2021datasheets:a1,a2,a3,a4"], "failure_modes": ["missing full-text locator"], "recommended_fix": "Keep the atom-to-passage record with the primary source." },
           "robustness": { "score": 4, "rule_id": "R4_ORIGINATING_SOURCE", "rationale": "This is a historical method-attribution claim and the originating primary paper covers every atom.", "evidence": ["claim_type=methodological", "gebru2021datasheets:direct_support"], "failure_modes": ["substituting a secondary description"], "recommended_fix": "Retain the originating paper as direct support." },
           "uncertainty_calibration": { "score": 4, "rule_id": "U4_EXACT_CALIBRATION", "rationale": "The sentence reports what the paper proposed and does not claim downstream effectiveness.", "evidence": ["evidence_relation=directly_supported", "historical attribution"], "failure_modes": ["adding an unsupported effectiveness claim"], "recommended_fix": "Keep the claim limited to the proposal's documented contents." },
           "source_integrity": { "score": 4, "rule_id": "S4_VERIFIED_PRIMARY", "rationale": "The relied-upon source is primary, DOI-linked, passage-verified, direction-matched, and integrity-checked.", "evidence": ["10.1145/3458723"], "failure_modes": ["DOI mismatch", "stale integrity check"], "recommended_fix": "Re-run integrity checks on review refresh." },
@@ -264,8 +274,9 @@
       "normalized_claim": "mitchell and colleagues added model cards short reports of a model s intended use its limitations and crucially its performance broken out by subgroup and context rather than as a single headline number",
       "claim_atoms": [
         { "atom_id": "a1", "text": "Mitchell and colleagues added model cards" },
-        { "atom_id": "a2", "text": "short reports of a model's intended use, its limitations" },
-        { "atom_id": "a3", "text": "its performance broken out by subgroup and context rather than as a single headline number" }
+        { "atom_id": "a2", "text": "a model's intended use" },
+        { "atom_id": "a3", "text": "its limitations" },
+        { "atom_id": "a4", "text": "its performance broken out by subgroup and context rather than as a single headline number" }
       ],
       "claim_type": "methodological",
       "claim_scope": {
@@ -293,13 +304,15 @@
           "integrity_checked_at": "2026-07-10T09:20:00Z",
           "integrity_check_source": "https://dl.acm.org/doi/10.1145/3287560.3287596",
           "passages": [
-            { "text": "we propose a framework that we call model cards, to encourage such transparent model reporting.", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "supports_claim_atoms": ["a1"] },
-            { "text": "what machine learning systems can and cannot do, the types of errors they make", "passage_source": "full_text", "locator": "Section 1, Introduction", "verification_status": "verified", "supports_claim_atoms": ["a2"] },
-            { "text": "model performance that contain quantitative evaluation results to be broken down by individual cultural, demographic, or phenotypic groups", "passage_source": "full_text", "locator": "Section 1, Introduction", "verification_status": "verified", "supports_claim_atoms": ["a3"] }
+            { "text": "we propose a framework that we call model cards, to encourage such transparent model reporting.", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "verification_source": "https://dl.acm.org/doi/10.1145/3287560.3287596", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a1"] },
+            { "text": "In order to clarify the intended use cases of machine learning models", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "verification_source": "https://dl.acm.org/doi/10.1145/3287560.3287596", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a2"] },
+            { "text": "what machine learning systems can and cannot do, the types of errors they make", "passage_source": "full_text", "locator": "Section 1, Introduction", "verification_status": "verified", "verification_source": "https://dl.acm.org/doi/10.1145/3287560.3287596", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a3"] },
+            { "text": "model performance that contain quantitative evaluation results to be broken down by individual cultural, demographic, or phenotypic groups", "passage_source": "full_text", "locator": "Section 1, Introduction", "verification_status": "verified", "verification_source": "https://dl.acm.org/doi/10.1145/3287560.3287596", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a4"] }
           ],
           "direction_match": true,
-          "supports_claim_atoms": ["a1", "a2", "a3"],
+          "supports_claim_atoms": ["a1", "a2", "a3", "a4"],
           "independence_group": "mitchell_etal_modelcards",
+          "independence_basis": "Single originating source; replication independence is not claimed.",
           "scope_match": "exact",
           "notes": "Originating paper directly supports the model-card contents and disaggregated reporting atoms."
         }
@@ -307,12 +320,12 @@
       "evidence_relation": "directly_supported",
       "conflicts": [],
       "knowledge_edges": [
-        { "subject": "model cards", "predicate": "reports", "object": "intended use, limitations, and disaggregated performance", "qualifier": "trained machine-learning models", "edge_source": "claim_text:a2,a3" }
+        { "subject": "model cards", "predicate": "reports", "object": "intended use, limitations, and disaggregated performance", "qualifier": "trained machine-learning models", "edge_source": "claim_text:a2,a3,a4" }
       ],
       "trust_score": {
         "rubric_version": "2.0.0",
         "components": {
-          "traceability": { "score": 4, "rule_id": "T4_ATOM_LEVEL", "rationale": "The DOI-linked originating source has verified passages and covers all three atoms.", "evidence": ["mitchell2019modelcards:a1,a2,a3"], "failure_modes": ["passage locator removed"], "recommended_fix": "Keep the atom-to-passage record with the primary source." },
+          "traceability": { "score": 4, "rule_id": "T4_ATOM_LEVEL", "rationale": "The DOI-linked originating source has verified passages and covers all four atoms.", "evidence": ["mitchell2019modelcards:a1,a2,a3,a4"], "failure_modes": ["passage locator removed"], "recommended_fix": "Keep the atom-to-passage record with the primary source." },
           "robustness": { "score": 4, "rule_id": "R4_ORIGINATING_SOURCE", "rationale": "This is a historical method-attribution claim and the originating primary paper covers every atom.", "evidence": ["claim_type=methodological", "mitchell2019modelcards:direct_support"], "failure_modes": ["treating proposal contents as an empirical effectiveness claim"], "recommended_fix": "Retain the claim type and originating source." },
           "uncertainty_calibration": { "score": 4, "rule_id": "U4_EXACT_CALIBRATION", "rationale": "The sentence accurately reports proposed model-card contents without claiming that model cards eliminate harms.", "evidence": ["evidence_relation=directly_supported", "historical attribution"], "failure_modes": ["adding unsupported impact language"], "recommended_fix": "Keep the claim descriptive." },
           "source_integrity": { "score": 4, "rule_id": "S4_VERIFIED_PRIMARY", "rationale": "The relied-upon source is primary, DOI-linked, passage-verified, direction-matched, and integrity-checked.", "evidence": ["10.1145/3287560.3287596"], "failure_modes": ["DOI mismatch", "stale integrity check"], "recommended_fix": "Re-run integrity checks on review refresh." },
@@ -342,8 +355,10 @@
       "normalized_claim": "bender and friedman proposed data statements for language technology to document represented populations and dataset provenance they argued that this practice could reduce bias and improve the precision of claims about generalization",
       "claim_atoms": [
         { "atom_id": "a1", "text": "Bender and Friedman proposed data statements for language technology" },
-        { "atom_id": "a2", "text": "document represented populations and dataset provenance" },
-        { "atom_id": "a3", "text": "they argued that this practice could reduce bias and improve the precision of claims about generalization" }
+        { "atom_id": "a2", "text": "document represented populations" },
+        { "atom_id": "a3", "text": "dataset provenance" },
+        { "atom_id": "a4", "text": "this practice could reduce bias" },
+        { "atom_id": "a5", "text": "improve the precision of claims about generalization" }
       ],
       "claim_type": "methodological",
       "claim_scope": {
@@ -371,15 +386,16 @@
           "integrity_checked_at": "2026-07-10T09:20:00Z",
           "integrity_check_source": "https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00041/43452/Data-Statements-for-Natural-Language-Processing",
           "passages": [
-            { "text": "we propose data statements as a design solution and professional practice for natural language processing technologists", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "supports_claim_atoms": ["a1"] },
-            { "text": "making it clearer which populations are and are not represented", "passage_source": "full_text", "locator": "Section 3, Why Does NLP Need Data Statements?", "verification_status": "verified", "supports_claim_atoms": ["a2"] },
-            { "text": "For datasets built out of existing datasets, the data statements for the source datasets should be included as an appendix.", "passage_source": "full_text", "locator": "Section 5.1, Provenance Appendix", "verification_status": "verified", "supports_claim_atoms": ["a2"] },
-            { "text": "data statements will help alleviate issues related to exclusion and bias in language technology", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "supports_claim_atoms": ["a3"] },
-            { "text": "lead to better precision in claims about how natural language processing research can generalize", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "supports_claim_atoms": ["a3"] }
+            { "text": "we propose data statements as a design solution and professional practice for natural language processing technologists", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "verification_source": "https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00041/43452/Data-Statements-for-Natural-Language-Processing", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a1"] },
+            { "text": "making it clearer which populations are and are not represented", "passage_source": "full_text", "locator": "Section 3, Why Does NLP Need Data Statements?", "verification_status": "verified", "verification_source": "https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00041/43452/Data-Statements-for-Natural-Language-Processing", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a2"] },
+            { "text": "For datasets built out of existing datasets, the data statements for the source datasets should be included as an appendix.", "passage_source": "full_text", "locator": "Section 5.1, Provenance Appendix", "verification_status": "verified", "verification_source": "https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00041/43452/Data-Statements-for-Natural-Language-Processing", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a3"] },
+            { "text": "data statements will help alleviate issues related to exclusion and bias in language technology", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "verification_source": "https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00041/43452/Data-Statements-for-Natural-Language-Processing", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a4"] },
+            { "text": "lead to better precision in claims about how natural language processing research can generalize", "passage_source": "abstract", "locator": "Abstract", "verification_status": "verified", "verification_source": "https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00041/43452/Data-Statements-for-Natural-Language-Processing", "verified_at": "2026-07-10T09:20:00Z", "supports_claim_atoms": ["a5"] }
           ],
           "direction_match": true,
-          "supports_claim_atoms": ["a1", "a2", "a3"],
+          "supports_claim_atoms": ["a1", "a2", "a3", "a4", "a5"],
           "independence_group": "bender_friedman_datastatements",
+          "independence_basis": "Single originating source; replication independence is not claimed.",
           "scope_match": "exact",
           "notes": "The sentence explicitly attributes the proposal and its bias/generalization rationale to the originating paper."
         }
@@ -387,12 +403,12 @@
       "evidence_relation": "directly_supported",
       "conflicts": [],
       "knowledge_edges": [
-        { "subject": "data statements", "predicate": "documents", "object": "represented populations and dataset provenance", "qualifier": "language technology", "edge_source": "claim_text:a2" }
+        { "subject": "data statements", "predicate": "documents", "object": "represented populations and dataset provenance", "qualifier": "language technology", "edge_source": "claim_text:a2,a3" }
       ],
       "trust_score": {
         "rubric_version": "2.0.0",
         "components": {
-          "traceability": { "score": 4, "rule_id": "T4_ATOM_LEVEL", "rationale": "The DOI-linked originating source has verified passages and covers all three atoms.", "evidence": ["benderfriedman2018datastatements:a1,a2,a3"], "failure_modes": ["passage locator removed"], "recommended_fix": "Keep the atom-to-passage record with the primary source." },
+          "traceability": { "score": 4, "rule_id": "T4_ATOM_LEVEL", "rationale": "The DOI-linked originating source has verified passages and covers all five atoms.", "evidence": ["benderfriedman2018datastatements:a1,a2,a3,a4,a5"], "failure_modes": ["passage locator removed"], "recommended_fix": "Keep the atom-to-passage record with the primary source." },
           "robustness": { "score": 4, "rule_id": "R4_ORIGINATING_SOURCE", "rationale": "This is a historical method-and-argument attribution claim; the originating paper covers every atom.", "evidence": ["claim_type=methodological", "benderfriedman2018datastatements:direct_support"], "failure_modes": ["dropping the 'they argued' attribution"], "recommended_fix": "Retain explicit attribution for the paper's proposed consequences." },
           "uncertainty_calibration": { "score": 4, "rule_id": "U4_EXACT_CALIBRATION", "rationale": "The proposal is stated as historical fact and the consequence is explicitly framed as the authors' argument.", "evidence": ["evidence_relation=directly_supported", "phrase=they argued"], "failure_modes": ["restating the argument as an established causal effect"], "recommended_fix": "Preserve the attribution phrase." },
           "source_integrity": { "score": 4, "rule_id": "S4_VERIFIED_PRIMARY", "rationale": "The relied-upon source is primary, DOI-linked, passage-verified, direction-matched, and integrity-checked.", "evidence": ["10.1162/tacl_a_00041"], "failure_modes": ["DOI mismatch", "stale integrity check"], "recommended_fix": "Re-run integrity checks on review refresh." },

@@ -42,12 +42,15 @@
           "passage_source": "abstract",
           "locator": "Abstract",
           "verification_status": "verified",
+          "verification_source": "https://dl.acm.org/doi/10.1145/3458723",
+          "verified_at": "2026-07-10T09:20:00Z",
           "supports_claim_atoms": ["a1"]
         }
       ],
       "direction_match": true,
       "supports_claim_atoms": ["a1"],
       "independence_group": "gebru_etal_datasheets",
+      "independence_basis": "Single originating source; replication independence is not claimed.",
       "scope_match": "exact",
       "notes": "Originating primary source for the proposal attribution."
     }

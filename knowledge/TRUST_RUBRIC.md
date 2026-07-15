@@ -19,9 +19,10 @@ Every scored claim has:
 - one `citation_context` per cited source, with the atoms it supports; its atom
   list must equal the union of its verified passages' atom lists;
 - one or more short, verbatim source passages for every supporting citation,
-  each including a locator, verification state, and `supports_claim_atoms`;
+  each including a locator, verification state, HTTPS `verification_source`,
+  `verified_at` timestamp, and `supports_claim_atoms`;
 - explicit source type, bibliographic status, integrity status, direction match,
-  independence group, and scope match;
+  independence group with a written `independence_basis`, and scope match;
 - claim-level evidence relation and scope status.
 
 The automated score is only as sound as these inputs. Passage verification and
@@ -61,13 +62,19 @@ A citation is eligible support only when all of these are true:
 - `integrity_status = verified_no_known_issue`;
 - `direction_match = true`;
 - role is `direct_support` or `partial_support`;
-- at least one passage has `verification_status = verified` and a locator;
+- at least one passage has `verification_status = verified`, a locator, an
+  HTTPS verification source, and a valid, non-future verification timestamp;
 - `supports_claim_atoms` is non-empty.
 
 `background`, `method_reference`, `review_context`, `contradictory`, and
 `unverified` citations are retained for attribution but are not eligible support.
 Two citations are independent only if their non-empty `independence_group` values
-differ.
+differ and the recorded basis supports the distinction. Merely assigning different
+strings is not evidence of independence. Sources with shared authors are treated as
+one group by default; an author-overlap/different-group combination is a hard gate
+failure. Other shared laboratories, datasets, cohorts, or study infrastructure must
+also be grouped conservatively during citation verification and explained in
+`independence_basis`.
 
 ## Component decision tables
 
@@ -114,10 +121,16 @@ Empirical table (`empirical`, `causal`, `comparative`, `review_synthesis`,
 
 ### U — Uncertainty calibration
 
-The citation validator records `wording_strength` from the actual sentence, not
-from directive metadata. `qualified` means the claim contains an evidential hedge
-such as “suggests”, “indicates”, or “may”; `contested` means conflicting evidence
-is explicitly disclosed; `unqualified` means neither.
+The validator derives a surface-wording basis from `claim_text`, not directive
+metadata. Conflict markers are classified as `contested`; evidential markers such
+as “suggests”, “indicates”, “can”, “could”, “may”, or “might” are classified as
+`qualified`; otherwise wording is `unqualified`. For `methodological` and
+`definition` claims, explicit reporting verbs such as “proposed”, “argued”,
+“reported”, “defined”, “introduced”, or “added” establish an attribution frame,
+which is `unqualified` about what the cited source said even when the attributed
+proposal itself contains a hedge. The exact markers and surface rule are emitted
+as `score_basis.wording_basis` in the score report. Stored `wording_strength` must
+match this derived result or the gate fails.
 
 | Rule | Score | Mechanical condition |
 |---|---:|---|
@@ -127,10 +140,18 @@ is explicitly disclosed; `unqualified` means neither.
 | `U3_CALIBRATED` | 3 | Partial/indirect evidence is qualified, or direct evidence is responsibly bounded while limitations remain. |
 | `U4_EXACT_CALIBRATION` | 4 | Direct evidence supports every atom and wording strength matches the evidence; or the sentence accurately attributes a proposal/argument to its source. |
 
-The validator implements this exact mapping: `directly_supported` plus matching
-wording gives 4; `partially_supported`/`indirectly_supported` plus `qualified`
-gives 3; `conflicted` plus `contested` gives 2; unsupported/overextended plus
-`qualified` gives 1; other mismatches give 0.
+`evidence_relation` is derived from eligible passage-to-atom coverage, conflicts,
+and scope state; it is never accepted as an independent scoring input. Complete
+eligible atom coverage is `directly_supported`, incomplete non-empty coverage is
+`partially_supported`, attributable review/background coverage is
+`indirectly_supported`, conflict records or contradictory contexts are
+`conflicted`, an overextended scope is `overextended`, and no attributable
+coverage is `unsupported`. The stored value must match the derivation.
+
+The validator implements this exact mapping: derived `directly_supported` plus
+matching surface wording gives 4; `partially_supported`/`indirectly_supported`
+plus `qualified` gives 3; `conflicted` plus `contested` gives 2;
+unsupported/overextended plus `qualified` gives 1; other mismatches give 0.
 
 ### S — Source integrity
 
@@ -200,6 +221,13 @@ non-binding cap is transparent rather than silently lost.
 There are no score overrides. Human reviewers submit comments, challenges, and
 proposed changes to verification inputs; accepted changes cause the validator to
 recompute a new score. A human opinion never replaces the mechanical result.
+
+`knowledge/trust_score_report.json` exposes a deterministic `score_basis` for
+each claim: the exact claim text, eligible citations and DOIs, verified passage
+locators, atom coverage, independence groups per atom, derived evidence relation,
+surface-wording basis, modality, and scope status. The validator reconstructs this
+object from `claim_graph.json` and fails if the report differs, so readers can trace
+every component score without trusting hand-written rationales alone.
 
 ## Gate policy
 

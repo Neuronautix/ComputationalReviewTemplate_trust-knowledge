@@ -11,7 +11,7 @@
       "sentence_index": 1,
       "claim_text": "Optogenetic studies in mice indicate that activating fast-spiking or parvalbumin interneurons can amplify or generate cortical gamma rhythms, while gamma-cycle timing can shape sensory-response precision.",
       "citation_keys": ["Cardin2009", "Sohal2009"],
-      "overall_score": 95,
+      "overall_score": 90,
       "trust_label": "high_trust",
       "human_review_required": false
     },

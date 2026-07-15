@@ -58,14 +58,117 @@ function parseJson(root, relativePath, errors) {
   }
 }
 
+function schemaTypeMatches(value, type) {
+  if (type === 'null') return value === null;
+  if (type === 'array') return Array.isArray(value);
+  if (type === 'object') return value !== null && typeof value === 'object' && !Array.isArray(value);
+  if (type === 'integer') return Number.isInteger(value);
+  if (type === 'number') return typeof value === 'number' && Number.isFinite(value);
+  return typeof value === type;
+}
+
+function schemaPointer(schema, fragment) {
+  if (!fragment || fragment === '#') return schema;
+  return fragment.replace(/^#\//, '').split('/').reduce((current, token) => (
+    current?.[token.replace(/~1/g, '/').replace(/~0/g, '~')]
+  ), schema);
+}
+
+function validateSchema(value, schema, registry = {}, schemaName = '', location = '$') {
+  if (!schema || typeof schema !== 'object') return [`${location}: invalid schema node`];
+  if (schema.$ref) {
+    const [filePart, fragment = ''] = schema.$ref.split('#');
+    const targetName = filePart ? path.basename(filePart) : schemaName;
+    const targetDocument = filePart ? registry[targetName] : registry[schemaName] || schema;
+    const target = schemaPointer(targetDocument, fragment ? `#${fragment}` : '#');
+    return target
+      ? validateSchema(value, target, registry, targetName, location)
+      : [`${location}: unresolved schema reference ${schema.$ref}`];
+  }
+  if (schema.anyOf) {
+    const branchErrors = schema.anyOf.map((branch) => validateSchema(value, branch, registry, schemaName, location));
+    return branchErrors.some((candidate) => candidate.length === 0)
+      ? []
+      : [`${location}: does not match any allowed schema`];
+  }
+
+  const errors = [];
+  if (Object.hasOwn(schema, 'const') && !sameJson(value, schema.const)) errors.push(`${location}: must equal ${JSON.stringify(schema.const)}`);
+  if (schema.enum && !schema.enum.some((candidate) => sameJson(value, candidate))) errors.push(`${location}: value is outside enum`);
+  if (schema.type) {
+    const allowedTypes = Array.isArray(schema.type) ? schema.type : [schema.type];
+    if (!allowedTypes.some((type) => schemaTypeMatches(value, type))) {
+      errors.push(`${location}: expected ${allowedTypes.join('|')}`);
+      return errors;
+    }
+  }
+
+  if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+    for (const required of schema.required || []) {
+      if (!Object.hasOwn(value, required)) errors.push(`${location}: missing required property ${required}`);
+    }
+    if (schema.additionalProperties === false) {
+      for (const key of Object.keys(value)) {
+        if (!Object.hasOwn(schema.properties || {}, key)) errors.push(`${location}.${key}: additional property is not allowed`);
+      }
+    }
+    for (const [key, childSchema] of Object.entries(schema.properties || {})) {
+      if (Object.hasOwn(value, key)) errors.push(...validateSchema(value[key], childSchema, registry, schemaName, `${location}.${key}`));
+    }
+  }
+
+  if (Array.isArray(value)) {
+    if (schema.minItems !== undefined && value.length < schema.minItems) errors.push(`${location}: requires at least ${schema.minItems} item(s)`);
+    if (schema.uniqueItems) {
+      const serialized = value.map((item) => JSON.stringify(item));
+      if (new Set(serialized).size !== serialized.length) errors.push(`${location}: items must be unique`);
+    }
+    if (schema.items) value.forEach((item, index) => errors.push(...validateSchema(item, schema.items, registry, schemaName, `${location}[${index}]`)));
+  }
+
+  if (typeof value === 'string') {
+    if (schema.minLength !== undefined && value.length < schema.minLength) errors.push(`${location}: shorter than minLength ${schema.minLength}`);
+    if (schema.pattern && !(new RegExp(schema.pattern, 'u')).test(value)) errors.push(`${location}: does not match ${schema.pattern}`);
+    if (schema.format === 'date-time' && !Number.isFinite(Date.parse(value))) errors.push(`${location}: invalid date-time`);
+    if (schema.format === 'uri') {
+      try { new URL(value); } catch { errors.push(`${location}: invalid URI`); }
+    }
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    if (schema.minimum !== undefined && value < schema.minimum) errors.push(`${location}: below minimum ${schema.minimum}`);
+    if (schema.maximum !== undefined && value > schema.maximum) errors.push(`${location}: above maximum ${schema.maximum}`);
+    if (schema.multipleOf !== undefined && Math.abs(value / schema.multipleOf - Math.round(value / schema.multipleOf)) > Number.EPSILON) {
+      errors.push(`${location}: must be a multiple of ${schema.multipleOf}`);
+    }
+  }
+  return errors;
+}
+
 function parseBibliography(text) {
   const entries = new Map();
   const entryPattern = /@[A-Za-z]+\s*\{\s*([^,\s]+)\s*,([\s\S]*?)(?=\n\s*@[A-Za-z]+\s*\{|\s*$)/g;
   for (const match of text.matchAll(entryPattern)) {
     const doiMatch = match[2].match(/\bdoi\s*=\s*[\{\"]([^\}\"]+)[\}\"]/i);
-    entries.set(match[1], { doi: doiMatch ? doiMatch[1].trim().toLowerCase() : null });
+    const authorMatch = match[2].match(/\bauthor\s*=\s*\{([^\r\n]*)\}\s*,?\s*$/im);
+    const authors = authorMatch
+      ? authorMatch[1].split(/\s+and\s+/i).map((author) => exactText(author)).filter(Boolean)
+      : [];
+    entries.set(match[1], {
+      doi: doiMatch ? doiMatch[1].trim().toLowerCase() : null,
+      authors,
+    });
   }
   return entries;
+}
+
+function canonicalAuthor(author) {
+  return author
+    .normalize('NFKD')
+    .toLocaleLowerCase('en-US')
+    .replace(/\\['"`^~=.]?/g, '')
+    .replace(/[{}\p{P}\p{S}\s]+/gu, ' ')
+    .trim();
 }
 
 function stripInlineMarkdown(text) {
@@ -108,9 +211,17 @@ function parseTrustDirectives(markdown) {
   return directives;
 }
 
+function isVerifiedPassage(passage) {
+  const verifiedAt = Date.parse(passage.verified_at);
+  return passage.verification_status === 'verified'
+    && Boolean(passage.locator)
+    && /^https:\/\//.test(passage.verification_source || '')
+    && Number.isFinite(verifiedAt)
+    && verifiedAt <= Date.now();
+}
+
 function verifiedPassage(context) {
-  return Array.isArray(context.passages)
-    && context.passages.some((passage) => passage.verification_status === 'verified' && passage.locator);
+  return Array.isArray(context.passages) && context.passages.some(isVerifiedPassage);
 }
 
 function isEligible(context) {
@@ -125,12 +236,65 @@ function isEligible(context) {
 
 function passageAtoms(context) {
   return new Set((context.passages || [])
-    .filter((passage) => passage.verification_status === 'verified')
+    .filter(isVerifiedPassage)
     .flatMap((passage) => passage.supports_claim_atoms || []));
 }
 
 function coveredAtoms(contexts) {
   return new Set(contexts.flatMap((context) => [...passageAtoms(context)]));
+}
+
+function deriveEvidenceRelation(claim) {
+  if (claim.scope_status === 'overextended') return 'overextended';
+  if ((claim.conflicts || []).length > 0
+      || claim.citation_contexts.some((context) => context.role === 'contradictory')) return 'conflicted';
+
+  const atomIds = claim.claim_atoms.map((atom) => atom.atom_id);
+  const eligibleCoverage = coveredAtoms(claim.citation_contexts.filter(isEligible));
+  if (atomIds.length > 0 && atomIds.every((atomId) => eligibleCoverage.has(atomId))) {
+    return 'directly_supported';
+  }
+  if (eligibleCoverage.size > 0) return 'partially_supported';
+
+  const indirectContexts = claim.citation_contexts.filter((context) => (
+    ['background', 'method_reference', 'review_context'].includes(context.role)
+      || ['systematic_review', 'narrative_review'].includes(context.source_type)
+  ) && context.bibliography_status === 'verified'
+    && context.direction_match === true
+    && verifiedPassage(context));
+  if (coveredAtoms(indirectContexts).size > 0) return 'indirectly_supported';
+  return 'unsupported';
+}
+
+function matchedMarkers(text, pattern) {
+  return [...text.matchAll(pattern)].map((match) => match[0]);
+}
+
+function deriveWordingBasis(claim) {
+  const contestedMarkers = matchedMarkers(
+    claim.claim_text,
+    /\b(?:contested|conflicting|inconsistent|mixed evidence|disagree(?:s|d)?|however)\b/giu,
+  );
+  if (contestedMarkers.length > 0) {
+    return { wording_strength: 'contested', rule_id: 'SURFACE_CONFLICT', markers: contestedMarkers };
+  }
+
+  const attributionMarkers = matchedMarkers(
+    claim.claim_text,
+    /\b(?:propose|proposes|proposed|argue|argues|argued|reported|described|defined|introduced|added)\b/giu,
+  );
+  if (ATTRIBUTION_TYPES.has(claim.claim_type) && attributionMarkers.length > 0) {
+    return { wording_strength: 'unqualified', rule_id: 'SURFACE_ATTRIBUTION', markers: attributionMarkers };
+  }
+
+  const qualifiedMarkers = matchedMarkers(
+    claim.claim_text,
+    /\b(?:indicate(?:s|d)?|suggest(?:s|ed)?|can|could|may|might|likely|possibly|appear(?:s|ed)?|seem(?:s|ed)?|uncertain)\b/giu,
+  );
+  if (qualifiedMarkers.length > 0) {
+    return { wording_strength: 'qualified', rule_id: 'SURFACE_HEDGE', markers: qualifiedMarkers };
+  }
+  return { wording_strength: 'unqualified', rule_id: 'SURFACE_UNQUALIFIED', markers: [] };
 }
 
 function scoreTraceability(claim, bibliography) {
@@ -187,7 +351,8 @@ function scoreRobustness(claim) {
 }
 
 function scoreUncertainty(claim) {
-  const relation = claim.evidence_relation;
+  const relation = deriveEvidenceRelation(claim);
+  if (claim.wording_strength !== deriveWordingBasis(claim).wording_strength) return [0, 'U0_OVERSTATED'];
   if (relation === 'directly_supported') return [4, 'U4_EXACT_CALIBRATION'];
   if (['partially_supported', 'indirectly_supported'].includes(relation) && claim.wording_strength === 'qualified') {
     return [3, 'U3_CALIBRATED'];
@@ -231,7 +396,7 @@ function deriveCapReasons(claim) {
   const contexts = claim.citation_contexts;
   const empirical = ['empirical', 'causal', 'comparative'].includes(claim.claim_type);
   const reasons = [];
-  if (contexts.length === 0 || claim.evidence_relation === 'unsupported'
+  if (contexts.length === 0 || deriveEvidenceRelation(claim) === 'unsupported'
       || contexts.some((context) => context.role === 'unverified' || context.bibliography_status === 'missing')) {
     reasons.push('unsupported_citation');
   }
@@ -253,6 +418,45 @@ function expectedScores(claim, bibliography) {
   };
 }
 
+function scoreBasis(claim) {
+  const eligible = claim.citation_contexts.filter(isEligible);
+  const atomSupport = Object.fromEntries(claim.claim_atoms.map((atom) => [
+    atom.atom_id,
+    eligible
+      .filter((context) => passageAtoms(context).has(atom.atom_id))
+      .map((context) => context.cite_key),
+  ]));
+  const independenceGroupsByAtom = Object.fromEntries(claim.claim_atoms.map((atom) => [
+    atom.atom_id,
+    [...new Set(eligible
+      .filter((context) => passageAtoms(context).has(atom.atom_id))
+      .map((context) => context.independence_group)
+      .filter(Boolean))],
+  ]));
+  return {
+    claim_text: claim.claim_text,
+    eligible_citations: eligible.map((context) => ({
+      cite_key: context.cite_key,
+      doi: context.doi,
+      role: context.role,
+      source_type: context.source_type,
+      supports_claim_atoms: context.supports_claim_atoms,
+      verified_passage_locators: context.passages
+        .filter(isVerifiedPassage)
+        .map((passage) => passage.locator),
+      independence_group: context.independence_group,
+      scope_match: context.scope_match,
+    })),
+    atom_support: atomSupport,
+    independence_groups_by_atom: independenceGroupsByAtom,
+    derived_evidence_relation: deriveEvidenceRelation(claim),
+    wording_strength: claim.wording_strength,
+    wording_basis: deriveWordingBasis(claim),
+    modality: claim.modality,
+    scope_status: claim.scope_status,
+  };
+}
+
 function sameJson(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
@@ -264,12 +468,25 @@ function validateRepository(root = path.resolve(__dirname, '..')) {
   const index = parseJson(root, 'knowledge/claim_index.json', errors);
   const report = parseJson(root, 'knowledge/trust_score_report.json', errors);
   const gate = parseJson(root, 'provenance/gate_trust_scores.json', errors);
-  const schemas = [
-    parseJson(root, 'knowledge/schemas/claim_context.schema.json', errors),
-    parseJson(root, 'knowledge/schemas/claim_graph.schema.json', errors),
-    parseJson(root, 'knowledge/schemas/trust_score.schema.json', errors),
-  ];
-  if (!graph || !seed || !index || !report || !gate || schemas.some((schema) => !schema)) return { errors, claims: 0 };
+  const example = parseJson(root, 'knowledge/examples/claim_context.example.json', errors);
+  const claimSchema = parseJson(root, 'knowledge/schemas/claim_context.schema.json', errors);
+  const graphSchema = parseJson(root, 'knowledge/schemas/claim_graph.schema.json', errors);
+  const trustSchema = parseJson(root, 'knowledge/schemas/trust_score.schema.json', errors);
+  if (!graph || !seed || !index || !report || !gate || !example || !claimSchema || !graphSchema || !trustSchema) {
+    return { errors, claims: 0 };
+  }
+
+  const schemaRegistry = {
+    'claim_context.schema.json': claimSchema,
+    'claim_graph.schema.json': graphSchema,
+    'trust_score.schema.json': trustSchema,
+  };
+  for (const schemaError of validateSchema(graph, graphSchema, schemaRegistry, 'claim_graph.schema.json')) {
+    errors.push(`claim_graph schema: ${schemaError}`);
+  }
+  for (const schemaError of validateSchema(example, claimSchema, schemaRegistry, 'claim_context.schema.json')) {
+    errors.push(`claim_context example schema: ${schemaError}`);
+  }
 
   for (const [name, artifact] of [['graph', graph], ['index', index], ['report', report], ['gate', gate]]) {
     if (artifact.schema_version !== RUBRIC_VERSION) errors.push(`${name}: schema_version must be ${RUBRIC_VERSION}`);
@@ -281,7 +498,7 @@ function validateRepository(root = path.resolve(__dirname, '..')) {
   const bibliography = parseBibliography(fs.readFileSync(bibliographyPath, 'utf8'));
   const claimIds = new Set();
   const contextCount = graph.claims.reduce((sum, claim) => sum + claim.citation_contexts.length, 0);
-  const passageCount = graph.claims.reduce((sum, claim) => sum + claim.citation_contexts.reduce((inner, context) => inner + context.passages.filter((passage) => passage.verification_status === 'verified').length, 0), 0);
+  const passageCount = graph.claims.reduce((sum, claim) => sum + claim.citation_contexts.reduce((inner, context) => inner + context.passages.filter(isVerifiedPassage).length, 0), 0);
 
   for (const claim of graph.claims) {
     const prefix = claim.claim_id || '<missing-id>';
@@ -322,6 +539,15 @@ function validateRepository(root = path.resolve(__dirname, '..')) {
         for (const atomId of passage.supports_claim_atoms || []) {
           if (!atomIds.has(atomId)) errors.push(`${prefix}: ${context.cite_key} passage references unknown atom ${atomId}`);
         }
+        if (passage.verification_status === 'verified') {
+          if (typeof passage.verification_source !== 'string' || !/^https:\/\//.test(passage.verification_source)) {
+            errors.push(`${prefix}: ${context.cite_key} verified passage requires an HTTPS verification_source`);
+          }
+          const verifiedAt = Date.parse(passage.verified_at);
+          if (!Number.isFinite(verifiedAt) || verifiedAt > Date.now()) {
+            errors.push(`${prefix}: ${context.cite_key} passage verified_at is invalid or in the future`);
+          }
+        }
       }
       const contextAtoms = [...new Set(context.supports_claim_atoms || [])].sort();
       const mappedPassageAtoms = [...passageAtoms(context)].sort();
@@ -335,6 +561,34 @@ function validateRepository(root = path.resolve(__dirname, '..')) {
           errors.push(`${prefix}: ${context.cite_key} verified integrity status requires an HTTPS integrity_check_source`);
         }
       }
+      if (SUPPORT_ROLES.has(context.role) && !exactText(context.independence_basis || '')) {
+        errors.push(`${prefix}: ${context.cite_key} supporting citation requires independence_basis`);
+      }
+    }
+
+    const supportingContexts = claim.citation_contexts.filter((context) => SUPPORT_ROLES.has(context.role));
+    for (let leftIndex = 0; leftIndex < supportingContexts.length; leftIndex += 1) {
+      for (let rightIndex = leftIndex + 1; rightIndex < supportingContexts.length; rightIndex += 1) {
+        const left = supportingContexts[leftIndex];
+        const right = supportingContexts[rightIndex];
+        if (!left.independence_group || !right.independence_group || left.independence_group === right.independence_group) continue;
+        const leftAuthors = new Set((bibliography.get(left.cite_key)?.authors || []).map(canonicalAuthor));
+        const sharedAuthors = (bibliography.get(right.cite_key)?.authors || [])
+          .map(canonicalAuthor)
+          .filter((author) => author && leftAuthors.has(author));
+        if (sharedAuthors.length > 0) {
+          errors.push(`${prefix}: ${left.cite_key} and ${right.cite_key} use different independence groups but share author(s): ${sharedAuthors.join(', ')}`);
+        }
+      }
+    }
+
+    const evidenceRelation = deriveEvidenceRelation(claim);
+    if (claim.evidence_relation !== evidenceRelation) {
+      errors.push(`${prefix}: evidence_relation should be derived as ${evidenceRelation}`);
+    }
+    const wordingBasis = deriveWordingBasis(claim);
+    if (claim.wording_strength !== wordingBasis.wording_strength) {
+      errors.push(`${prefix}: wording_strength should be ${wordingBasis.wording_strength} from ${wordingBasis.rule_id}`);
     }
 
     const expected = expectedScores(claim, bibliography);
@@ -453,6 +707,7 @@ function validateRepository(root = path.resolve(__dirname, '..')) {
       const componentScores = Object.fromEntries(COMPONENTS.map((component) => [component, claim.trust_score.components[component].score]));
       const componentRules = Object.fromEntries(COMPONENTS.map((component) => [component, claim.trust_score.components[component].rule_id]));
       if (!sameJson(reported.component_scores, componentScores) || !sameJson(reported.component_rules, componentRules)) errors.push(`trust_score_report: ${claim.claim_id} component mismatch`);
+      if (!sameJson(reported.score_basis, scoreBasis(claim))) errors.push(`trust_score_report: ${claim.claim_id} score_basis mismatch`);
       for (const field of ['raw_score', 'overall_score', 'trust_label', 'capped']) {
         if (reported[field] !== claim.trust_score[field]) errors.push(`trust_score_report: ${claim.claim_id} ${field} mismatch`);
       }
@@ -501,6 +756,11 @@ module.exports = {
   labelFor,
   normalizeClaim,
   parseBibliography,
+  deriveEvidenceRelation,
+  deriveWordingBasis,
   scoreRobustness,
+  scoreBasis,
+  isVerifiedPassage,
+  validateSchema,
   validateRepository,
 };

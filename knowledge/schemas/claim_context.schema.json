@@ -82,7 +82,7 @@
         "required": [
           "cite_key", "doi", "role", "source_type", "bibliography_status",
           "integrity_status", "integrity_checked_at", "integrity_check_source", "passages", "direction_match",
-          "supports_claim_atoms", "independence_group", "scope_match", "notes"
+          "supports_claim_atoms", "independence_group", "independence_basis", "scope_match", "notes"
         ],
         "properties": {
           "cite_key": { "type": "string", "minLength": 1 },
@@ -104,12 +104,17 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["text", "passage_source", "locator", "verification_status", "supports_claim_atoms"],
+              "required": [
+                "text", "passage_source", "locator", "verification_status",
+                "verification_source", "verified_at", "supports_claim_atoms"
+              ],
               "properties": {
                 "text": { "type": "string", "minLength": 1 },
                 "passage_source": { "type": "string", "enum": ["full_text", "abstract"] },
                 "locator": { "type": "string", "minLength": 1 },
                 "verification_status": { "type": "string", "enum": ["verified", "unverified"] },
+                "verification_source": { "type": ["string", "null"], "format": "uri" },
+                "verified_at": { "type": ["string", "null"], "format": "date-time" },
                 "supports_claim_atoms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^a[1-9][0-9]*$" } }
               }
             }
@@ -117,6 +122,7 @@
           "direction_match": { "type": "boolean" },
           "supports_claim_atoms": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^a[1-9][0-9]*$" } },
           "independence_group": { "type": ["string", "null"] },
+          "independence_basis": { "type": ["string", "null"] },
           "scope_match": { "type": "string", "enum": ["exact", "narrower", "broader", "not_applicable", "unverified"] },
           "notes": { "type": ["string", "null"] }
         }
