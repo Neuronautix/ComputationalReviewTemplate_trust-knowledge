@@ -29,6 +29,11 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Validate TRUST knowledge
+        run: |
+          node scripts/validate-trust.js
+          node scripts/test-trust-validator.js
+
       - name: Install dependencies
         run: |
           pip install mystmd jupyter matplotlib numpy pandas seaborn

@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "rubric_version",
     "generated_at",
     "generated_by_phase",
     "claims",
@@ -13,7 +14,8 @@
     "summary"
   ],
   "properties": {
-    "schema_version": { "type": "string" },
+    "schema_version": { "const": "2.0.0" },
+    "rubric_version": { "const": "2.0.0" },
     "generated_at": { "type": "string", "format": "date-time" },
     "generated_by_phase": { "type": "string" },
     "claims": {

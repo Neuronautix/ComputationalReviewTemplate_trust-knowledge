@@ -62,7 +62,11 @@ Inputs: `knowledge/claim_seed_index.json`, `knowledge/schemas/claim_context.sche
 1. **CLAIM_SEED_FILE_EXISTS**: `knowledge/claim_seed_index.json` exists and parses as JSON array/object? **pass/fail**
 2. **CLAIM_SCHEMA_VALID**: Every claim object validates against `claim_context.schema.json`? **pass/fail**
 3. **TRUST_SCHEMA_VALID**: Every `trust_score` validates against `trust_score.schema.json`? **pass/fail**
-4. **CLAIM_ID_DETERMINISTIC**: Recomputed hash from `section_id + normalized_claim + sorted(citation_keys)` matches stored `claim_id`? **pass/fail**
+4. **CLAIM_ID_DETERMINISTIC**: Recompute `claim_id` as `clm_` plus the first 16 lowercase
+   hex characters of SHA-256 over `section_id + "\\n" + canonical_claim_text`, where
+   canonical text is the exact claim text after Unicode NFKC normalization, trimming, and
+   whitespace collapse. Citation keys are excluded so evidence corrections preserve identity.
+   The recomputed value must match the stored `claim_id`. **pass/fail**
 5. **CLAIM_TRACEABLE_TO_SECTION**: Every claim points to an existing `evidence/evidence_section_NN.json` source and matching section id? **pass/fail**
 6. **EMPIRICAL_DOI_REQUIRED**: Any `claim_type=empirical` with empty DOI list fails unless `human_review_required=true` and validation status marks it unresolved? **pass/fail**
 7. **NO_WRITER_FINAL_TRUST_OVERRIDE**: Claims may not use writer-assigned final labels without validator override metadata (`computed_from=validator` or explicit manual override justification). **pass/fail**

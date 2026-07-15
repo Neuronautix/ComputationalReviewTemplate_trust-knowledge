@@ -1,124 +1,91 @@
 {
-  "claim_id": "clm_2f4c95c6017f8e0a",
-  "section_id": "sec-introduction",
-  "source_file": "content/01_introduction.md",
-  "paragraph_index": 2,
+  "claim_id": "clm_3f6806d566c1ba52",
+  "section_id": "sec-example",
+  "source_file": "content/example.md",
+  "paragraph_index": 1,
   "sentence_index": 1,
-  "claim_text": "Cortical inhibition timing can stabilize recurrent network activity under fluctuating inputs.",
-  "normalized_claim": "cortical inhibition timing stabilize recurrent network activity fluctuating input",
-  "claim_type": "empirical",
-  "claim_scope": {
-    "biological": "rodent cortex",
-    "computational": "recurrent network dynamics",
-    "clinical": null,
-    "methodological": "in vivo electrophysiology",
-    "conceptual": "stability control"
-  },
-  "claim_polarity": "positive",
-  "modality": "likely",
-  "entities": [
-    {
-      "name": "inhibitory timing",
-      "entity_type": "concept",
-      "identifier": null
-    },
-    {
-      "name": "recurrent network",
-      "entity_type": "model",
-      "identifier": null
-    },
-    {
-      "name": "mouse",
-      "entity_type": "species",
-      "identifier": "NCBITaxon:10090"
-    }
+  "claim_text": "Gebru and colleagues proposed datasheets for datasets.",
+  "normalized_claim": "gebru and colleagues proposed datasheets for datasets",
+  "claim_atoms": [
+    { "atom_id": "a1", "text": "Gebru and colleagues proposed datasheets for datasets" }
   ],
-  "citation_keys": ["Cardin2009", "Atallah2012"],
-  "dois": ["10.1038/nature08417", "10.1038/nn.3446"],
+  "claim_type": "methodological",
+  "claim_scope": {
+    "biological": null,
+    "computational": "machine-learning datasets",
+    "clinical": null,
+    "methodological": "dataset documentation proposal",
+    "conceptual": "method attribution"
+  },
+  "scope_status": "matched",
+  "claim_polarity": "neutral",
+  "modality": "established",
+  "wording_strength": "unqualified",
+  "entities": [
+    { "name": "datasheets for datasets", "entity_type": "method", "identifier": null }
+  ],
+  "citation_keys": ["gebru2021datasheets"],
+  "dois": ["10.1145/3458723"],
   "citation_contexts": [
     {
-      "cite_key": "Cardin2009",
-      "doi": "10.1038/nature08417",
+      "cite_key": "gebru2021datasheets",
+      "doi": "10.1145/3458723",
       "role": "direct_support",
-      "supporting_passage": "Optogenetic activation of fast-spiking interneurons increased temporal precision and reduced runaway excitation.",
-      "passage_source": "full_text",
+      "source_type": "primary",
+      "bibliography_status": "verified",
+      "integrity_status": "verified_no_known_issue",
+      "integrity_checked_at": "2026-07-10T09:20:00Z",
+      "integrity_check_source": "https://dl.acm.org/doi/10.1145/3458723",
+      "passages": [
+        {
+          "text": "To address this gap, we propose datasheets for datasets.",
+          "passage_source": "abstract",
+          "locator": "Abstract",
+          "verification_status": "verified",
+          "verification_source": "https://dl.acm.org/doi/10.1145/3458723",
+          "verified_at": "2026-07-10T09:20:00Z",
+          "supports_claim_atoms": ["a1"]
+        }
+      ],
       "direction_match": true,
-      "notes": "Direct physiological support in mouse V1."
-    },
-    {
-      "cite_key": "Atallah2012",
-      "doi": "10.1038/nn.3446",
-      "role": "partial_support",
-      "supporting_passage": "Inhibitory activity scaled with excitatory drive and constrained gain.",
-      "passage_source": "abstract",
-      "direction_match": true,
-      "notes": "Supports stabilization but in narrower task context."
+      "supports_claim_atoms": ["a1"],
+      "independence_group": "gebru_etal_datasheets",
+      "independence_basis": "Single originating source; replication independence is not claimed.",
+      "scope_match": "exact",
+      "notes": "Originating primary source for the proposal attribution."
     }
   ],
-  "evidence_relation": "partially_supported",
-  "conflicts": [
-    {
-      "conflict_type": "citation_key",
-      "target_id": "Hypothetical2016",
-      "notes": "Reported weak effect under anesthesia."
-    }
-  ],
+  "evidence_relation": "directly_supported",
+  "conflicts": [],
   "knowledge_edges": [
     {
-      "subject": "inhibitory timing",
-      "predicate": "stabilizes",
-      "object": "recurrent network activity",
-      "qualifier": "under fluctuating input",
-      "edge_source": "claim_text"
+      "subject": "Gebru and colleagues",
+      "predicate": "proposes",
+      "object": "datasheets for datasets",
+      "qualifier": null,
+      "edge_source": "claim_text:a1"
     }
   ],
   "trust_score": {
+    "rubric_version": "2.0.0",
     "components": {
-      "traceability": {
-        "score": 4,
-        "rationale": "All references resolve and include supporting passages.",
-        "evidence": ["2 citation contexts with DOI and passage source"],
-        "failure_modes": ["missing DOI", "no supporting passage"],
-        "recommended_fix": "Require DOI lookup and passage extraction before acceptance."
-      },
-      "robustness": {
-        "score": 3,
-        "rationale": "Convergent support from two studies using related methods.",
-        "evidence": ["two independent studies", "aligned direction"],
-        "failure_modes": ["single-study support"],
-        "recommended_fix": "Add explicit replication evidence across labs."
-      },
-      "uncertainty_calibration": {
-        "score": 3,
-        "rationale": "Claim uses calibrated modality (likely).",
-        "evidence": ["modality=likely", "partial_support classification"],
-        "failure_modes": ["overstated confidence"],
-        "recommended_fix": "Use suggestive/uncertain language when replication is sparse."
-      },
-      "source_integrity": {
-        "score": 4,
-        "rationale": "Primary sources with DOI verification and full-text retrieval for key support.",
-        "evidence": ["CrossRef-verified DOI", "full_text passage for direct support"],
-        "failure_modes": ["metadata-only support", "retracted sources"],
-        "recommended_fix": "Drop retracted sources and require at least abstract-level traceability."
-      },
-      "transferability_scope_control": {
-        "score": 2,
-        "rationale": "Evidence is mostly rodent V1; broader cortical transfer remains uncertain.",
-        "evidence": ["scope limited to rodent V1"],
-        "failure_modes": ["species/generalization overreach"],
-        "recommended_fix": "Constrain claim scope explicitly to tested system."
-      }
+      "traceability": { "score": 4, "rule_id": "T4_ATOM_LEVEL", "rationale": "The source is linked to the atom and a verified passage.", "evidence": ["gebru2021datasheets:a1"], "failure_modes": ["missing locator"], "recommended_fix": "Keep the source locator." },
+      "robustness": { "score": 4, "rule_id": "R4_ORIGINATING_SOURCE", "rationale": "The originating method paper covers the attribution atom.", "evidence": ["gebru2021datasheets:direct_support"], "failure_modes": ["secondary attribution"], "recommended_fix": "Cite the originating paper." },
+      "uncertainty_calibration": { "score": 4, "rule_id": "U4_EXACT_CALIBRATION", "rationale": "The sentence reports only the documented proposal.", "evidence": ["evidence_relation=directly_supported"], "failure_modes": ["unsupported effectiveness language"], "recommended_fix": "Keep the claim descriptive." },
+      "source_integrity": { "score": 4, "rule_id": "S4_VERIFIED_PRIMARY", "rationale": "The example record links the publisher integrity check.", "evidence": ["10.1145/3458723"], "failure_modes": ["integrity check omitted"], "recommended_fix": "Recheck source status." },
+      "transferability_scope_control": { "score": 4, "rule_id": "X4_SCOPE_MATCHED", "rationale": "The claim and source concern the same method scope.", "evidence": ["scope_status=matched"], "failure_modes": ["scope expansion"], "recommended_fix": "Keep scope aligned." }
     },
-    "overall_score": 80,
-    "trust_label": "moderate_trust",
+    "raw_score": 100,
+    "overall_score": 100,
+    "trust_label": "high_trust",
     "capped": false,
+    "cap_value": null,
+    "cap_reasons": [],
     "cap_reason": null,
-    "computed_from": "validator",
-    "manual_override_justification": null
+    "computed_from": "validator"
   },
   "human_review_required": false,
   "created_by_phase": "phase_5b_claim_seed",
-  "updated_by_phase": "phase_16_verification",
+  "updated_by_phase": "phase_16T_trust_score_validation",
   "validation_status": "validated"
 }
