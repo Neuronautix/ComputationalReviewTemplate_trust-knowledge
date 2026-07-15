@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   activateConcernedText,
+  bindHighlightLifecycle,
   findTextQuote,
   renderCitationContexts,
   trustBandText,
@@ -40,6 +41,72 @@ test('build-time target highlighting is coordinated and cleanup is idempotent', 
   assert.equal(classes.has('tc-is-highlighted'), true);
   active.cleanup();
   active.cleanup();
+  assert.equal(classes.has('tc-is-highlighted'), false);
+});
+
+test('hover binds only to the score badge while focus binds to the full control', () => {
+  class FakeEventTarget {
+    constructor() {
+      this.listeners = new Map();
+    }
+
+    addEventListener(type, listener) {
+      const listeners = this.listeners.get(type) || new Set();
+      listeners.add(listener);
+      this.listeners.set(type, listeners);
+    }
+
+    removeEventListener(type, listener) {
+      this.listeners.get(type)?.delete(listener);
+    }
+
+    emit(type) {
+      for (const listener of this.listeners.get(type) || []) listener();
+    }
+  }
+
+  const classes = new Set();
+  const exactTarget = {
+    classList: {
+      add: (name) => classes.add(name),
+      remove: (name) => classes.delete(name),
+    },
+  };
+  const doc = {
+    getElementById: (id) => (id === 'exact-target' ? exactTarget : null),
+  };
+  const el = { ownerDocument: doc };
+  const control = new FakeEventTarget();
+  const scoreBadge = new FakeEventTarget();
+  const status = { textContent: '' };
+  const cleanup = bindHighlightLifecycle(
+    control,
+    scoreBadge,
+    el,
+    { targetAnchor: 'exact-target' },
+    status,
+  );
+
+  control.emit('mouseenter');
+  assert.equal(classes.has('tc-is-highlighted'), false);
+
+  scoreBadge.emit('mouseenter');
+  assert.equal(classes.has('tc-is-highlighted'), true);
+  assert.match(status.textContent, /exact text scored/);
+  scoreBadge.emit('mouseleave');
+  assert.equal(classes.has('tc-is-highlighted'), false);
+
+  control.emit('focus');
+  assert.equal(classes.has('tc-is-highlighted'), true);
+  scoreBadge.emit('mouseenter');
+  scoreBadge.emit('mouseleave');
+  assert.equal(classes.has('tc-is-highlighted'), true);
+  control.emit('blur');
+  assert.equal(classes.has('tc-is-highlighted'), false);
+
+  cleanup();
+  scoreBadge.emit('mouseenter');
+  control.emit('focus');
   assert.equal(classes.has('tc-is-highlighted'), false);
 });
 

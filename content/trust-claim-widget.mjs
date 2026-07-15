@@ -170,7 +170,7 @@ function previousContentSibling(el) {
  * Explicit target ids may select their entire element; inferred paragraphs may
  * not, which prevents a paraphrased claim from highlighting unrelated prose.
  */
-export function activateConcernedText(el, selector) {
+export function activateConcernedText(el, selector = {}) {
   const doc = el.ownerDocument;
   activeHighlights.get(doc)?.();
 
@@ -616,10 +616,15 @@ const WIDGET_STYLES = `
   }
 `;
 
-function bindHighlightLifecycle(trigger, el, selector, status) {
+/**
+ * Bind pointer highlighting to the visible score while keeping the complete
+ * score control as the keyboard focus target.
+ */
+export function bindHighlightLifecycle(focusTrigger, hoverTrigger, el, selector, status) {
   let hovered = false;
   let focused = false;
   let activeCleanup = null;
+  const pointerTrigger = hoverTrigger || focusTrigger;
 
   function activate() {
     activeCleanup?.();
@@ -654,20 +659,20 @@ function bindHighlightLifecycle(trigger, el, selector, status) {
     deactivate();
   }
 
-  trigger.addEventListener('mouseenter', onMouseEnter);
-  trigger.addEventListener('mouseleave', onMouseLeave);
-  trigger.addEventListener('focus', onFocus);
-  trigger.addEventListener('blur', onBlur);
+  pointerTrigger.addEventListener('mouseenter', onMouseEnter);
+  pointerTrigger.addEventListener('mouseleave', onMouseLeave);
+  focusTrigger.addEventListener('focus', onFocus);
+  focusTrigger.addEventListener('blur', onBlur);
 
   return () => {
     hovered = false;
     focused = false;
     activeCleanup?.();
     activeCleanup = null;
-    trigger.removeEventListener('mouseenter', onMouseEnter);
-    trigger.removeEventListener('mouseleave', onMouseLeave);
-    trigger.removeEventListener('focus', onFocus);
-    trigger.removeEventListener('blur', onBlur);
+    pointerTrigger.removeEventListener('mouseenter', onMouseEnter);
+    pointerTrigger.removeEventListener('mouseleave', onMouseLeave);
+    focusTrigger.removeEventListener('focus', onFocus);
+    focusTrigger.removeEventListener('blur', onBlur);
   };
 }
 
@@ -718,7 +723,7 @@ function render({ model, el }) {
 
   const cardHtml = `
     <span class="tc-rail-line" aria-hidden="true"></span>
-    <span class="${badgeClass(trustScore)}" aria-hidden="true" title="Highlight scored text">${escapeHtml(scoreText)}</span>
+    <span class="${badgeClass(trustScore)}" data-highlight-trigger aria-hidden="true" title="Highlight scored text">${escapeHtml(scoreText)}</span>
     <span class="tc-summary-main">
       <span class="tc-summary-head">${escapeHtml(classLabel)}</span>
       <span class="tc-summary-sub ${bandClass}">${escapeHtml(summaryTitle(trustScore))} - ${escapeHtml(trustBand)}</span>
@@ -728,44 +733,54 @@ function render({ model, el }) {
   const root = el.shadowRoot || el.attachShadow({ mode: 'open' });
   root.innerHTML = '';
 
-  const style = document.createElement('style');
+  const doc = el.ownerDocument || document;
+  const style = doc.createElement('style');
   style.textContent = WIDGET_STYLES;
   root.appendChild(style);
 
-  const status = document.createElement('span');
+  const status = doc.createElement('span');
   status.className = 'tc-sr-only';
+  status.id = 'tc-highlight-status';
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
   root.appendChild(status);
 
   if (interactionMode === 'details') {
-    const details = document.createElement('details');
+    const details = doc.createElement('details');
     details.className = 'tc-root';
-    const summary = document.createElement('summary');
+    const summary = doc.createElement('summary');
     summary.className = 'tc-summary';
     summary.setAttribute('aria-label', accessibleSummary);
+    summary.setAttribute('aria-describedby', status.id);
     summary.innerHTML = cardHtml;
-    const box = document.createElement('div');
+    const box = doc.createElement('div');
     box.className = 'tc-box';
     box.innerHTML = detailHtml;
     details.appendChild(summary);
     details.appendChild(box);
     root.appendChild(details);
-    el.__trustClaimCleanup = bindHighlightLifecycle(summary, el, targetSelector, status);
+    el.__trustClaimCleanup = bindHighlightLifecycle(
+      summary,
+      summary.querySelector('[data-highlight-trigger]'),
+      el,
+      targetSelector,
+      status,
+    );
     return;
   }
 
-  const wrapper = document.createElement('div');
+  const wrapper = doc.createElement('div');
   wrapper.className = 'tc-root tc-slideout-root';
 
-  const cardButton = document.createElement('button');
+  const cardButton = doc.createElement('button');
   cardButton.type = 'button';
   cardButton.className = 'tc-summary tc-card-btn';
   cardButton.setAttribute('aria-expanded', 'false');
   cardButton.setAttribute('aria-label', accessibleSummary);
+  cardButton.setAttribute('aria-describedby', status.id);
   cardButton.innerHTML = cardHtml;
 
-  const panel = document.createElement('aside');
+  const panel = doc.createElement('aside');
   panel.className = 'tc-slideout';
   panel.setAttribute('aria-hidden', 'true');
   const panelId = `tc-panel-${String(claimId || 'claim').replace(/[^a-zA-Z0-9_-]+/g, '-')}`;
@@ -798,7 +813,13 @@ function render({ model, el }) {
   wrapper.appendChild(cardButton);
   wrapper.appendChild(panel);
   root.appendChild(wrapper);
-  el.__trustClaimCleanup = bindHighlightLifecycle(cardButton, el, targetSelector, status);
+  el.__trustClaimCleanup = bindHighlightLifecycle(
+    cardButton,
+    cardButton.querySelector('[data-highlight-trigger]'),
+    el,
+    targetSelector,
+    status,
+  );
 }
 
 export default { render };

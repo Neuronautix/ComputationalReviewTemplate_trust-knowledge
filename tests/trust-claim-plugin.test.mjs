@@ -107,3 +107,64 @@ test('explicit target ids do not rewrite adjacent prose', () => {
   assert.equal(model.targetId, 'author-owned-target');
   assert.equal(model.quote, '');
 });
+
+test('repeated claim ids receive unique target and widget ids', () => {
+  const tree = {
+    type: 'root',
+    children: [
+      { type: 'paragraph', children: [{ type: 'text', value: 'First exact claim.' }] },
+      {
+        type: 'trust-claim',
+        claimId: 'clm_repeat',
+        claimText: 'First exact claim.',
+        kbPath: 'missing.json',
+      },
+      { type: 'paragraph', children: [{ type: 'text', value: 'Second exact claim.' }] },
+      {
+        type: 'trust-claim',
+        claimId: 'clm_repeat',
+        claimText: 'Second exact claim.',
+        kbPath: 'missing.json',
+      },
+    ],
+  };
+
+  createTrustClaimTransform()(tree, { path: 'content/test.md' });
+
+  assert.equal(tree.children[0].children[0].identifier, 'trust-claim-target-clm-repeat');
+  assert.equal(tree.children[1].children[0].id, 'trust-claim-target-clm-repeat-widget');
+  assert.equal(tree.children[2].children[0].identifier, 'trust-claim-target-clm-repeat-2');
+  assert.equal(tree.children[3].children[0].id, 'trust-claim-target-clm-repeat-2-widget');
+});
+
+test('overlapping claims preserve the first anchor and use a quote scope for the second', () => {
+  const tree = {
+    type: 'root',
+    children: [
+      { type: 'paragraph', children: [{ type: 'text', value: 'Alpha beta gamma delta.' }] },
+      {
+        type: 'trust-claim',
+        claimId: 'clm_first',
+        claimText: 'Alpha beta gamma',
+        kbPath: 'missing.json',
+      },
+      {
+        type: 'trust-claim',
+        claimId: 'clm_second',
+        claimText: 'beta gamma delta',
+        kbPath: 'missing.json',
+      },
+    ],
+  };
+
+  createTrustClaimTransform()(tree, { path: 'content/test.md' });
+
+  const scope = tree.children[0].children[0];
+  const firstTarget = scope.children[0];
+  const secondModel = tree.children[2].children[0].model;
+  assert.equal(scope.class, 'trust-claim-scope');
+  assert.equal(firstTarget.identifier, 'trust-claim-target-clm-first');
+  assert.equal(secondModel.targetAnchor, '');
+  assert.equal(secondModel.scopeAnchor, 'trust-claim-scope-clm-second');
+  assert.equal(secondModel.quote, 'beta gamma delta');
+});
