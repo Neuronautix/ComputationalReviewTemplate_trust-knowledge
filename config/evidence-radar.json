@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0.0",
+  "claim_index_path": "knowledge/claim_index.json",
+  "claims": [
+    {
+      "claim_id": "clm_7659634fb095cdce",
+      "cited_dois": ["10.1038/nature08002", "10.1038/nature07991"],
+      "topic_queries": ["parvalbumin interneurons gamma rhythms", "gamma cycle sensory precision"]
+    },
+    {
+      "claim_id": "clm_3ea62e8a65cbdb75",
+      "cited_dois": ["10.1145/3458723"],
+      "topic_queries": ["datasheets for datasets documentation"]
+    },
+    {
+      "claim_id": "clm_451ccab1daf492e4",
+      "cited_dois": ["10.1145/3287560.3287596"],
+      "topic_queries": ["model cards model reporting"]
+    },
+    {
+      "claim_id": "clm_111c57f0f206705d",
+      "cited_dois": ["10.1162/tacl_a_00041"],
+      "topic_queries": ["data statements natural language processing"]
+    }
+  ]
+}
