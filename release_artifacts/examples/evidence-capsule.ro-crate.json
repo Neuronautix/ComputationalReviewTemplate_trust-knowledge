@@ -1,0 +1,141 @@
+{
+  "@context": [
+    "https://w3id.org/ro/crate/1.3/context",
+    {
+      "comprev": "https://w3id.org/computational-review/terms/"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "about": {
+        "@id": "./"
+      },
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.3"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": "Executable evidence capsule capsule-example-analysis-0001",
+      "identifier": "capsule-example-analysis-0001",
+      "version": "1.1.0",
+      "datePublished": "2026-07-01T11:55:00Z",
+      "license": {
+        "@id": "https://spdx.org/licenses/MIT.html"
+      },
+      "conformsTo": [
+        {
+          "@id": "https://w3id.org/ro/crate/1.3"
+        },
+        {
+          "@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"
+        }
+      ],
+      "hasPart": [
+        {
+          "@id": "code/analysis.mjs"
+        },
+        {
+          "@id": "data/input.json"
+        },
+        {
+          "@id": "environment/runtime.json"
+        },
+        {
+          "@id": "output/result.json"
+        }
+      ],
+      "mentions": {
+        "@id": "capsule-example-analysis-0001/#execution"
+      },
+      "comprev:release": {
+        "@id": "urn:sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "comprev:status": "passed"
+    },
+    {
+      "@id": "capsule-example-analysis-0001/#execution",
+      "@type": "CreateAction",
+      "name": "node code/analysis.mjs",
+      "actionStatus": {
+        "@id": "https://schema.org/CompletedActionStatus"
+      },
+      "startTime": "2026-07-01T11:54:58Z",
+      "endTime": "2026-07-01T11:54:59Z",
+      "instrument": [
+        {
+          "@id": "code/analysis.mjs"
+        },
+        {
+          "@id": "environment/runtime.json"
+        }
+      ],
+      "object": [
+        {
+          "@id": "data/input.json"
+        }
+      ],
+      "result": [
+        {
+          "@id": "output/result.json"
+        }
+      ],
+      "comprev:command": [
+        "node",
+        "code/analysis.mjs"
+      ],
+      "comprev:exitCode": 0
+    },
+    {
+      "@id": "code/analysis.mjs",
+      "@type": [
+        "File",
+        "SoftwareSourceCode"
+      ],
+      "name": "code/analysis.mjs",
+      "encodingFormat": "text/javascript",
+      "contentSize": 348,
+      "comprev:artifactRole": "code",
+      "comprev:sha256": "6c926a8665be7bd58957e1dabd0ff35670d049085f2bf5566db692b80884a883"
+    },
+    {
+      "@id": "data/input.json",
+      "@type": [
+        "File",
+        "Dataset"
+      ],
+      "name": "data/input.json",
+      "encodingFormat": "application/json",
+      "contentSize": 29,
+      "comprev:artifactRole": "data",
+      "comprev:sha256": "d8243b858ba8483890f1f2e1a629976b74b89858c0c6d7b49420e6c5b09c33ee"
+    },
+    {
+      "@id": "environment/runtime.json",
+      "@type": [
+        "File",
+        "SoftwareApplication"
+      ],
+      "name": "environment/runtime.json",
+      "encodingFormat": "application/json",
+      "contentSize": 67,
+      "comprev:artifactRole": "environment",
+      "comprev:sha256": "8bf32e6bbb24a415f7ef8522c5ea4cb9322cd06363bf084eb9312cabc18339e5"
+    },
+    {
+      "@id": "output/result.json",
+      "@type": [
+        "File",
+        "CreativeWork"
+      ],
+      "name": "output/result.json",
+      "encodingFormat": "application/json",
+      "contentSize": 16,
+      "comprev:artifactRole": "output",
+      "comprev:sha256": "3a436917e5235dcb7e09244b863b8dfc5715aa6142bef830270584c590660cd1"
+    }
+  ]
+}

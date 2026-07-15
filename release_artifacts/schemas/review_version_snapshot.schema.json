@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/computational-review/schemas/review-version-snapshot-1.0.0.json",
+  "title": "Immutable computational review version snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "release", "claims", "anchors"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "release": { "$ref": "#/$defs/release" },
+    "claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "anchors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/anchor" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "claim_id": { "type": "string", "pattern": "^clm_[a-f0-9]{16}$" },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_id", "release_id", "version", "manifest_sha256", "frozen_at"],
+      "properties": {
+        "review_id": { "type": "string", "pattern": "^review-[a-z0-9][a-z0-9-]{2,63}$" },
+        "release_id": { "type": "string", "pattern": "^release-[a-z0-9][a-z0-9-]{7,95}$" },
+        "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "frozen_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rubric_version", "report_sha256", "component_scores", "overall_score", "trust_label"],
+      "properties": {
+        "rubric_version": { "type": "string", "minLength": 1 },
+        "report_sha256": { "$ref": "#/$defs/sha256" },
+        "component_scores": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["traceability", "robustness", "uncertainty_calibration", "source_integrity", "transferability_scope_control"],
+          "properties": {
+            "traceability": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "robustness": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "uncertainty_calibration": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "source_integrity": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "transferability_scope_control": { "type": "integer", "minimum": 0, "maximum": 4 }
+          }
+        },
+        "overall_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "trust_label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "supersedes_claim_ids", "claim_text", "source", "citation_keys", "evidence_basis", "trust", "human_decision_references", "relations"],
+      "properties": {
+        "claim_id": { "$ref": "#/$defs/claim_id" },
+        "supersedes_claim_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/claim_id" } },
+        "claim_text": { "type": "string", "minLength": 1 },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": { "type": "string", "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_.\\/-]+$" },
+            "sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "citation_keys": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "evidence_basis": { "type": "object" },
+        "trust": { "$ref": "#/$defs/trust" },
+        "human_decision_references": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "relations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["predicate", "target_claim_id"],
+            "properties": {
+              "predicate": { "enum": ["supports", "contradicts", "qualifies"] },
+              "target_claim_id": { "$ref": "#/$defs/claim_id" }
+            }
+          }
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchor_id", "selector", "human_decision_references"],
+      "properties": {
+        "anchor_id": { "type": "string", "minLength": 1 },
+        "selector": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "claim_id"],
+              "properties": { "kind": { "const": "claim" }, "claim_id": { "$ref": "#/$defs/claim_id" } }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "source_path", "source_sha256", "exact_quote"],
+              "properties": {
+                "kind": { "const": "text" },
+                "source_path": { "type": "string", "minLength": 1 },
+                "source_sha256": { "$ref": "#/$defs/sha256" },
+                "exact_quote": { "type": "string", "minLength": 1 },
+                "prefix": { "type": "string" },
+                "suffix": { "type": "string" }
+              }
+            }
+          ]
+        },
+        "human_decision_references": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/computational-review/schemas/frozen-trust-report-1.0.0.json",
+  "title": "Frozen TRUST report projection for release artifacts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "rubric_version", "generated_at", "release_id", "claims"],
+  "properties": {
+    "schema_version": { "type": "string", "minLength": 1 },
+    "rubric_version": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "release_id": { "type": "string", "pattern": "^release-[a-z0-9][a-z0-9-]{7,95}$" },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim_id", "component_scores", "overall_score", "trust_label"],
+        "properties": {
+          "claim_id": { "type": "string", "pattern": "^clm_[a-f0-9]{16}$" },
+          "component_scores": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["traceability", "robustness", "uncertainty_calibration", "source_integrity", "transferability_scope_control"],
+            "properties": {
+              "traceability": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "robustness": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "uncertainty_calibration": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "source_integrity": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "transferability_scope_control": { "type": "integer", "minimum": 0, "maximum": 4 }
+            }
+          },
+          "overall_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "trust_label": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

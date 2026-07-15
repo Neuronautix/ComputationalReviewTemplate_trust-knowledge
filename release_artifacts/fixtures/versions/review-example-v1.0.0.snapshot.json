@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0.0",
+  "release": {
+    "review_id": "review-example",
+    "release_id": "release-example-v1-0-0",
+    "version": "1.0.0",
+    "manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "frozen_at": "2026-06-01T12:00:00Z"
+  },
+  "claims": [
+    {
+      "claim_id": "clm_aaaaaaaaaaaaaaaa",
+      "supersedes_claim_ids": [],
+      "claim_text": "The intervention improves the measured outcome.",
+      "source": {
+        "path": "content/results.md",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "citation_keys": ["SourceA"],
+      "evidence_basis": {
+        "derived_evidence_relation": "directly_supported",
+        "eligible_citations": [
+          { "cite_key": "SourceA", "doi": "10.1000/source-a", "supports_claim_atoms": ["a1"] }
+        ],
+        "atom_support": { "a1": ["SourceA"] }
+      },
+      "trust": {
+        "rubric_version": "2.0.0",
+        "report_sha256": "dd4774365f89b220e6908233688bc1182662a6b3fbf9aae822a85b041db0ac41",
+        "component_scores": {
+          "traceability": 4,
+          "robustness": 2,
+          "uncertainty_calibration": 4,
+          "source_integrity": 3,
+          "transferability_scope_control": 3
+        },
+        "overall_score": 80,
+        "trust_label": "moderate_trust"
+      },
+      "human_decision_references": ["decision-example-0001"],
+      "relations": [
+        { "predicate": "supports", "target_claim_id": "clm_eeeeeeeeeeeeeeee" }
+      ]
+    },
+    {
+      "claim_id": "clm_cccccccccccccccc",
+      "supersedes_claim_ids": [],
+      "claim_text": "A preliminary subgroup pattern was observed.",
+      "source": {
+        "path": "content/results.md",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "citation_keys": ["SourceC"],
+      "evidence_basis": {
+        "derived_evidence_relation": "partially_supported",
+        "eligible_citations": [
+          { "cite_key": "SourceC", "doi": "10.1000/source-c", "supports_claim_atoms": ["a1"] }
+        ],
+        "atom_support": { "a1": ["SourceC"] }
+      },
+      "trust": {
+        "rubric_version": "2.0.0",
+        "report_sha256": "dd4774365f89b220e6908233688bc1182662a6b3fbf9aae822a85b041db0ac41",
+        "component_scores": {
+          "traceability": 3,
+          "robustness": 1,
+          "uncertainty_calibration": 3,
+          "source_integrity": 3,
+          "transferability_scope_control": 2
+        },
+        "overall_score": 60,
+        "trust_label": "low_trust"
+      },
+      "human_decision_references": ["decision-example-0002"],
+      "relations": []
+    },
+    {
+      "claim_id": "clm_eeeeeeeeeeeeeeee",
+      "supersedes_claim_ids": [],
+      "claim_text": "The comparator protocol remained unchanged.",
+      "source": {
+        "path": "content/methods.md",
+        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      },
+      "citation_keys": ["ProtocolE"],
+      "evidence_basis": {
+        "derived_evidence_relation": "directly_supported",
+        "eligible_citations": [
+          { "cite_key": "ProtocolE", "doi": "10.1000/protocol-e", "supports_claim_atoms": ["a1"] }
+        ],
+        "atom_support": { "a1": ["ProtocolE"] }
+      },
+      "trust": {
+        "rubric_version": "2.0.0",
+        "report_sha256": "dd4774365f89b220e6908233688bc1182662a6b3fbf9aae822a85b041db0ac41",
+        "component_scores": {
+          "traceability": 4,
+          "robustness": 4,
+          "uncertainty_calibration": 4,
+          "source_integrity": 4,
+          "transferability_scope_control": 4
+        },
+        "overall_score": 100,
+        "trust_label": "high_trust"
+      },
+      "human_decision_references": [],
+      "relations": []
+    }
+  ],
+  "anchors": [
+    {
+      "anchor_id": "annotation-primary-outcome",
+      "selector": { "kind": "claim", "claim_id": "clm_aaaaaaaaaaaaaaaa" },
+      "human_decision_references": ["decision-example-0001"]
+    },
+    {
+      "anchor_id": "annotation-subgroup-pattern",
+      "selector": { "kind": "claim", "claim_id": "clm_cccccccccccccccc" },
+      "human_decision_references": ["decision-example-0002"]
+    }
+  ]
+}
