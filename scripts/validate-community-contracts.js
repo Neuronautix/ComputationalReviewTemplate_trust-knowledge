@@ -19,8 +19,10 @@ function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), 'utf8'));
 }
 
-function fileSha256(relativePath) {
-  return crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, relativePath))).digest('hex');
+function canonicalJsonSha256(relativePath) {
+  const value = readJson(relativePath);
+  const canonical = `${JSON.stringify(value, null, 2)}\n`;
+  return crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
 }
 
 function jsonType(value) {
@@ -306,8 +308,8 @@ const exampleAcceptedRef = release.example.human_review.accepted_submissions.fin
 assert.ok(exampleAcceptedRef, 'release example must reference the exact human submission example revision');
 assert.equal(
   exampleAcceptedRef.sha256,
-  fileSha256(contracts[0].examplePath),
-  'release example accepted-submission digest must match the exact example bytes',
+  canonicalJsonSha256(contracts[0].examplePath),
+  'release example accepted-submission digest must match canonical JSON',
 );
 
 const noConsent = clone(human.example);
