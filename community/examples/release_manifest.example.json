@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "release_id": "release-example-review-v1-0-0",
+  "review_id": "review-example",
+  "version": "1.0.0",
+  "status": "published",
+  "title": "Example Computational Review",
+  "released_at": "2026-07-15T15:00:00Z",
+  "source": {
+    "repository": "https://github.com/example/review",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "tag": "review/example/v1.0.0"
+  },
+  "artifacts": [
+    {
+      "role": "html_bundle",
+      "path": "artifacts/review-html.tar.gz",
+      "media_type": "application/gzip",
+      "bytes": 1200000,
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "role": "claim_graph",
+      "path": "knowledge/claim_graph.json",
+      "media_type": "application/json",
+      "bytes": 64000,
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "role": "trust_report",
+      "path": "knowledge/trust_score_report.json",
+      "media_type": "application/json",
+      "bytes": 18000,
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    },
+    {
+      "role": "provenance",
+      "path": "provenance/release-provenance.json",
+      "media_type": "application/json",
+      "bytes": 12000,
+      "sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+    }
+  ],
+  "methodology": {
+    "pipeline_version": "comprev-orchestrator-v29",
+    "trust_rubric_version": "2.0.0",
+    "claim_schema_version": "2.0.0",
+    "gates": [
+      {
+        "gate_id": "phase_16T_trust_score_validation",
+        "status": "pass",
+        "artifact_path": "provenance/gate_trust_scores.json",
+        "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+      }
+    ]
+  },
+  "human_review": {
+    "accepted_submissions": [
+      {
+        "submission_id": "hsub-example-review-0001",
+        "revision": 1,
+        "sha256": "d7ea7c83edabd917447e5b8b05a53a4234ecb2b487da89c0d086cbf39692a8bc"
+      }
+    ],
+    "editorial_decision_ids": [
+      "decision-example-0001"
+    ]
+  },
+  "lineage": {
+    "change_summary": "Initial published release."
+  },
+  "licenses": {
+    "content": "CC-BY-4.0",
+    "code": "MIT",
+    "data": "CC0-1.0",
+    "human_submissions": "CC-BY-4.0"
+  },
+  "persistent_identifiers": {
+    "landing_page": "https://archive.example.org/reviews/review-example/versions/1.0.0",
+    "concept_doi": "10.0000/example-review",
+    "version_doi": "10.0000/example-review.1"
+  },
+  "integrity": {
+    "generated_by": "comprev-release-manifest/1.0.0",
+    "generated_at": "2026-07-15T14:55:00Z",
+    "detached_signatures": [
+      {
+        "algorithm": "sigstore",
+        "artifact_path": "signatures/release-manifest.sigstore.json",
+        "sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+      }
+    ]
+  }
+}

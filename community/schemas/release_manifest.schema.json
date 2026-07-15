@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/computational-review/schemas/release_manifest.schema.json",
+  "title": "Computational review release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "release_id",
+    "review_id",
+    "version",
+    "status",
+    "title",
+    "released_at",
+    "source",
+    "artifacts",
+    "methodology",
+    "human_review",
+    "lineage",
+    "licenses",
+    "persistent_identifiers",
+    "integrity"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "release_id": {
+      "type": "string",
+      "pattern": "^release-[a-z0-9][a-z0-9-]{7,95}$"
+    },
+    "review_id": {
+      "type": "string",
+      "pattern": "^review-[a-z0-9][a-z0-9-]{2,63}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "status": {
+      "enum": ["candidate", "published", "superseded", "corrected", "withdrawn", "retracted"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "tag"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^([a-f0-9]{40}|[a-f0-9]{64})$"
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      },
+      "allOf": [
+        { "contains": { "properties": { "role": { "const": "html_bundle" } }, "required": ["role"] } },
+        { "contains": { "properties": { "role": { "const": "claim_graph" } }, "required": ["role"] } },
+        { "contains": { "properties": { "role": { "const": "trust_report" } }, "required": ["role"] } },
+        { "contains": { "properties": { "role": { "const": "provenance" } }, "required": ["role"] } }
+      ]
+    },
+    "methodology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pipeline_version", "trust_rubric_version", "claim_schema_version", "gates"],
+      "properties": {
+        "pipeline_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "trust_rubric_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "claim_schema_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "gates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["gate_id", "status", "artifact_path", "sha256"],
+            "properties": {
+              "gate_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "status": {
+                "enum": ["pass", "pass_with_blocked_checks"]
+              },
+              "artifact_path": {
+                "$ref": "#/$defs/safe_path"
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        }
+      }
+    },
+    "human_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accepted_submissions", "editorial_decision_ids"],
+      "properties": {
+        "accepted_submissions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["submission_id", "revision", "sha256"],
+            "properties": {
+              "submission_id": {
+                "type": "string",
+                "pattern": "^hsub-[a-z0-9][a-z0-9-]{7,63}$"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        },
+        "editorial_decision_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^decision-[a-z0-9][a-z0-9-]{7,63}$"
+          }
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["change_summary"],
+      "properties": {
+        "previous_release_id": {
+          "type": "string",
+          "pattern": "^release-[a-z0-9][a-z0-9-]{7,95}$"
+        },
+        "supersedes_release_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^release-[a-z0-9][a-z0-9-]{7,95}$"
+          }
+        },
+        "change_summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10000
+        }
+      }
+    },
+    "licenses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content", "code", "data", "human_submissions"],
+      "properties": {
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "data": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "human_submissions": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      }
+    },
+    "persistent_identifiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["landing_page"],
+      "properties": {
+        "landing_page": {
+          "type": "string",
+          "format": "uri"
+        },
+        "concept_doi": {
+          "type": "string",
+          "pattern": "^10\\.[0-9]{4,9}/\\S+$"
+        },
+        "version_doi": {
+          "type": "string",
+          "pattern": "^10\\.[0-9]{4,9}/\\S+$"
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generated_by", "generated_at", "detached_signatures"],
+      "properties": {
+        "generated_by": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "detached_signatures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["algorithm", "artifact_path", "sha256"],
+            "properties": {
+              "algorithm": {
+                "enum": ["sigstore", "minisign", "gpg"]
+              },
+              "artifact_path": {
+                "$ref": "#/$defs/safe_path"
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "safe_path": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_.\\/-]+$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "path", "media_type", "bytes", "sha256"],
+      "properties": {
+        "role": {
+          "enum": [
+            "html_bundle",
+            "pdf",
+            "source_archive",
+            "bibliography",
+            "evidence",
+            "claim_graph",
+            "trust_report",
+            "provenance",
+            "other"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/safe_path"
+        },
+        "media_type": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

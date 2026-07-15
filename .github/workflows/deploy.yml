@@ -35,6 +35,9 @@ jobs:
           node scripts/test-trust-validator.js
           node --test tests/*.test.mjs
 
+      - name: Validate human-review and publication contracts
+        run: node scripts/validate-community-contracts.js
+
       - name: Install dependencies
         run: |
           pip install mystmd jupyter matplotlib numpy pandas seaborn
