@@ -38,6 +38,11 @@ jobs:
       - name: Validate human-review and publication contracts
         run: node scripts/validate-community-contracts.js
 
+      - name: Validate living-review release artifacts
+        run: |
+          node scripts/release-artifacts/validate-release-artifact-schemas.mjs --root .
+          node scripts/release-artifacts/validate-release-artifact-bundle.mjs --directory release_artifacts/examples
+
       - name: Install dependencies
         run: |
           pip install mystmd jupyter matplotlib numpy pandas seaborn

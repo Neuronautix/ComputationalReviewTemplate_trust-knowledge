@@ -66,6 +66,43 @@ Every capsule includes at least one artifact in each role:
 All four roles carry SHA-256 and byte length in the crate. A `passed` capsule
 must have exit code zero; a `failed` capsule must have a nonzero exit code.
 
+## Federated claim graph
+
+The claim exporter assigns each versioned claim a durable HTTPS URI beneath the
+archive base URL. Each nanopublication-like JSON-LD record has separate named
+assertion, provenance, and publication-info graphs. Assertions include exact
+claim text, citation links, evidence relation, frozen TRUST values, and
+`supports`, `contradicts`, or `qualifies` relations to other durable claim URIs.
+
+The dataset and every nanopublication repeat the validated source-native marker.
+Claim assertions label their score as the current claim-object projection,
+declare disagreement representation unavailable, and set
+`comprev:consensusClaimed=false`. Human-decision references remain visible, but
+the exporter does not invent reviewer identities or stances absent from the
+frozen source record.
+
+Provenance links the assertion to the release-manifest digest, snapshot digest,
+source digest, and frozen TRUST-report digest. Publication info includes review
+version and human editorial-decision references. Because JSON-LD is an RDF
+serialization, downstream services can load the graphs without scraping review
+HTML.
+
+## Static archive ingestion
+
+`generate-release-artifacts.mjs` writes a content-addressable
+`release-artifact-index.json`. A registry can:
+
+1. fetch the immutable release directory;
+2. verify every indexed byte count and SHA-256;
+3. validate the JSON artifacts against the versioned schemas;
+4. expose the Markdown diff next to the version page;
+5. serve the RO-Crate as a reproducibility artifact; and
+6. index the JSON-LD claim dataset for cross-review search and federation.
+
+The base URL is an input, so deployment does not hard-code one archive vendor.
+An archive must never repoint a versioned claim URI or replace an artifact at an
+indexed path; corrections publish a new versioned directory and lineage.
+
 Published snapshots, reports, diffs, and capsules are immutable. A correction
 creates a new release ID, semantic version, manifest digest, and snapshot rather
 than overwriting an earlier release.

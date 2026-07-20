@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_type": "computational_review_release_artifact_index",
+  "generated_at": "2026-07-01T12:00:00Z",
+  "release": {
+    "review_id": "review-example",
+    "release_id": "release-example-v1-1-0",
+    "version": "1.1.0",
+    "manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "frozen_at": "2026-07-01T12:00:00Z"
+  },
+  "source_native_provenance": {
+    "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+    "rubric_version": "2.0.0",
+    "method_version": "trust-validator-2.0.0",
+    "semantic_origin": "source_native_trust",
+    "oratlas_re_adjudicated": false,
+    "assessment_unit": {
+      "decision_id": "D01",
+      "status": "proposed",
+      "projection": "claim_object_current_behavior"
+    },
+    "disagreement": {
+      "decision_id": "D09",
+      "status": "proposed",
+      "representation": "not_available",
+      "aggregation_performed": false
+    },
+    "export_semantics": {
+      "decision_id": "D11",
+      "status": "proposed"
+    }
+  },
+  "immutable_inputs": {
+    "from_snapshot_sha256": "749ea820f6348d229859ada3a4fa42dcc01f7049216769bc802dfa9536052a53",
+    "to_snapshot_sha256": "3188b4610735b63ddc3c327f9f70f131264832fd25a608f7096dc04b16040b4e",
+    "from_trust_report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
+    "to_trust_report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
+    "capsule_descriptor_sha256": "e1998ea8b4698abe6a1e5e22c088490e0f96d0d07f08852bf1c7f9de86127107"
+  },
+  "artifacts": [
+    {
+      "role": "scientific_review_diff",
+      "path": "scientific-review-diff.json",
+      "media_type": "application/json",
+      "bytes": 15502,
+      "sha256": "40afb3c67b85331c231cd72d3f02074dbce96f67059c51241fbcaa2d402c1b98"
+    },
+    {
+      "role": "scientific_review_diff_human",
+      "path": "scientific-review-diff.md",
+      "media_type": "text/markdown",
+      "bytes": 1902,
+      "sha256": "ea6e8333b1df27a8054515b6cbb520fc0e5a6d0d7d85c99bc5ed2ce2fc99a79d"
+    },
+    {
+      "role": "evidence_capsule",
+      "path": "evidence-capsule.ro-crate.json",
+      "media_type": "application/ld+json",
+      "bytes": 4356,
+      "sha256": "5e2158643bc9ffe4fcef0e2ee202e5331123254a695e3a548731f81d0b0920df"
+    },
+    {
+      "role": "federated_claims",
+      "path": "federated-claims.jsonld",
+      "media_type": "application/ld+json",
+      "bytes": 15576,
+      "sha256": "761d6a1ead73be929efbeb9e5b77e713169827238f600dd327c397e074f65b8b"
+    }
+  ]
+}

@@ -178,9 +178,11 @@ rule 10.
 - Date: 2026-07-19
 - Question: What is the source-native export contract, and what marker prevents an
   export from being read as an ORAtlas-native (re-adjudicated) assessment?
-- Decision: **Open.** No exporter exists on `main`; draft PR #8 adds a
-  federation/nanopublication adapter whose semantic markers must be reviewed
-  against this decision.
+- Decision: **Open.** The release artifacts and federation adapter now require
+  an originating repository, rubric version, method version, explicit
+  `source_native_trust` origin, and `oratlas_re_adjudicated=false`. Dataset and
+  nanopublication validators reject missing or contradictory markers. This
+  implements a guardrail without ratifying the final D11 contract.
 - Rationale: Prohibitions against silent protocol translation and
   overstated-validation UI.
 - Alternatives considered: JSON source-native + provenance marker; JSON-LD /
