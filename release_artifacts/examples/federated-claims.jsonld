@@ -12,7 +12,29 @@
   "schema:version": "1.1.0",
   "dcterms:created": "2026-07-01T12:00:00Z",
   "prov:wasDerivedFrom": {
-    "@id": "urn:sha256:bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7"
+    "@id": "urn:sha256:3188b4610735b63ddc3c327f9f70f131264832fd25a608f7096dc04b16040b4e"
+  },
+  "source_native_provenance": {
+    "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+    "rubric_version": "2.0.0",
+    "method_version": "trust-validator-2.0.0",
+    "semantic_origin": "source_native_trust",
+    "oratlas_re_adjudicated": false,
+    "assessment_unit": {
+      "decision_id": "D01",
+      "status": "proposed",
+      "projection": "claim_object_current_behavior"
+    },
+    "disagreement": {
+      "decision_id": "D09",
+      "status": "proposed",
+      "representation": "not_available",
+      "aggregation_performed": false
+    },
+    "export_semantics": {
+      "decision_id": "D11",
+      "status": "proposed"
+    }
   },
   "@graph": [
     {
@@ -40,6 +62,9 @@
               "source_integrity": 4,
               "transferability_scope_control": 4
             },
+            "comprev:assessmentUnitProjection": "claim_object_current_behavior",
+            "comprev:disagreementRepresentation": "not_available",
+            "comprev:consensusClaimed": false,
             "cito:isSupportedBy": [
               {
                 "@id": "https://doi.org/10.1000/source-a"
@@ -73,13 +98,13 @@
                 "@id": "urn:sha256:2222222222222222222222222222222222222222222222222222222222222222"
               },
               {
-                "@id": "urn:sha256:bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7"
+                "@id": "urn:sha256:3188b4610735b63ddc3c327f9f70f131264832fd25a608f7096dc04b16040b4e"
               },
               {
                 "@id": "urn:sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
               },
               {
-                "@id": "urn:sha256:356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c"
+                "@id": "urn:sha256:8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18"
               }
             ],
             "prov:hadPrimarySource": {
@@ -102,6 +127,28 @@
               "decision-example-0001",
               "decision-example-0003"
             ],
+            "comprev:sourceNativeProvenance": {
+              "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+              "rubric_version": "2.0.0",
+              "method_version": "trust-validator-2.0.0",
+              "semantic_origin": "source_native_trust",
+              "oratlas_re_adjudicated": false,
+              "assessment_unit": {
+                "decision_id": "D01",
+                "status": "proposed",
+                "projection": "claim_object_current_behavior"
+              },
+              "disagreement": {
+                "decision_id": "D09",
+                "status": "proposed",
+                "representation": "not_available",
+                "aggregation_performed": false
+              },
+              "export_semantics": {
+                "decision_id": "D11",
+                "status": "proposed"
+              }
+            },
             "prov:wasAttributedTo": {
               "@id": "https://w3id.org/computational-review/software/release-artifacts"
             }
@@ -133,6 +180,9 @@
               "source_integrity": 4,
               "transferability_scope_control": 4
             },
+            "comprev:assessmentUnitProjection": "claim_object_current_behavior",
+            "comprev:disagreementRepresentation": "not_available",
+            "comprev:consensusClaimed": false,
             "cito:isSupportedBy": [
               {
                 "@id": "https://doi.org/10.1000/source-b"
@@ -157,13 +207,13 @@
                 "@id": "urn:sha256:2222222222222222222222222222222222222222222222222222222222222222"
               },
               {
-                "@id": "urn:sha256:bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7"
+                "@id": "urn:sha256:3188b4610735b63ddc3c327f9f70f131264832fd25a608f7096dc04b16040b4e"
               },
               {
                 "@id": "urn:sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
               },
               {
-                "@id": "urn:sha256:356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c"
+                "@id": "urn:sha256:8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18"
               }
             ],
             "prov:hadPrimarySource": {
@@ -185,6 +235,28 @@
             "comprev:humanDecisionReference": [
               "decision-example-0003"
             ],
+            "comprev:sourceNativeProvenance": {
+              "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+              "rubric_version": "2.0.0",
+              "method_version": "trust-validator-2.0.0",
+              "semantic_origin": "source_native_trust",
+              "oratlas_re_adjudicated": false,
+              "assessment_unit": {
+                "decision_id": "D01",
+                "status": "proposed",
+                "projection": "claim_object_current_behavior"
+              },
+              "disagreement": {
+                "decision_id": "D09",
+                "status": "proposed",
+                "representation": "not_available",
+                "aggregation_performed": false
+              },
+              "export_semantics": {
+                "decision_id": "D11",
+                "status": "proposed"
+              }
+            },
             "prov:wasAttributedTo": {
               "@id": "https://w3id.org/computational-review/software/release-artifacts"
             }
@@ -216,6 +288,9 @@
               "source_integrity": 4,
               "transferability_scope_control": 4
             },
+            "comprev:assessmentUnitProjection": "claim_object_current_behavior",
+            "comprev:disagreementRepresentation": "not_available",
+            "comprev:consensusClaimed": false,
             "cito:isSupportedBy": [
               {
                 "@id": "https://doi.org/10.1000/protocol-e"
@@ -234,13 +309,13 @@
                 "@id": "urn:sha256:2222222222222222222222222222222222222222222222222222222222222222"
               },
               {
-                "@id": "urn:sha256:bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7"
+                "@id": "urn:sha256:3188b4610735b63ddc3c327f9f70f131264832fd25a608f7096dc04b16040b4e"
               },
               {
                 "@id": "urn:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
               },
               {
-                "@id": "urn:sha256:356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c"
+                "@id": "urn:sha256:8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18"
               }
             ],
             "prov:hadPrimarySource": {
@@ -260,6 +335,28 @@
             "dcterms:isVersionOf": "https://archive.example.org/reviews/review-example",
             "schema:version": "1.1.0",
             "comprev:humanDecisionReference": [],
+            "comprev:sourceNativeProvenance": {
+              "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+              "rubric_version": "2.0.0",
+              "method_version": "trust-validator-2.0.0",
+              "semantic_origin": "source_native_trust",
+              "oratlas_re_adjudicated": false,
+              "assessment_unit": {
+                "decision_id": "D01",
+                "status": "proposed",
+                "projection": "claim_object_current_behavior"
+              },
+              "disagreement": {
+                "decision_id": "D09",
+                "status": "proposed",
+                "representation": "not_available",
+                "aggregation_performed": false
+              },
+              "export_semantics": {
+                "decision_id": "D11",
+                "status": "proposed"
+              }
+            },
             "prov:wasAttributedTo": {
               "@id": "https://w3id.org/computational-review/software/release-artifacts"
             }

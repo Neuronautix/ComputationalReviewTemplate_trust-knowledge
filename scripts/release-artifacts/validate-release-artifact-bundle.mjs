@@ -32,6 +32,7 @@ export function validateReleaseArtifactBundle(directory) {
   );
   invariant(claims['schema:version'] === index.release.version, 'claim export version differs from index');
   invariant(claims['dcterms:created'] === index.release.frozen_at, 'claim export timestamp differs from index');
+  invariant(deepEqual(claims.source_native_provenance, index.source_native_provenance), 'claim export source-native provenance differs from index');
   return { index, diff, capsule, claims };
 }
 

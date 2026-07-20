@@ -42,9 +42,15 @@ test('federated export uses durable IDs, named provenance graphs, and all relati
     verified_trust_report_sha256: sha256File(AFTER_TRUST_PATH),
   });
   validateFederatedClaimExport(exported);
+  assert.equal(exported.source_native_provenance.semantic_origin, 'source_native_trust');
+  assert.equal(exported.source_native_provenance.oratlas_re_adjudicated, false);
   assert.equal(exported['@graph'].length, snapshot.claims.length);
   const primary = exported['@graph'].find((item) => item['@id'].endsWith('clm_bbbbbbbbbbbbbbbb'));
   const assertion = primary['np:hasAssertion']['@graph'];
+  const claimAssertion = assertion.find((triple) => triple['@type'] === 'schema:Claim');
+  assert.equal(claimAssertion['comprev:consensusClaimed'], false);
+  assert.equal(claimAssertion['comprev:assessmentUnitProjection'], 'claim_object_current_behavior');
+  assert.equal(claimAssertion['comprev:disagreementRepresentation'], 'not_available');
   assert.ok(assertion.some((triple) => triple['cito:supports']));
   assert.ok(assertion.some((triple) => triple['cito:disagreesWith']));
   const provenance = primary['np:hasProvenance']['@graph'][0]['prov:wasDerivedFrom'];
@@ -53,8 +59,29 @@ test('federated export uses durable IDs, named provenance graphs, and all relati
     primary['np:hasPublicationInfo']['@graph'][0]['comprev:humanDecisionReference'],
     ['decision-example-0001', 'decision-example-0003'],
   );
+  assert.deepEqual(
+    primary['np:hasPublicationInfo']['@graph'][0]['comprev:sourceNativeProvenance'],
+    exported.source_native_provenance,
+  );
   const qualifier = exported['@graph'].find((item) => item['@id'].endsWith('clm_dddddddddddddddd'));
   assert.ok(qualifier['np:hasAssertion']['@graph'].some((triple) => triple['comprev:qualifies']));
+});
+
+test('federated export rejects missing or re-adjudicated semantic markers', () => {
+  const snapshot = readJson(AFTER_PATH);
+  const exported = exportFederatedClaims(snapshot, {
+    base_uri: 'https://archive.example.org',
+    snapshot_sha256: sha256File(AFTER_PATH),
+    verified_trust_report_sha256: sha256File(AFTER_TRUST_PATH),
+  });
+  const missing = clone(exported);
+  delete missing.source_native_provenance;
+  assert.throws(() => validateFederatedClaimExport(missing), /source_native_provenance/);
+
+  const reinterpreted = clone(exported);
+  reinterpreted['@graph'][0]['np:hasPublicationInfo']['@graph'][0]
+    ['comprev:sourceNativeProvenance'].oratlas_re_adjudicated = true;
+  assert.throws(() => validateFederatedClaimExport(reinterpreted), /oratlas_re_adjudicated must be false/);
 });
 
 test('claim export rejects dangling relationships before emitting RDF', () => {
@@ -86,6 +113,7 @@ test('aggregate CLI reproduces committed static archive examples and index hashe
       );
     }
     const index = readJson(join(outputDir, 'release-artifact-index.json'));
+    assert.deepEqual(index.source_native_provenance, readJson(AFTER_PATH).source_native_provenance);
     for (const artifact of index.artifacts) {
       assert.equal(artifact.sha256, sha256File(join(outputDir, artifact.path)));
     }
@@ -128,4 +156,9 @@ test('archive adapter validates every schema and full fixture', () => {
   invalidSnapshot.claims[0].claim_id = 'not-a-claim';
   const snapshotSchema = readJson(join(schemaDir, 'review_version_snapshot.schema.json'));
   assert.ok(validateJsonSchema(invalidSnapshot, snapshotSchema).some((error) => /claim_id/.test(error)));
+
+  const exportSchema = readJson(join(schemaDir, 'federated_claim_export.schema.json'));
+  const missingBoundary = clone(readJson(join(EXAMPLES_DIR, 'federated-claims.jsonld')));
+  delete missingBoundary.source_native_provenance;
+  assert.ok(validateJsonSchema(missingBoundary, exportSchema).some((error) => /source_native_provenance/.test(error)));
 });

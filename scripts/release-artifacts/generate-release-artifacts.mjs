@@ -20,6 +20,7 @@ import {
   stableJson,
   unique,
   validateFrozenTrustReport,
+  validateSourceNativeProvenance,
   writeText,
 } from './lib.mjs';
 
@@ -37,6 +38,7 @@ function artifactRecord(outputDir, role, path, mediaType) {
 export function validateReleaseArtifactIndex(index, outputDir) {
   invariant(index?.schema_version === '1.0.0', 'release artifact index schema_version must be 1.0.0');
   invariant(index?.artifact_type === 'computational_review_release_artifact_index', 'release artifact index type is invalid');
+  validateSourceNativeProvenance(index.source_native_provenance, 'release artifact index source_native_provenance');
   invariant(Array.isArray(index.artifacts), 'release artifact index artifacts must be an array');
   const requiredRoles = [
     'scientific_review_diff',
@@ -106,6 +108,7 @@ export function generateReleaseArtifacts(options) {
     artifact_type: 'computational_review_release_artifact_index',
     generated_at: after.release.frozen_at,
     release: after.release,
+    source_native_provenance: after.source_native_provenance,
     immutable_inputs: {
       from_snapshot_sha256: fromDigest,
       to_snapshot_sha256: toDigest,

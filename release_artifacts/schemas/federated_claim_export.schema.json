@@ -4,7 +4,7 @@
   "title": "Federated provenance-bearing claim export",
   "type": "object",
   "additionalProperties": false,
-  "required": ["@context", "@id", "@type", "schema:version", "dcterms:created", "prov:wasDerivedFrom", "@graph"],
+  "required": ["@context", "@id", "@type", "schema:version", "dcterms:created", "prov:wasDerivedFrom", "source_native_provenance", "@graph"],
   "properties": {
     "@context": { "type": "object" },
     "@id": { "type": "string", "format": "uri" },
@@ -12,6 +12,7 @@
     "schema:version": { "type": "string" },
     "dcterms:created": { "type": "string", "format": "date-time" },
     "prov:wasDerivedFrom": { "type": "object" },
+    "source_native_provenance": { "type": "object", "additionalProperties": false, "required": ["originating_repository", "rubric_version", "method_version", "semantic_origin", "oratlas_re_adjudicated", "assessment_unit", "disagreement", "export_semantics"], "properties": { "originating_repository": { "type": "string", "format": "uri", "pattern": "^https://" }, "rubric_version": { "type": "string", "minLength": 1 }, "method_version": { "type": "string", "minLength": 1 }, "semantic_origin": { "const": "source_native_trust" }, "oratlas_re_adjudicated": { "const": false }, "assessment_unit": { "type": "object" }, "disagreement": { "type": "object" }, "export_semantics": { "type": "object" } } },
     "@graph": {
       "type": "array",
       "items": {

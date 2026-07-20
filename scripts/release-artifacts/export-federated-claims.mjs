@@ -3,6 +3,7 @@
 import { pathToFileURL } from 'node:url';
 import {
   compareText,
+  deepEqual,
   invariant,
   parseArgs,
   readJson,
@@ -10,6 +11,7 @@ import {
   stableJson,
   unique,
   validateFrozenTrustReport,
+  validateSourceNativeProvenance,
   validateSnapshot,
   writeText,
 } from './lib.mjs';
@@ -56,6 +58,9 @@ export function exportFederatedClaims(snapshotInput, options = {}) {
               'comprev:trustOverall': claim.trust.overall_score,
               'comprev:trustLabel': claim.trust.trust_label,
               'comprev:trustComponents': claim.trust.component_scores,
+              'comprev:assessmentUnitProjection': snapshot.source_native_provenance.assessment_unit.projection,
+              'comprev:disagreementRepresentation': snapshot.source_native_provenance.disagreement.representation,
+              'comprev:consensusClaimed': false,
               'cito:isSupportedBy': citationNodes.map((citation) => ({
                 '@id': citation.doi ? `https://doi.org/${citation.doi}` : `urn:citekey:${citation.cite_key}`,
               })),
@@ -94,6 +99,7 @@ export function exportFederatedClaims(snapshotInput, options = {}) {
               'dcterms:isVersionOf': `${baseUri.replace(/\/$/u, '')}/reviews/${snapshot.release.review_id}`,
               'schema:version': snapshot.release.version,
               'comprev:humanDecisionReference': claim.human_decision_references,
+              'comprev:sourceNativeProvenance': snapshot.source_native_provenance,
               'prov:wasAttributedTo': { '@id': 'https://w3id.org/computational-review/software/release-artifacts' },
             },
           ],
@@ -114,12 +120,14 @@ export function exportFederatedClaims(snapshotInput, options = {}) {
     'schema:version': snapshot.release.version,
     'dcterms:created': snapshot.release.frozen_at,
     'prov:wasDerivedFrom': { '@id': `urn:sha256:${snapshotDigest}` },
+    source_native_provenance: snapshot.source_native_provenance,
     '@graph': nanopublications,
   };
 }
 
 export function validateFederatedClaimExport(exported) {
   invariant(exported?.['@context']?.np && exported?.['@context']?.prov, 'claim export lacks RDF contexts');
+  validateSourceNativeProvenance(exported.source_native_provenance, 'claim export source_native_provenance');
   invariant(Array.isArray(exported['@graph']), 'claim export @graph must be an array');
   unique(exported['@graph'].map((nanopub) => nanopub['@id']), 'nanopublication IDs');
   for (const nanopub of exported['@graph']) {
@@ -127,6 +135,13 @@ export function validateFederatedClaimExport(exported) {
     invariant(Array.isArray(nanopub['np:hasAssertion']?.['@graph']), `${nanopub['@id']} lacks an assertion graph`);
     invariant(Array.isArray(nanopub['np:hasProvenance']?.['@graph']), `${nanopub['@id']} lacks a provenance graph`);
     invariant(Array.isArray(nanopub['np:hasPublicationInfo']?.['@graph']), `${nanopub['@id']} lacks publication info`);
+    const assertion = nanopub['np:hasAssertion']['@graph'].find((node) => node['@type'] === 'schema:Claim');
+    invariant(assertion?.['comprev:consensusClaimed'] === false, `${nanopub['@id']} must not present TRUST as consensus`);
+    invariant(assertion?.['comprev:assessmentUnitProjection'] === 'claim_object_current_behavior', `${nanopub['@id']} lacks the current assessment-unit projection marker`);
+    invariant(assertion?.['comprev:disagreementRepresentation'] === 'not_available', `${nanopub['@id']} lacks the disagreement availability marker`);
+    const publicationInfo = nanopub['np:hasPublicationInfo']['@graph'][0];
+    validateSourceNativeProvenance(publicationInfo?.['comprev:sourceNativeProvenance'], `${nanopub['@id']} source-native provenance`);
+    invariant(deepEqual(publicationInfo['comprev:sourceNativeProvenance'], exported.source_native_provenance), `${nanopub['@id']} source-native provenance differs from dataset`);
   }
   return exported;
 }

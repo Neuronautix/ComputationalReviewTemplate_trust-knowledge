@@ -74,6 +74,13 @@ assertion, provenance, and publication-info graphs. Assertions include exact
 claim text, citation links, evidence relation, frozen TRUST values, and
 `supports`, `contradicts`, or `qualifies` relations to other durable claim URIs.
 
+The dataset and every nanopublication repeat the validated source-native marker.
+Claim assertions label their score as the current claim-object projection,
+declare disagreement representation unavailable, and set
+`comprev:consensusClaimed=false`. Human-decision references remain visible, but
+the exporter does not invent reviewer identities or stances absent from the
+frozen source record.
+
 Provenance links the assertion to the release-manifest digest, snapshot digest,
 source digest, and frozen TRUST-report digest. Publication info includes review
 version and human editorial-decision references. Because JSON-LD is an RDF
