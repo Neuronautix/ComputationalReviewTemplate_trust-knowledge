@@ -1,5 +1,19 @@
 # Verified review deltas and executable evidence capsules
 
+## Source-native semantic boundary
+
+Every snapshot, frozen TRUST report, scientific diff, and evidence capsule must
+carry `source_native_provenance`. The marker identifies the originating
+repository, rubric and method versions, states that the artifact is native
+TRUST rather than an ORAtlas re-adjudication, and records the status of D01,
+D09, and D11.
+
+While those decisions remain `proposed`, the claim-level score is explicitly a
+projection of current storage behaviour, not a ratified assessment-unit
+contract. Disagreement is declared `not_available` and no consensus or
+cross-reviewer aggregation is implied. Validators reject missing, weakened, or
+contradictory markers.
+
 The release-artifact foundation compares two immutable review releases and
 packages a completed computational run without recalculating scientific
 judgments. Its command-line interface is documented in

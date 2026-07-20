@@ -13,6 +13,7 @@ import {
   stableJson,
   unique,
   validateFrozenTrustReport,
+  validateSourceNativeProvenance,
   validateReleaseRef,
   validateSnapshot,
   writeText,
@@ -179,6 +180,7 @@ export function buildScientificReviewDiff(beforeInput, afterInput, inputDigests 
       trust_recomputed: false,
       matching: 'same claim_id, then explicit supersedes_claim_ids',
     },
+    source_native_provenance: after.source_native_provenance,
     summary: {
       claims: claimCounts,
       trust_overall_changed: claims.filter((claim) => claim.before && claim.after && claim.changes.trust.overall !== null).length,
@@ -204,6 +206,7 @@ export function validateScientificReviewDiff(diff) {
   validateReleaseRef(diff.to_release, 'to_release');
   invariant(compareSemver(diff.from_release.version, diff.to_release.version) < 0, 'scientific diff release order is invalid');
   invariant(diff.methodology?.trust_recomputed === false, 'scientific diff must not claim TRUST recomputation');
+  validateSourceNativeProvenance(diff.source_native_provenance, 'scientific diff source_native_provenance');
   invariant(Array.isArray(diff.claims), 'scientific diff claims must be an array');
   invariant(Array.isArray(diff.anchor_changes), 'scientific diff anchor_changes must be an array');
   invariant(Array.isArray(diff.orphaned_anchors), 'scientific diff orphaned_anchors must be an array');

@@ -4,11 +4,12 @@
   "title": "Scientific computational review version diff",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "artifact_type", "generated_at", "from_release", "to_release", "immutable_inputs", "methodology", "summary", "claims", "anchor_changes", "orphaned_anchors"],
+  "required": ["schema_version", "artifact_type", "generated_at", "source_native_provenance", "from_release", "to_release", "immutable_inputs", "methodology", "summary", "claims", "anchor_changes", "orphaned_anchors"],
   "properties": {
     "schema_version": { "const": "1.0.0" },
     "artifact_type": { "const": "scientific_review_version_diff" },
     "generated_at": { "type": "string", "format": "date-time" },
+    "source_native_provenance": { "type": "object", "additionalProperties": false, "required": ["originating_repository", "rubric_version", "method_version", "semantic_origin", "oratlas_re_adjudicated", "assessment_unit", "disagreement", "export_semantics"], "properties": { "originating_repository": { "type": "string", "format": "uri", "pattern": "^https://" }, "rubric_version": { "type": "string", "minLength": 1 }, "method_version": { "type": "string", "minLength": 1 }, "semantic_origin": { "const": "source_native_trust" }, "oratlas_re_adjudicated": { "const": false }, "assessment_unit": { "type": "object" }, "disagreement": { "type": "object" }, "export_semantics": { "type": "object" } } },
     "from_release": { "type": "object" },
     "to_release": { "type": "object" },
     "immutable_inputs": {

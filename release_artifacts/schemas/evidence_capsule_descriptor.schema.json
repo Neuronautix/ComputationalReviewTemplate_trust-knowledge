@@ -4,9 +4,10 @@
   "title": "Executable evidence capsule descriptor",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "capsule_id", "release", "created_at", "status", "license", "execution", "artifacts"],
+  "required": ["schema_version", "source_native_provenance", "capsule_id", "release", "created_at", "status", "license", "execution", "artifacts"],
   "properties": {
     "schema_version": { "const": "1.0.0" },
+    "source_native_provenance": { "type": "object", "additionalProperties": false, "required": ["originating_repository", "rubric_version", "method_version", "semantic_origin", "oratlas_re_adjudicated", "assessment_unit", "disagreement", "export_semantics"], "properties": { "originating_repository": { "type": "string", "format": "uri", "pattern": "^https://" }, "rubric_version": { "type": "string", "minLength": 1 }, "method_version": { "type": "string", "minLength": 1 }, "semantic_origin": { "const": "source_native_trust" }, "oratlas_re_adjudicated": { "const": false }, "assessment_unit": { "type": "object" }, "disagreement": { "type": "object" }, "export_semantics": { "type": "object" } } },
     "capsule_id": { "type": "string", "pattern": "^capsule-[a-z0-9][a-z0-9-]{7,95}$" },
     "release": { "type": "object" },
     "created_at": { "type": "string", "format": "date-time" },

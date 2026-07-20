@@ -17,14 +17,36 @@
     "frozen_at": "2026-07-01T12:00:00Z"
   },
   "immutable_inputs": {
-    "from_snapshot_sha256": "f2094eb06f6f19c3a4bdf97bf8f149ba91d553d43d381037c7e1f476d81bbd1d",
-    "to_snapshot_sha256": "bee7cab2f377cfb77bd4ad2ee7be37c4aad0348b043f653fdb3d7b2b401a4dc7",
-    "from_trust_report_sha256": "dd4774365f89b220e6908233688bc1182662a6b3fbf9aae822a85b041db0ac41",
-    "to_trust_report_sha256": "356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c"
+    "from_snapshot_sha256": "749ea820f6348d229859ada3a4fa42dcc01f7049216769bc802dfa9536052a53",
+    "to_snapshot_sha256": "3188b4610735b63ddc3c327f9f70f131264832fd25a608f7096dc04b16040b4e",
+    "from_trust_report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
+    "to_trust_report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18"
   },
   "methodology": {
     "trust_recomputed": false,
     "matching": "same claim_id, then explicit supersedes_claim_ids"
+  },
+  "source_native_provenance": {
+    "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+    "rubric_version": "2.0.0",
+    "method_version": "trust-validator-2.0.0",
+    "semantic_origin": "source_native_trust",
+    "oratlas_re_adjudicated": false,
+    "assessment_unit": {
+      "decision_id": "D01",
+      "status": "proposed",
+      "projection": "claim_object_current_behavior"
+    },
+    "disagreement": {
+      "decision_id": "D09",
+      "status": "proposed",
+      "representation": "not_available",
+      "aggregation_performed": false
+    },
+    "export_semantics": {
+      "decision_id": "D11",
+      "status": "proposed"
+    }
   },
   "summary": {
     "claims": {
@@ -69,7 +91,7 @@
         },
         "trust": {
           "rubric_version": "2.0.0",
-          "report_sha256": "dd4774365f89b220e6908233688bc1182662a6b3fbf9aae822a85b041db0ac41",
+          "report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
           "component_scores": {
             "traceability": 4,
             "robustness": 2,
@@ -122,7 +144,7 @@
         },
         "trust": {
           "rubric_version": "2.0.0",
-          "report_sha256": "356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c",
+          "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
           "component_scores": {
             "traceability": 4,
             "robustness": 4,
@@ -207,7 +229,7 @@
         },
         "trust": {
           "rubric_version": "2.0.0",
-          "report_sha256": "dd4774365f89b220e6908233688bc1182662a6b3fbf9aae822a85b041db0ac41",
+          "report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
           "component_scores": {
             "traceability": 3,
             "robustness": 1,
@@ -300,7 +322,7 @@
         },
         "trust": {
           "rubric_version": "2.0.0",
-          "report_sha256": "dd4774365f89b220e6908233688bc1182662a6b3fbf9aae822a85b041db0ac41",
+          "report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
           "component_scores": {
             "traceability": 4,
             "robustness": 4,
@@ -338,7 +360,7 @@
         },
         "trust": {
           "rubric_version": "2.0.0",
-          "report_sha256": "356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c",
+          "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
           "component_scores": {
             "traceability": 4,
             "robustness": 4,
@@ -398,7 +420,7 @@
         },
         "trust": {
           "rubric_version": "2.0.0",
-          "report_sha256": "356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c",
+          "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
           "component_scores": {
             "traceability": 4,
             "robustness": 3,

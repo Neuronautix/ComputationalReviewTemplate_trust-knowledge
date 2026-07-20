@@ -1,5 +1,12 @@
 # Immutable release artifacts
 
+All artifacts are source-native TRUST records. They are not ORAtlas-native and
+have not been re-adjudicated by ORAtlas. The required
+`source_native_provenance` object makes that boundary machine-verifiable and
+keeps D01, D09, and D11 visibly `proposed`; consumers must not interpret the
+current claim-level projection as a resolved assessment-unit or consensus
+contract.
+
 This directory contains versioned contracts, fixtures, and generated examples
 for three archive-facing artifacts:
 

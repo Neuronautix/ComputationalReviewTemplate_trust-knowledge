@@ -14,6 +14,7 @@ import {
   stableJson,
   unique,
   validateReleaseRef,
+  validateSourceNativeProvenance,
   writeText,
 } from './lib.mjs';
 
@@ -35,6 +36,7 @@ export function validateCapsuleDescriptor(descriptor) {
   invariant(descriptor.schema_version === '1.0.0', 'capsule descriptor schema_version must be 1.0.0');
   invariant(/^capsule-[a-z0-9][a-z0-9-]{7,95}$/u.test(descriptor.capsule_id), 'capsule_id is invalid');
   validateReleaseRef(descriptor.release, 'release');
+  validateSourceNativeProvenance(descriptor.source_native_provenance, 'capsule source_native_provenance');
   invariant(Number.isFinite(Date.parse(descriptor.created_at)), 'created_at is invalid');
   invariant(Date.parse(descriptor.created_at) <= Date.parse(descriptor.release.frozen_at), 'created_at must not be later than the frozen release');
   invariant(/^https:\/\//u.test(descriptor.license), 'license must be an HTTPS URI');
@@ -108,6 +110,7 @@ export function buildEvidenceCapsule(descriptorInput, baseDir) {
       '@id': `urn:sha256:${descriptor.release.manifest_sha256}`,
     },
     'comprev:status': descriptor.status,
+    'comprev:sourceNativeProvenance': descriptor.source_native_provenance,
   };
   const action = {
     '@id': actionId,
@@ -148,6 +151,8 @@ export function buildEvidenceCapsule(descriptorInput, baseDir) {
 export function validateEvidenceCapsule(capsule) {
   invariant(isObject(capsule), 'capsule must be an object');
   invariant(Array.isArray(capsule['@context']), 'capsule @context must be an array');
+  const root = capsule['@graph']?.find((node) => node['@id'] === './');
+  validateSourceNativeProvenance(root?.['comprev:sourceNativeProvenance'], 'capsule source_native_provenance');
   invariant(capsule['@context'].includes('https://w3id.org/ro/crate/1.3/context'), 'capsule lacks the RO-Crate 1.3 context');
   invariant(Array.isArray(capsule['@graph']), 'capsule @graph must be an array');
   const ids = capsule['@graph'].map((node) => node['@id']);

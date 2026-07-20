@@ -54,7 +54,29 @@
       "comprev:release": {
         "@id": "urn:sha256:2222222222222222222222222222222222222222222222222222222222222222"
       },
-      "comprev:status": "passed"
+      "comprev:status": "passed",
+      "comprev:sourceNativeProvenance": {
+        "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+        "rubric_version": "2.0.0",
+        "method_version": "trust-validator-2.0.0",
+        "semantic_origin": "source_native_trust",
+        "oratlas_re_adjudicated": false,
+        "assessment_unit": {
+          "decision_id": "D01",
+          "status": "proposed",
+          "projection": "claim_object_current_behavior"
+        },
+        "disagreement": {
+          "decision_id": "D09",
+          "status": "proposed",
+          "representation": "not_available",
+          "aggregation_performed": false
+        },
+        "export_semantics": {
+          "decision_id": "D11",
+          "status": "proposed"
+        }
+      }
     },
     {
       "@id": "capsule-example-analysis-0001/#execution",

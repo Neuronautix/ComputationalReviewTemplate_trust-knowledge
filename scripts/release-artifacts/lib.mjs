@@ -14,6 +14,9 @@ export const COMPONENT_NAMES = [
   'transferability_scope_control',
 ];
 
+export const SOURCE_NATIVE_ORIGIN = 'source_native_trust';
+export const CURRENT_ASSESSMENT_PROJECTION = 'claim_object_current_behavior';
+
 export function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -103,6 +106,25 @@ export function validateReleaseRef(release, label = 'release') {
   invariant(Number.isFinite(Date.parse(release.frozen_at)), `${label}.frozen_at is invalid`);
 }
 
+export function validateSourceNativeProvenance(provenance, label = 'source_native_provenance') {
+  invariant(isObject(provenance), `${label} must be an object`);
+  invariant(/^https:\/\//u.test(provenance.originating_repository || ''), `${label}.originating_repository must be an HTTPS URL`);
+  invariant(typeof provenance.rubric_version === 'string' && provenance.rubric_version.length > 0, `${label}.rubric_version is required`);
+  invariant(typeof provenance.method_version === 'string' && provenance.method_version.length > 0, `${label}.method_version is required`);
+  invariant(provenance.semantic_origin === SOURCE_NATIVE_ORIGIN, `${label}.semantic_origin must be ${SOURCE_NATIVE_ORIGIN}`);
+  invariant(provenance.oratlas_re_adjudicated === false, `${label}.oratlas_re_adjudicated must be false`);
+  invariant(provenance.assessment_unit?.decision_id === 'D01', `${label}.assessment_unit must reference D01`);
+  invariant(provenance.assessment_unit?.status === 'proposed', `${label}.assessment_unit.status must remain proposed`);
+  invariant(provenance.assessment_unit?.projection === CURRENT_ASSESSMENT_PROJECTION, `${label}.assessment_unit.projection must describe current storage behavior`);
+  invariant(provenance.disagreement?.decision_id === 'D09', `${label}.disagreement must reference D09`);
+  invariant(provenance.disagreement?.status === 'proposed', `${label}.disagreement.status must remain proposed`);
+  invariant(provenance.disagreement?.representation === 'not_available', `${label}.disagreement.representation must be not_available`);
+  invariant(provenance.disagreement?.aggregation_performed === false, `${label}.disagreement.aggregation_performed must be false`);
+  invariant(provenance.export_semantics?.decision_id === 'D11', `${label}.export_semantics must reference D11`);
+  invariant(provenance.export_semantics?.status === 'proposed', `${label}.export_semantics.status must remain proposed`);
+  return provenance;
+}
+
 export function validateTrustSnapshot(trust, label) {
   invariant(isObject(trust), `${label} must be an object`);
   invariant(typeof trust.rubric_version === 'string' && trust.rubric_version.length > 0, `${label}.rubric_version is required`);
@@ -122,6 +144,7 @@ export function validateTrustSnapshot(trust, label) {
 export function validateSnapshot(snapshot, label = 'snapshot') {
   invariant(isObject(snapshot), `${label} must be an object`);
   invariant(snapshot.schema_version === '1.0.0', `${label}.schema_version must be 1.0.0`);
+  validateSourceNativeProvenance(snapshot.source_native_provenance, `${label}.source_native_provenance`);
   validateReleaseRef(snapshot.release, `${label}.release`);
   invariant(Array.isArray(snapshot.claims), `${label}.claims must be an array`);
   invariant(Array.isArray(snapshot.anchors), `${label}.anchors must be an array`);
@@ -173,6 +196,9 @@ export function validateFrozenTrustReport(snapshot, report, reportDigest, label 
   invariant(isObject(report), `${label} must be an object`);
   invariant(typeof report.schema_version === 'string' && report.schema_version.length > 0, `${label}.schema_version is required`);
   invariant(typeof report.rubric_version === 'string' && report.rubric_version.length > 0, `${label}.rubric_version is required`);
+  validateSourceNativeProvenance(report.source_native_provenance, `${label}.source_native_provenance`);
+  invariant(report.source_native_provenance.rubric_version === report.rubric_version, `${label} source-native rubric version differs from report`);
+  invariant(deepEqual(snapshot.source_native_provenance, report.source_native_provenance), `${label} source-native provenance differs from snapshot`);
   invariant(Number.isFinite(Date.parse(report.generated_at)), `${label}.generated_at is invalid`);
   invariant(report.release_id === snapshot.release.release_id, `${label}.release_id differs from the snapshot`);
   invariant(Date.parse(report.generated_at) <= Date.parse(snapshot.release.frozen_at), `${label} was generated after the release froze`);
