@@ -278,6 +278,7 @@ function clone(value) {
   return structuredClone(value);
 }
 
+function runCli() {
 const contracts = [
   {
     name: 'human submission',
@@ -299,6 +300,19 @@ for (const contract of contracts) {
   assertValid(`${contract.name} example`, contract.example, contract.schema);
   console.log(`PASS ${contract.examplePath}`);
 }
+
+const acceptedCollectionPath = 'community/examples/human_reviews.accepted.example.json';
+const acceptedCollection = readJson(acceptedCollectionPath);
+assert.equal(acceptedCollection.schema_version, '1.0.0');
+assert.ok(Array.isArray(acceptedCollection.submissions) && acceptedCollection.submissions.length > 0);
+const acceptedRevisionKeys = new Set();
+for (const [index, submission] of acceptedCollection.submissions.entries()) {
+  assertValid(`${acceptedCollectionPath} submission ${index + 1}`, submission, contracts[0].schema);
+  const revisionKey = `${submission.submission_id}@${submission.revision}`;
+  assert.ok(!acceptedRevisionKeys.has(revisionKey), `duplicate accepted submission revision: ${revisionKey}`);
+  acceptedRevisionKeys.add(revisionKey);
+}
+console.log(`PASS ${acceptedCollectionPath} (${acceptedCollection.submissions.length} submissions)`);
 
 const human = contracts[0];
 const release = contracts[1];
@@ -387,9 +401,13 @@ generatedAfterRelease.integrity.generated_at = '2026-07-15T15:00:01Z';
 assertInvalid('release generated after released_at', generatedAfterRelease, release.schema);
 
 console.log('Community contract validator tests passed.');
+}
+
+if (require.main === module) runCli();
 
 module.exports = {
   auditSchema,
+  runCli,
   validate,
   validateContract,
   validateHumanSubmissionSemantics,

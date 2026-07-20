@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.0.0",
+  "submissions": [
+    {
+      "schema_version": "1.0.0",
+      "submission_id": "hsub-ui-support-0001",
+      "revision": 1,
+      "created_at": "2026-07-15T09:00:00Z",
+      "target": {
+        "review_id": "review-example",
+        "review_version": "1.0.0",
+        "release_manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "selector": {
+          "kind": "claim",
+          "claim_id": "clm_7659634fb095cdce"
+        }
+      },
+      "submitter": {
+        "identity_ref": "identity-reviewer-0001",
+        "display_name": "A. Example",
+        "visibility": "public",
+        "orcid": "https://orcid.org/0000-0002-1825-0097"
+      },
+      "content": {
+        "kind": "peer_review",
+        "title": "The claim is supported at its stated scope",
+        "body_markdown": "The cited evidence supports the claim as written. The population and method qualifiers should remain visible in future versions.",
+        "stance": "supports",
+        "recommendation": "accept",
+        "confidence": 4,
+        "evidence": []
+      },
+      "declarations": {
+        "license": "CC-BY-4.0",
+        "public_record_consent": true,
+        "competing_interests": "No competing interests declared.",
+        "contains_confidential_information": false,
+        "ethical_guidelines_acknowledged": true,
+        "ai_assistance": {
+          "used": false
+        }
+      },
+      "moderation": {
+        "state": "accepted",
+        "events": [
+          {
+            "event": "submitted",
+            "at": "2026-07-15T09:00:00Z",
+            "actor_ref": "identity-reviewer-0001"
+          },
+          {
+            "event": "accepted",
+            "at": "2026-07-15T10:00:00Z",
+            "actor_ref": "editor-example",
+            "reason": "Accepted after human scientific and moderation review."
+          }
+        ]
+      },
+      "provenance": {
+        "intake_channel": "archive_portal",
+        "source_url": "https://archive.example.org/submissions/hsub-ui-support-0001",
+        "received_at": "2026-07-15T09:00:01Z",
+        "payload_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "submission_id": "hsub-ui-qualify-0002",
+      "revision": 2,
+      "created_at": "2026-07-15T09:15:00Z",
+      "target": {
+        "review_id": "review-example",
+        "review_version": "1.0.0",
+        "release_manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "selector": {
+          "kind": "text",
+          "source_path": "content/human-review-fixture.md",
+          "source_sha256": "ca5a0ab41e3d9adf044aaf76836445b701751b9c4defc86d48bf770d48083df3",
+          "exact_quote": "precise claim",
+          "prefix": "makes a",
+          "suffix": "about evidence"
+        }
+      },
+      "submitter": {
+        "identity_ref": "identity-reviewer-0002",
+        "display_name": "Reviewer Two",
+        "visibility": "pseudonymous"
+      },
+      "content": {
+        "kind": "comment",
+        "title": "Keep the methodological boundary explicit",
+        "body_markdown": "This exact wording is reasonable, but the surrounding discussion should keep the methodological boundary explicit.",
+        "stance": "qualifies",
+        "recommendation": "not_applicable",
+        "evidence": []
+      },
+      "declarations": {
+        "license": "CC-BY-4.0",
+        "public_record_consent": true,
+        "competing_interests": "No competing interests declared.",
+        "contains_confidential_information": false,
+        "ethical_guidelines_acknowledged": true,
+        "ai_assistance": {
+          "used": true,
+          "disclosure": "A language model was used for copy-editing; the reviewer verified the final text."
+        }
+      },
+      "moderation": {
+        "state": "accepted",
+        "events": [
+          {
+            "event": "submitted",
+            "at": "2026-07-15T09:15:00Z",
+            "actor_ref": "identity-reviewer-0002"
+          },
+          {
+            "event": "accepted",
+            "at": "2026-07-15T10:15:00Z",
+            "actor_ref": "editor-example"
+          }
+        ]
+      },
+      "provenance": {
+        "intake_channel": "archive_portal",
+        "source_url": "https://archive.example.org/submissions/hsub-ui-qualify-0002",
+        "received_at": "2026-07-15T09:15:01Z",
+        "payload_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "submission_id": "hsub-ui-orphaned-0003",
+      "revision": 1,
+      "created_at": "2026-07-15T09:30:00Z",
+      "target": {
+        "review_id": "review-example",
+        "review_version": "1.0.0",
+        "release_manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "selector": {
+          "kind": "text",
+          "source_path": "content/human-review-fixture.md",
+          "source_sha256": "ca5a0ab41e3d9adf044aaf76836445b701751b9c4defc86d48bf770d48083df3",
+          "exact_quote": "an older disputed formulation",
+          "prefix": "formerly",
+          "suffix": "in this review"
+        }
+      },
+      "submitter": {
+        "identity_ref": "identity-reviewer-0003",
+        "display_name": "C. Example",
+        "visibility": "public"
+      },
+      "content": {
+        "kind": "correction",
+        "title": "The original formulation was too broad",
+        "body_markdown": "This comment remains part of the accepted record even though its exact target is no longer present in this rendered source.",
+        "stance": "disputes",
+        "recommendation": "minor_revision",
+        "evidence": []
+      },
+      "declarations": {
+        "license": "CC-BY-4.0",
+        "public_record_consent": true,
+        "competing_interests": "No competing interests declared.",
+        "contains_confidential_information": false,
+        "ethical_guidelines_acknowledged": true,
+        "ai_assistance": {
+          "used": false
+        }
+      },
+      "moderation": {
+        "state": "accepted",
+        "events": [
+          {
+            "event": "submitted",
+            "at": "2026-07-15T09:30:00Z",
+            "actor_ref": "identity-reviewer-0003"
+          },
+          {
+            "event": "accepted",
+            "at": "2026-07-15T10:30:00Z",
+            "actor_ref": "editor-example"
+          }
+        ]
+      },
+      "provenance": {
+        "intake_channel": "archive_portal",
+        "source_url": "https://archive.example.org/submissions/hsub-ui-orphaned-0003",
+        "received_at": "2026-07-15T09:30:01Z",
+        "payload_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    }
+  ]
+}

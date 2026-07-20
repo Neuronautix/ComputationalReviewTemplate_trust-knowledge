@@ -1,0 +1,36 @@
+/* Host-page styles for exact human-review annotation targets. Widget chrome is
+   duplicated inside the shadow root by human-review-widget.mjs. Purple is used
+   intentionally so this layer cannot be mistaken for the yellow TRUST score
+   highlight. */
+.trust-claim-target.hr-is-highlighted,
+.human-review-scope.hr-is-highlighted,
+.hr-is-highlighted,
+mark.hr-runtime-highlight {
+  color: inherit;
+  background: #ede9fe;
+  border-radius: 0.16rem;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.45);
+  text-decoration: underline;
+  text-decoration-color: #7c3aed;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+}
+
+html[data-theme="dark"] .trust-claim-target.hr-is-highlighted,
+html[data-theme="dark"] .human-review-scope.hr-is-highlighted,
+html[data-theme="dark"] .hr-is-highlighted,
+html[data-theme="dark"] mark.hr-runtime-highlight {
+  color: inherit;
+  background: #4c1d95;
+  box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.65);
+  text-decoration-color: #ddd6fe;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-claim-target.hr-is-highlighted,
+  .human-review-scope.hr-is-highlighted,
+  .hr-is-highlighted,
+  mark.hr-runtime-highlight {
+    transition: none;
+  }
+}

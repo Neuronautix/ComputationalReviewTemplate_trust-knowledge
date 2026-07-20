@@ -183,7 +183,15 @@ function stripInlineMarkdown(text) {
 }
 
 function contentParagraphs(markdown) {
-  const withoutDirectives = markdown.replace(/:::\{trust-claim\}[\s\S]*?^:::\s*$/gm, '');
+  // Plugin directives are metadata/rendering controls, not review prose. Keep
+  // them out of paragraph numbering so an optional human-review annotation
+  // cannot shift the canonical paragraph_index used by the TRUST knowledge
+  // graph. This list is deliberately limited to non-prose plugin directives;
+  // admonitions and other containers may contain real review prose.
+  const withoutDirectives = markdown.replace(
+    /:::\{(?:trust-claim|human-reviews|authorship-explorer|evidence-explorer)\}[\s\S]*?^:::\s*$/gm,
+    '',
+  );
   return withoutDirectives
     .split(/\r?\n\s*\r?\n/)
     .map((paragraph) => paragraph.trim())
@@ -752,6 +760,7 @@ if (require.main === module) {
 
 module.exports = {
   claimId,
+  contentParagraphs,
   exactText,
   labelFor,
   normalizeClaim,
