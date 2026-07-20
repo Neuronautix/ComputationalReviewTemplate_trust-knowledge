@@ -57,6 +57,10 @@ test('scientific diff compares frozen values without mutation or TRUST recomputa
   assert.equal(stableJson(before), beforeBytes);
   assert.equal(stableJson(after), afterBytes);
   assert.equal(first.methodology.trust_recomputed, false);
+  assert.equal(first.source_native_provenance.semantic_origin, 'source_native_trust');
+  assert.equal(first.source_native_provenance.oratlas_re_adjudicated, false);
+  assert.equal(first.source_native_provenance.assessment_unit.status, 'proposed');
+  assert.equal(first.source_native_provenance.disagreement.representation, 'not_available');
   assert.deepEqual(first.summary.claims, { added: 1, removed: 1, modified: 1, unchanged: 1 });
   const revised = first.claims.find((item) => item.after?.claim_id === 'clm_bbbbbbbbbbbbbbbb');
   assert.equal(revised.before.claim_id, 'clm_aaaaaaaaaaaaaaaa');
@@ -87,12 +91,23 @@ test('diff rejects mutable, ambiguous, or silently retargeted version lineage', 
   const silentRetarget = clone(readJson(AFTER_PATH));
   silentRetarget.anchors[0].selector.claim_id = 'clm_dddddddddddddddd';
   assert.throws(() => buildScientificReviewDiff(before, silentRetarget, diffDigests()), /changed selector without explicit claim succession/);
+
+  const missingBoundary = clone(readJson(AFTER_PATH));
+  delete missingBoundary.source_native_provenance;
+  assert.throws(() => buildScientificReviewDiff(before, missingBoundary, diffDigests()), /source_native_provenance/);
 });
 
 test('frozen TRUST report bytes and claim projections are verified before provenance use', () => {
   const snapshot = readJson(AFTER_PATH);
   const report = readJson(AFTER_TRUST_PATH);
   validateFrozenTrustReport(snapshot, report, sha256File(AFTER_TRUST_PATH));
+
+  const reinterpreted = clone(report);
+  reinterpreted.source_native_provenance.oratlas_re_adjudicated = true;
+  assert.throws(
+    () => validateFrozenTrustReport(snapshot, reinterpreted, sha256File(AFTER_TRUST_PATH)),
+    /oratlas_re_adjudicated must be false/,
+  );
 
   const directory = mkdtempSync(join(tmpdir(), 'comprev-tampered-trust-'));
   try {
@@ -127,6 +142,8 @@ test('RO-Crate 1.3 evidence capsule hashes all four artifact roles deterministic
   }
   const action = first['@graph'].find((node) => node['@type'] === 'CreateAction');
   assert.equal(action.actionStatus['@id'], 'https://schema.org/CompletedActionStatus');
+  const root = first['@graph'].find((node) => node['@id'] === './');
+  assert.equal(root['comprev:sourceNativeProvenance'].semantic_origin, 'source_native_trust');
 });
 
 test('capsule rejects path traversal, hash drift, and incoherent status', () => {
@@ -141,6 +158,10 @@ test('capsule rejects path traversal, hash drift, and incoherent status', () => 
   const incoherent = clone(readJson(CAPSULE_DESCRIPTOR_PATH));
   incoherent.status = 'failed';
   assert.throws(() => validateCapsuleDescriptor(incoherent), /non-zero exit_code/);
+
+  const missingBoundary = clone(readJson(CAPSULE_DESCRIPTOR_PATH));
+  delete missingBoundary.source_native_provenance;
+  assert.throws(() => validateCapsuleDescriptor(missingBoundary), /source_native_provenance/);
 });
 
 test('release-diff and capsule fixtures satisfy their Draft 2020-12 schemas', () => {
@@ -165,4 +186,8 @@ test('release-diff and capsule fixtures satisfy their Draft 2020-12 schemas', ()
   invalidSnapshot.claims[0].claim_id = 'not-a-claim';
   const snapshotSchema = readJson(join(RELEASE_ROOT, 'schemas/review_version_snapshot.schema.json'));
   assert.ok(validateJsonSchema(invalidSnapshot, snapshotSchema).some((error) => /claim_id/.test(error)));
+
+  const missingBoundary = clone(readJson(AFTER_PATH));
+  delete missingBoundary.source_native_provenance;
+  assert.ok(validateJsonSchema(missingBoundary, snapshotSchema).some((error) => /source_native_provenance/.test(error)));
 });

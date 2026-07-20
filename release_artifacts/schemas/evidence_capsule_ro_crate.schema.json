@@ -14,10 +14,10 @@
         "type": "object",
         "required": ["@id", "@type"]
       },
-      "contains": {
-        "properties": { "@id": { "const": "ro-crate-metadata.json" } },
-        "required": ["@id"]
-      }
+      "allOf": [
+        { "contains": { "properties": { "@id": { "const": "ro-crate-metadata.json" } }, "required": ["@id"] } },
+        { "contains": { "properties": { "@id": { "const": "./" }, "comprev:sourceNativeProvenance": { "type": "object" } }, "required": ["@id", "comprev:sourceNativeProvenance"] } }
+      ]
     }
   }
 }

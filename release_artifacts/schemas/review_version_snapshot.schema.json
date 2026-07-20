@@ -4,9 +4,10 @@
   "title": "Immutable computational review version snapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "release", "claims", "anchors"],
+  "required": ["schema_version", "source_native_provenance", "release", "claims", "anchors"],
   "properties": {
     "schema_version": { "const": "1.0.0" },
+    "source_native_provenance": { "type": "object", "additionalProperties": false, "required": ["originating_repository", "rubric_version", "method_version", "semantic_origin", "oratlas_re_adjudicated", "assessment_unit", "disagreement", "export_semantics"], "properties": { "originating_repository": { "type": "string", "format": "uri", "pattern": "^https://" }, "rubric_version": { "type": "string", "minLength": 1 }, "method_version": { "type": "string", "minLength": 1 }, "semantic_origin": { "const": "source_native_trust" }, "oratlas_re_adjudicated": { "const": false }, "assessment_unit": { "type": "object" }, "disagreement": { "type": "object" }, "export_semantics": { "type": "object" } } },
     "release": { "$ref": "#/$defs/release" },
     "claims": {
       "type": "array",

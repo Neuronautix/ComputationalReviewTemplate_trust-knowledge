@@ -1,5 +1,15 @@
 {
   "schema_version": "1.0.0",
+  "source_native_provenance": {
+    "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+    "rubric_version": "2.0.0",
+    "method_version": "trust-validator-2.0.0",
+    "semantic_origin": "source_native_trust",
+    "oratlas_re_adjudicated": false,
+    "assessment_unit": { "decision_id": "D01", "status": "proposed", "projection": "claim_object_current_behavior" },
+    "disagreement": { "decision_id": "D09", "status": "proposed", "representation": "not_available", "aggregation_performed": false },
+    "export_semantics": { "decision_id": "D11", "status": "proposed" }
+  },
   "release": {
     "review_id": "review-example",
     "release_id": "release-example-v1-1-0",
@@ -27,7 +37,7 @@
       },
       "trust": {
         "rubric_version": "2.0.0",
-        "report_sha256": "356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c",
+        "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
         "component_scores": {
           "traceability": 4,
           "robustness": 4,
@@ -62,7 +72,7 @@
       },
       "trust": {
         "rubric_version": "2.0.0",
-        "report_sha256": "356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c",
+        "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
         "component_scores": {
           "traceability": 4,
           "robustness": 3,
@@ -96,7 +106,7 @@
       },
       "trust": {
         "rubric_version": "2.0.0",
-        "report_sha256": "356aa8c1f63bf7792b98e909aa1691ee65940021d316c0c11479cd129904bb5c",
+        "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
         "component_scores": {
           "traceability": 4,
           "robustness": 4,
