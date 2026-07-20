@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "provider": "offline-fixture",
+  "scan_status": "scanned",
+  "retrieved_at": "2026-07-14T12:00:00Z",
+  "records": [
+    {
+      "record_id": "notice-1", "alert_type": "retraction", "title": "Retraction notice", "related_dois": ["10.1038/nature07991"],
+      "observed_at": "2026-07-14T10:00:00Z", "source": { "provider": "crossmark-fixture", "url": "https://example.org/notices/1" }
+    },
+    {
+      "record_id": "work-1", "alert_type": "new_work", "doi": "10.5555/new.gamma", "title": "Parvalbumin interneurons, gamma rhythms, and sensory precision", "published_at": "2026-07-01",
+      "topics": ["gamma cycle sensory precision"], "observed_at": "2026-07-14T11:00:00Z", "source": { "provider": "openalex-fixture", "url": "https://example.org/works/1" }
+    }
+  ]
+}

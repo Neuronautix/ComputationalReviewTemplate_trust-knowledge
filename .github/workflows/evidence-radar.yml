@@ -1,0 +1,66 @@
+name: Evidence Radar advisory scan
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      publish_issue:
+        description: Open an advisory issue
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    outputs:
+      proposals: ${{ steps.scan.outputs.proposals }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Test offline engine
+        run: node --test tests/evidence-radar.test.mjs
+      - name: Acquire normalized provider feed when configured
+        env:
+          RADAR_FEED_URL: ${{ secrets.EVIDENCE_RADAR_FEED_URL }}
+        run: |
+          mkdir -p evidence-radar-output
+          if [ -n "$RADAR_FEED_URL" ]; then
+            node -e 'const u=new URL(process.env.RADAR_FEED_URL); if(u.protocol!=="https:"||u.username||u.password) throw new Error("feed URL must be credential-free HTTPS")'
+            curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 60 --max-filesize 10485760 "$RADAR_FEED_URL" -o evidence-radar-output/feed.json
+          else
+            node -e 'const fs=require("node:fs"); fs.writeFileSync("evidence-radar-output/feed.json", JSON.stringify({schema_version:"1.0.0",provider:"no-provider-configured",scan_status:"not_scanned",not_scanned_reason:"no_provider",retrieved_at:new Date().toISOString(),records:[]},null,2)+"\n")'
+          fi
+      - name: Build advisory proposal artifact
+        id: scan
+        run: |
+          node scripts/evidence-radar.mjs --config config/evidence-radar.json --claim-index knowledge/claim_index.json --feed evidence-radar-output/feed.json --output evidence-radar-output/proposals.json --failure-output evidence-radar-output/failure.json
+          echo "proposals=$(node -e 'console.log(require("./evidence-radar-output/proposals.json").proposals.length)')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: evidence-radar-advisory
+          path: evidence-radar-output/
+
+  advisory-issue:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_issue && needs.scan.outputs.proposals != '0' }}
+    needs: scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: evidence-radar-advisory
+          path: evidence-radar-output
+      - name: Open advisory issue if credentials permit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "Evidence Radar: review proposals available" --body "Evidence Radar produced ${{ needs.scan.outputs.proposals }} advisory proposal(s). Download the workflow artifact and apply the human-review boundary in docs/EVIDENCE_RADAR.md. No TRUST or review content was changed."

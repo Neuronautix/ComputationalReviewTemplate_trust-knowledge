@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "snapshot_at": "2026-07-15T14:00:00Z",
+  "proposals": [
+    {
+      "proposal_id": "proposal-human-panel",
+      "source_type": "maintainer",
+      "theme": "human-review-ui",
+      "title": "Render accepted comments against exact claim text",
+      "priority": "high",
+      "affected_claim_ids": ["clm_3ea62e8a65cbdb75"],
+      "target_files": ["plugins/human-review-plugin.mjs", "content/human-review-widget.mjs"],
+      "scientific_approval_required": false
+    },
+    {
+      "proposal_id": "proposal-integrity-alert",
+      "source_type": "evidence_radar",
+      "theme": "trust-evidence",
+      "title": "Review a correction alert against an affected claim",
+      "priority": "critical",
+      "affected_claim_ids": ["clm_7659634fb095cdce"],
+      "target_files": ["knowledge/claim_graph.json", "content/01_introduction.md"],
+      "scientific_approval_required": true
+    },
+    {
+      "proposal_id": "proposal-release-diff",
+      "source_type": "validator",
+      "theme": "release-artifacts",
+      "title": "Publish a claim-level delta with the next immutable version",
+      "priority": "medium",
+      "affected_claim_ids": ["clm_7659634fb095cdce"],
+      "target_files": ["community/releases/review-diff.json"],
+      "scientific_approval_required": false
+    }
+  ]
+}

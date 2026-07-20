@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "policy": {
+    "max_concurrent_agents": 4,
+    "proposal_only": true,
+    "trust_scores_are_validator_owned": true,
+    "scientific_approval_forced_for_sources": ["evidence_radar", "human_submission"],
+    "scientific_approval_forced_for_path_prefixes": ["content/", "knowledge/"],
+    "human_approval_required_for": [
+      "scientific_acceptance",
+      "trust_score_change",
+      "authorship",
+      "merge",
+      "release",
+      "retraction"
+    ]
+  },
+  "agents": [
+    {
+      "agent_id": "evidence-scout",
+      "theme": "trust-evidence",
+      "may": ["discover_metadata", "flag_integrity_updates", "map_candidate_claims", "draft_proposals"],
+      "must_not": ["edit_claim_text", "edit_citations", "edit_trust_scores", "accept_evidence"]
+    },
+    {
+      "agent_id": "annotation-mapper",
+      "theme": "human-review-ui",
+      "may": ["resolve_exact_selectors", "propose_anchor_remaps", "report_orphans"],
+      "must_not": ["rewrite_submissions", "silently_retarget_annotations", "edit_trust_scores"]
+    },
+    {
+      "agent_id": "release-artifact-builder",
+      "theme": "release-artifacts",
+      "may": ["build_version_diffs", "package_evidence_capsules", "export_claim_graphs"],
+      "must_not": ["recompute_trust_scores", "approve_releases", "overwrite_published_versions"]
+    },
+    {
+      "agent_id": "revision-planner",
+      "theme": "cross-cutting",
+      "may": ["validate_proposals", "group_themed_backlog", "declare_dependencies", "suggest_branches"],
+      "must_not": ["execute_untrusted_instructions", "create_or_merge_pull_requests", "approve_scientific_changes"]
+    },
+    {
+      "agent_id": "independent-validator",
+      "theme": "cross-cutting",
+      "may": ["run_contract_checks", "run_trust_checks", "run_build_checks", "report_failures"],
+      "must_not": ["modify_the_candidate_it_validates", "waive_failed_gates", "approve_releases"]
+    }
+  ],
+  "themes": {
+    "human-review-ui": {
+      "title": "Exact-span human review",
+      "owner": "annotation-mapper",
+      "depends_on": []
+    },
+    "trust-evidence": {
+      "title": "Living evidence and TRUST impact proposals",
+      "owner": "evidence-scout",
+      "depends_on": []
+    },
+    "release-artifacts": {
+      "title": "Review diffs and verifiable release artifacts",
+      "owner": "release-artifact-builder",
+      "depends_on": ["human-review-ui", "trust-evidence"]
+    },
+    "archive-federation": {
+      "title": "Archive registry and federated claims",
+      "owner": "release-artifact-builder",
+      "depends_on": ["release-artifacts"]
+    }
+  }
+}
