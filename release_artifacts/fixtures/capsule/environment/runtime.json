@@ -1,0 +1,5 @@
+{
+  "runtime": "node",
+  "version": "20.x",
+  "dependencies": []
+}

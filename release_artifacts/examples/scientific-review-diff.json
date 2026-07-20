@@ -1,0 +1,562 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_type": "scientific_review_version_diff",
+  "generated_at": "2026-07-01T12:00:00Z",
+  "from_release": {
+    "review_id": "review-example",
+    "release_id": "release-example-v1-0-0",
+    "version": "1.0.0",
+    "manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "frozen_at": "2026-06-01T12:00:00Z"
+  },
+  "to_release": {
+    "review_id": "review-example",
+    "release_id": "release-example-v1-1-0",
+    "version": "1.1.0",
+    "manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "frozen_at": "2026-07-01T12:00:00Z"
+  },
+  "immutable_inputs": {
+    "from_snapshot_sha256": "749ea820f6348d229859ada3a4fa42dcc01f7049216769bc802dfa9536052a53",
+    "to_snapshot_sha256": "3188b4610735b63ddc3c327f9f70f131264832fd25a608f7096dc04b16040b4e",
+    "from_trust_report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
+    "to_trust_report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18"
+  },
+  "methodology": {
+    "trust_recomputed": false,
+    "matching": "same claim_id, then explicit supersedes_claim_ids"
+  },
+  "source_native_provenance": {
+    "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+    "rubric_version": "2.0.0",
+    "method_version": "trust-validator-2.0.0",
+    "semantic_origin": "source_native_trust",
+    "oratlas_re_adjudicated": false,
+    "assessment_unit": {
+      "decision_id": "D01",
+      "status": "proposed",
+      "projection": "claim_object_current_behavior"
+    },
+    "disagreement": {
+      "decision_id": "D09",
+      "status": "proposed",
+      "representation": "not_available",
+      "aggregation_performed": false
+    },
+    "export_semantics": {
+      "decision_id": "D11",
+      "status": "proposed"
+    }
+  },
+  "summary": {
+    "claims": {
+      "added": 1,
+      "removed": 1,
+      "modified": 1,
+      "unchanged": 1
+    },
+    "trust_overall_changed": 1,
+    "trust_overall_added_or_removed": 2,
+    "evidence_basis_changed": 1,
+    "evidence_basis_added_or_removed": 2,
+    "human_decision_references_added": 2,
+    "orphaned_anchors": 1
+  },
+  "claims": [
+    {
+      "comparison_id": "clm_aaaaaaaaaaaaaaaa--clm_bbbbbbbbbbbbbbbb",
+      "status": "modified",
+      "before": {
+        "claim_id": "clm_aaaaaaaaaaaaaaaa",
+        "claim_text": "The intervention improves the measured outcome.",
+        "citation_keys": [
+          "SourceA"
+        ],
+        "evidence_basis": {
+          "derived_evidence_relation": "directly_supported",
+          "eligible_citations": [
+            {
+              "cite_key": "SourceA",
+              "doi": "10.1000/source-a",
+              "supports_claim_atoms": [
+                "a1"
+              ]
+            }
+          ],
+          "atom_support": {
+            "a1": [
+              "SourceA"
+            ]
+          }
+        },
+        "trust": {
+          "rubric_version": "2.0.0",
+          "report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
+          "component_scores": {
+            "traceability": 4,
+            "robustness": 2,
+            "uncertainty_calibration": 4,
+            "source_integrity": 3,
+            "transferability_scope_control": 3
+          },
+          "overall_score": 80,
+          "trust_label": "moderate_trust"
+        },
+        "human_decision_references": [
+          "decision-example-0001"
+        ]
+      },
+      "after": {
+        "claim_id": "clm_bbbbbbbbbbbbbbbb",
+        "claim_text": "Across the sampled population, the intervention is associated with an improved measured outcome.",
+        "citation_keys": [
+          "SourceA",
+          "SourceB"
+        ],
+        "evidence_basis": {
+          "derived_evidence_relation": "directly_supported",
+          "eligible_citations": [
+            {
+              "cite_key": "SourceA",
+              "doi": "10.1000/source-a",
+              "supports_claim_atoms": [
+                "a1"
+              ]
+            },
+            {
+              "cite_key": "SourceB",
+              "doi": "10.1000/source-b",
+              "supports_claim_atoms": [
+                "a1",
+                "a2"
+              ]
+            }
+          ],
+          "atom_support": {
+            "a1": [
+              "SourceA",
+              "SourceB"
+            ],
+            "a2": [
+              "SourceB"
+            ]
+          }
+        },
+        "trust": {
+          "rubric_version": "2.0.0",
+          "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
+          "component_scores": {
+            "traceability": 4,
+            "robustness": 4,
+            "uncertainty_calibration": 4,
+            "source_integrity": 4,
+            "transferability_scope_control": 4
+          },
+          "overall_score": 100,
+          "trust_label": "high_trust"
+        },
+        "human_decision_references": [
+          "decision-example-0001",
+          "decision-example-0003"
+        ]
+      },
+      "changes": {
+        "claim_text_changed": true,
+        "citations": {
+          "added": [
+            "SourceB"
+          ],
+          "removed": []
+        },
+        "evidence_basis_changed": true,
+        "trust": {
+          "components": {
+            "robustness": {
+              "before": 2,
+              "after": 4
+            },
+            "source_integrity": {
+              "before": 3,
+              "after": 4
+            },
+            "transferability_scope_control": {
+              "before": 3,
+              "after": 4
+            }
+          },
+          "overall": {
+            "before": 80,
+            "after": 100
+          },
+          "label": {
+            "before": "moderate_trust",
+            "after": "high_trust"
+          }
+        },
+        "human_decision_references": {
+          "added": [
+            "decision-example-0003"
+          ],
+          "removed": []
+        }
+      }
+    },
+    {
+      "comparison_id": "clm_cccccccccccccccc--none",
+      "status": "removed",
+      "before": {
+        "claim_id": "clm_cccccccccccccccc",
+        "claim_text": "A preliminary subgroup pattern was observed.",
+        "citation_keys": [
+          "SourceC"
+        ],
+        "evidence_basis": {
+          "derived_evidence_relation": "partially_supported",
+          "eligible_citations": [
+            {
+              "cite_key": "SourceC",
+              "doi": "10.1000/source-c",
+              "supports_claim_atoms": [
+                "a1"
+              ]
+            }
+          ],
+          "atom_support": {
+            "a1": [
+              "SourceC"
+            ]
+          }
+        },
+        "trust": {
+          "rubric_version": "2.0.0",
+          "report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
+          "component_scores": {
+            "traceability": 3,
+            "robustness": 1,
+            "uncertainty_calibration": 3,
+            "source_integrity": 3,
+            "transferability_scope_control": 2
+          },
+          "overall_score": 60,
+          "trust_label": "low_trust"
+        },
+        "human_decision_references": [
+          "decision-example-0002"
+        ]
+      },
+      "after": null,
+      "changes": {
+        "claim_text_changed": true,
+        "citations": {
+          "added": [],
+          "removed": [
+            "SourceC"
+          ]
+        },
+        "evidence_basis_changed": true,
+        "trust": {
+          "components": {
+            "traceability": {
+              "before": 3,
+              "after": null
+            },
+            "robustness": {
+              "before": 1,
+              "after": null
+            },
+            "uncertainty_calibration": {
+              "before": 3,
+              "after": null
+            },
+            "source_integrity": {
+              "before": 3,
+              "after": null
+            },
+            "transferability_scope_control": {
+              "before": 2,
+              "after": null
+            }
+          },
+          "overall": {
+            "before": 60,
+            "after": null
+          },
+          "label": {
+            "before": "low_trust",
+            "after": null
+          }
+        },
+        "human_decision_references": {
+          "added": [],
+          "removed": [
+            "decision-example-0002"
+          ]
+        }
+      }
+    },
+    {
+      "comparison_id": "clm_eeeeeeeeeeeeeeee--clm_eeeeeeeeeeeeeeee",
+      "status": "unchanged",
+      "before": {
+        "claim_id": "clm_eeeeeeeeeeeeeeee",
+        "claim_text": "The comparator protocol remained unchanged.",
+        "citation_keys": [
+          "ProtocolE"
+        ],
+        "evidence_basis": {
+          "derived_evidence_relation": "directly_supported",
+          "eligible_citations": [
+            {
+              "cite_key": "ProtocolE",
+              "doi": "10.1000/protocol-e",
+              "supports_claim_atoms": [
+                "a1"
+              ]
+            }
+          ],
+          "atom_support": {
+            "a1": [
+              "ProtocolE"
+            ]
+          }
+        },
+        "trust": {
+          "rubric_version": "2.0.0",
+          "report_sha256": "2c92518d5c70d54d5703075c2f8ee1a8ce960688144dc990508f206346e4213b",
+          "component_scores": {
+            "traceability": 4,
+            "robustness": 4,
+            "uncertainty_calibration": 4,
+            "source_integrity": 4,
+            "transferability_scope_control": 4
+          },
+          "overall_score": 100,
+          "trust_label": "high_trust"
+        },
+        "human_decision_references": []
+      },
+      "after": {
+        "claim_id": "clm_eeeeeeeeeeeeeeee",
+        "claim_text": "The comparator protocol remained unchanged.",
+        "citation_keys": [
+          "ProtocolE"
+        ],
+        "evidence_basis": {
+          "derived_evidence_relation": "directly_supported",
+          "eligible_citations": [
+            {
+              "cite_key": "ProtocolE",
+              "doi": "10.1000/protocol-e",
+              "supports_claim_atoms": [
+                "a1"
+              ]
+            }
+          ],
+          "atom_support": {
+            "a1": [
+              "ProtocolE"
+            ]
+          }
+        },
+        "trust": {
+          "rubric_version": "2.0.0",
+          "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
+          "component_scores": {
+            "traceability": 4,
+            "robustness": 4,
+            "uncertainty_calibration": 4,
+            "source_integrity": 4,
+            "transferability_scope_control": 4
+          },
+          "overall_score": 100,
+          "trust_label": "high_trust"
+        },
+        "human_decision_references": []
+      },
+      "changes": {
+        "claim_text_changed": false,
+        "citations": {
+          "added": [],
+          "removed": []
+        },
+        "evidence_basis_changed": false,
+        "trust": {
+          "components": {},
+          "overall": null,
+          "label": null
+        },
+        "human_decision_references": {
+          "added": [],
+          "removed": []
+        }
+      }
+    },
+    {
+      "comparison_id": "none--clm_dddddddddddddddd",
+      "status": "added",
+      "before": null,
+      "after": {
+        "claim_id": "clm_dddddddddddddddd",
+        "claim_text": "The effect estimate is bounded to the prespecified sampled population.",
+        "citation_keys": [
+          "SourceB"
+        ],
+        "evidence_basis": {
+          "derived_evidence_relation": "directly_supported",
+          "eligible_citations": [
+            {
+              "cite_key": "SourceB",
+              "doi": "10.1000/source-b",
+              "supports_claim_atoms": [
+                "a1"
+              ]
+            }
+          ],
+          "atom_support": {
+            "a1": [
+              "SourceB"
+            ]
+          }
+        },
+        "trust": {
+          "rubric_version": "2.0.0",
+          "report_sha256": "8a71279956a266ccb63f9d878ea1eea1af0a2ae45afaa4f472268cc3a08fcc18",
+          "component_scores": {
+            "traceability": 4,
+            "robustness": 3,
+            "uncertainty_calibration": 4,
+            "source_integrity": 4,
+            "transferability_scope_control": 4
+          },
+          "overall_score": 95,
+          "trust_label": "high_trust"
+        },
+        "human_decision_references": [
+          "decision-example-0003"
+        ]
+      },
+      "changes": {
+        "claim_text_changed": true,
+        "citations": {
+          "added": [
+            "SourceB"
+          ],
+          "removed": []
+        },
+        "evidence_basis_changed": true,
+        "trust": {
+          "components": {
+            "traceability": {
+              "before": null,
+              "after": 4
+            },
+            "robustness": {
+              "before": null,
+              "after": 3
+            },
+            "uncertainty_calibration": {
+              "before": null,
+              "after": 4
+            },
+            "source_integrity": {
+              "before": null,
+              "after": 4
+            },
+            "transferability_scope_control": {
+              "before": null,
+              "after": 4
+            }
+          },
+          "overall": {
+            "before": null,
+            "after": 95
+          },
+          "label": {
+            "before": null,
+            "after": "high_trust"
+          }
+        },
+        "human_decision_references": {
+          "added": [
+            "decision-example-0003"
+          ],
+          "removed": []
+        }
+      }
+    }
+  ],
+  "anchor_changes": [
+    {
+      "anchor_id": "annotation-primary-outcome",
+      "status": "remapped",
+      "before": {
+        "anchor_id": "annotation-primary-outcome",
+        "selector": {
+          "kind": "claim",
+          "claim_id": "clm_aaaaaaaaaaaaaaaa"
+        },
+        "human_decision_references": [
+          "decision-example-0001"
+        ]
+      },
+      "after": {
+        "anchor_id": "annotation-primary-outcome",
+        "selector": {
+          "kind": "claim",
+          "claim_id": "clm_bbbbbbbbbbbbbbbb"
+        },
+        "human_decision_references": [
+          "decision-example-0001",
+          "decision-example-0003"
+        ]
+      }
+    },
+    {
+      "anchor_id": "annotation-subgroup-pattern",
+      "status": "orphaned",
+      "before": {
+        "anchor_id": "annotation-subgroup-pattern",
+        "selector": {
+          "kind": "claim",
+          "claim_id": "clm_cccccccccccccccc"
+        },
+        "human_decision_references": [
+          "decision-example-0002"
+        ]
+      },
+      "after": null
+    },
+    {
+      "anchor_id": "annotation-scope-boundary",
+      "status": "added",
+      "before": null,
+      "after": {
+        "anchor_id": "annotation-scope-boundary",
+        "selector": {
+          "kind": "claim",
+          "claim_id": "clm_dddddddddddddddd"
+        },
+        "human_decision_references": [
+          "decision-example-0003"
+        ]
+      }
+    }
+  ],
+  "orphaned_anchors": [
+    {
+      "anchor_id": "annotation-subgroup-pattern",
+      "status": "orphaned",
+      "before": {
+        "anchor_id": "annotation-subgroup-pattern",
+        "selector": {
+          "kind": "claim",
+          "claim_id": "clm_cccccccccccccccc"
+        },
+        "human_decision_references": [
+          "decision-example-0002"
+        ]
+      },
+      "after": null
+    }
+  ]
+}

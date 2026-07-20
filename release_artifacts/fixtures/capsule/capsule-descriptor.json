@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "source_native_provenance": {
+    "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+    "rubric_version": "2.0.0",
+    "method_version": "trust-validator-2.0.0",
+    "semantic_origin": "source_native_trust",
+    "oratlas_re_adjudicated": false,
+    "assessment_unit": { "decision_id": "D01", "status": "proposed", "projection": "claim_object_current_behavior" },
+    "disagreement": { "decision_id": "D09", "status": "proposed", "representation": "not_available", "aggregation_performed": false },
+    "export_semantics": { "decision_id": "D11", "status": "proposed" }
+  },
+  "capsule_id": "capsule-example-analysis-0001",
+  "release": {
+    "review_id": "review-example",
+    "release_id": "release-example-v1-1-0",
+    "version": "1.1.0",
+    "manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "frozen_at": "2026-07-01T12:00:00Z"
+  },
+  "created_at": "2026-07-01T11:55:00Z",
+  "status": "passed",
+  "license": "https://spdx.org/licenses/MIT.html",
+  "execution": {
+    "command": ["node", "code/analysis.mjs"],
+    "started_at": "2026-07-01T11:54:58Z",
+    "completed_at": "2026-07-01T11:54:59Z",
+    "exit_code": 0
+  },
+  "artifacts": [
+    { "path": "code/analysis.mjs", "role": "code", "media_type": "text/javascript", "expected_sha256": "6c926a8665be7bd58957e1dabd0ff35670d049085f2bf5566db692b80884a883" },
+    { "path": "data/input.json", "role": "data", "media_type": "application/json", "expected_sha256": "d8243b858ba8483890f1f2e1a629976b74b89858c0c6d7b49420e6c5b09c33ee" },
+    { "path": "environment/runtime.json", "role": "environment", "media_type": "application/json", "expected_sha256": "8bf32e6bbb24a415f7ef8522c5ea4cb9322cd06363bf084eb9312cabc18339e5" },
+    { "path": "output/result.json", "role": "output", "media_type": "application/json", "expected_sha256": "3a436917e5235dcb7e09244b863b8dfc5715aa6142bef830270584c590660cd1" }
+  ]
+}

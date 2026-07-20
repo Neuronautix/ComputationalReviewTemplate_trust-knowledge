@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/computational-review/schemas/evidence-capsule-ro-crate-1.0.0.json",
+  "title": "RO-Crate 1.3 executable evidence capsule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["@context", "@graph"],
+  "properties": {
+    "@context": { "type": "array", "minItems": 2 },
+    "@graph": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["@id", "@type"]
+      },
+      "allOf": [
+        { "contains": { "properties": { "@id": { "const": "ro-crate-metadata.json" } }, "required": ["@id"] } },
+        { "contains": { "properties": { "@id": { "const": "./" }, "comprev:sourceNativeProvenance": { "type": "object" } }, "required": ["@id", "comprev:sourceNativeProvenance"] } }
+      ]
+    }
+  }
+}

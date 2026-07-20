@@ -1,0 +1,54 @@
+{
+  "schema_version": "2.0.0",
+  "source_native_provenance": {
+    "originating_repository": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge",
+    "rubric_version": "2.0.0",
+    "method_version": "trust-validator-2.0.0",
+    "semantic_origin": "source_native_trust",
+    "oratlas_re_adjudicated": false,
+    "assessment_unit": { "decision_id": "D01", "status": "proposed", "projection": "claim_object_current_behavior" },
+    "disagreement": { "decision_id": "D09", "status": "proposed", "representation": "not_available", "aggregation_performed": false },
+    "export_semantics": { "decision_id": "D11", "status": "proposed" }
+  },
+  "rubric_version": "2.0.0",
+  "generated_at": "2026-06-01T11:55:00Z",
+  "release_id": "release-example-v1-0-0",
+  "claims": [
+    {
+      "claim_id": "clm_aaaaaaaaaaaaaaaa",
+      "component_scores": {
+        "traceability": 4,
+        "robustness": 2,
+        "uncertainty_calibration": 4,
+        "source_integrity": 3,
+        "transferability_scope_control": 3
+      },
+      "overall_score": 80,
+      "trust_label": "moderate_trust"
+    },
+    {
+      "claim_id": "clm_cccccccccccccccc",
+      "component_scores": {
+        "traceability": 3,
+        "robustness": 1,
+        "uncertainty_calibration": 3,
+        "source_integrity": 3,
+        "transferability_scope_control": 2
+      },
+      "overall_score": 60,
+      "trust_label": "low_trust"
+    },
+    {
+      "claim_id": "clm_eeeeeeeeeeeeeeee",
+      "component_scores": {
+        "traceability": 4,
+        "robustness": 4,
+        "uncertainty_calibration": 4,
+        "source_integrity": 4,
+        "transferability_scope_control": 4
+      },
+      "overall_score": 100,
+      "trust_label": "high_trust"
+    }
+  ]
+}

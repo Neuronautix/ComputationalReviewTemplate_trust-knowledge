@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/computational-review/schemas/scientific-review-diff-1.0.0.json",
+  "title": "Scientific computational review version diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "generated_at", "source_native_provenance", "from_release", "to_release", "immutable_inputs", "methodology", "summary", "claims", "anchor_changes", "orphaned_anchors"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "artifact_type": { "const": "scientific_review_version_diff" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "source_native_provenance": { "type": "object", "additionalProperties": false, "required": ["originating_repository", "rubric_version", "method_version", "semantic_origin", "oratlas_re_adjudicated", "assessment_unit", "disagreement", "export_semantics"], "properties": { "originating_repository": { "type": "string", "format": "uri", "pattern": "^https://" }, "rubric_version": { "type": "string", "minLength": 1 }, "method_version": { "type": "string", "minLength": 1 }, "semantic_origin": { "const": "source_native_trust" }, "oratlas_re_adjudicated": { "const": false }, "assessment_unit": { "type": "object" }, "disagreement": { "type": "object" }, "export_semantics": { "type": "object" } } },
+    "from_release": { "type": "object" },
+    "to_release": { "type": "object" },
+    "immutable_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_snapshot_sha256", "to_snapshot_sha256", "from_trust_report_sha256", "to_trust_report_sha256"],
+      "properties": {
+        "from_snapshot_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "to_snapshot_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "from_trust_report_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "to_trust_report_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "methodology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trust_recomputed", "matching"],
+      "properties": {
+        "trust_recomputed": { "const": false },
+        "matching": { "type": "string", "minLength": 1 }
+      }
+    },
+    "summary": { "type": "object" },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["comparison_id", "status", "before", "after", "changes"],
+        "properties": {
+          "comparison_id": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["added", "removed", "modified", "unchanged"] },
+          "before": { "type": ["object", "null"] },
+          "after": { "type": ["object", "null"] },
+          "changes": { "type": "object" }
+        }
+      }
+    },
+    "anchor_changes": { "type": "array", "items": { "$ref": "#/$defs/anchor_change" } },
+    "orphaned_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor_change" } }
+  },
+  "$defs": {
+    "anchor_change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchor_id", "status", "before", "after"],
+      "properties": {
+        "anchor_id": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["current", "remapped", "orphaned", "added"] },
+        "before": { "type": ["object", "null"] },
+        "after": { "type": ["object", "null"] }
+      }
+    }
+  }
+}
