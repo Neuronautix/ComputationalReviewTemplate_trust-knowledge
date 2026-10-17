@@ -6,8 +6,9 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { exportFromSources, readSources } from '../scripts/oratlas/export-oratlas.mjs';
-import { lineageToLinks } from '../scripts/source-evidence/lineage-to-links.mjs';
-import { importPacket } from '../scripts/source-evidence/import.mjs';
+import { CLAIM_FINDING_MAP_SCHEMA, lineageToLinks } from '../scripts/source-evidence/lineage-to-links.mjs';
+import { importPacket, phase2FindingDigest } from '../scripts/source-evidence/import.mjs';
+import { curateIdentitySection, phase2ImportGate, phase5Gate } from '../scripts/source-evidence/phase-gates.mjs';
 import { sha256 } from '../scripts/source-evidence/canonical.mjs';
 import { writePacket } from './helpers/sep-packet.mjs';
 
@@ -38,7 +39,7 @@ const assessment = (id, findingId, passageId, slug) => ({
   passage_id: `passage:${passageId}`, producer_ids: { support_assessment_ref: `support-${id}` }, protocol: 'seip-support-v1', rationale: 'Synthetic rationale.', reviewer_ref: 'rv-0123456789abcdef', status: 'supports',
 });
 
-function lineage() {
+function imported() {
   const dir = mkdtempSync(join(tmpdir(), 'links-v2-packet-'));
   writePacket(dir, {
     records: {
@@ -50,7 +51,29 @@ function lineage() {
   });
   const result = importPacket(dir, { minVerification: 'human-reviewed' });
   assert.equal(result.ok, true);
-  return JSON.parse(result.outputs['source-evidence-lineage.json']);
+  const bytes = Buffer.from(result.outputs['source-evidence-lineage.json'], 'utf8');
+  return { result, bytes, lineage: JSON.parse(bytes.toString('utf8')) };
+}
+const lineage = () => imported().bytes;
+
+const CLAIM = 'clm_7659634fb095cdce';
+/** A reviewed map: the claim uses c-f1 (Cardin) and s-f1 (Sohal); c-f2 is deliberately left unmapped. */
+function reviewedMap({ bytes, lineage: parsed }, only = ['finding:c-f1', 'finding:s-f1']) {
+  return {
+    schema: CLAIM_FINDING_MAP_SCHEMA,
+    lineage_sha256: sha256(bytes),
+    mappings: parsed.entries
+      .filter((entry) => only.includes(entry.finding.finding_id))
+      .map((entry) => ({
+        claim_id: CLAIM,
+        finding_id: entry.finding.finding_id,
+        finding_revision: entry.finding.revision,
+        phase2_finding_sha256: entry.phase2_finding_sha256,
+        decision_ref: 'decision:map-001',
+        asserted_at: '2026-01-03T00:00:00Z',
+        basis: 'Synthetic fixture decision.',
+      })),
+  };
 }
 
 function exportWith(links) {
@@ -86,9 +109,10 @@ test('the S2 lineage sidecar bridges to links/2 and exports passage-level lineag
 });
 
 test('bridge and exporter are deterministic and order independent', () => {
-  const source = lineage();
-  const a = lineageToLinks(source, claimGraph).links;
-  const b = lineageToLinks({ ...source, entries: [...source.entries].reverse() }, claimGraph).links;
+  const source = imported();
+  const reversed = Buffer.from(JSON.stringify({ ...source.lineage, entries: [...source.lineage.entries].reverse() }), 'utf8');
+  const a = lineageToLinks(source.bytes, claimGraph).links;
+  const b = lineageToLinks(reversed, claimGraph).links;
   assert.deepEqual(a, b);
   assert.equal(exportWith(a).files.get('knowledge/oratlas/source-native-trust.json'), exportWith(b).files.get('knowledge/oratlas/source-native-trust.json'));
 });
@@ -127,9 +151,96 @@ test('a locator is refused on schema /1 and malformed passage detail aborts the 
 });
 
 test('a DOI the review does not cite is skipped, never linked by text', () => {
-  const source = lineage();
+  const { lineage: source } = imported();
   source.entries[0].doi = '10.9999/not.cited';
-  const { links, skipped } = lineageToLinks(source, claimGraph);
+  const { links, skipped } = lineageToLinks(Buffer.from(JSON.stringify(source)), claimGraph);
   assert.deepEqual(skipped, [{ finding_id: source.entries[0].finding.finding_id, reason: 'doi-not-cited-by-review' }]);
   assert.equal(links.findings.length, 2);
+});
+
+test('DOI equality alone yields only same-paper candidates, never claim evidence', () => {
+  const { links } = lineageToLinks(lineage(), claimGraph);
+  assert.ok(links.findings.length > 0);
+  assert.ok(links.findings.every((f) => f.binding === 'same-paper-candidate' && f.mappings === undefined));
+  const first = JSON.parse(exportWith(links).files.get('knowledge/oratlas/source-native-trust.json')).evidence_links[0];
+  assert.equal(first.binding, 'same-paper-candidate');
+});
+
+test('a reviewed map binds only the mapped finding; a second finding of the same paper stays a candidate', () => {
+  const source = imported();
+  const { links } = lineageToLinks(source.bytes, claimGraph, { claimFindingMap: reviewedMap(source) });
+  const pick = (id, binding) => links.findings.find((f) => f.finding_id === id && f.binding === binding);
+  assert.deepEqual(pick('finding:c-f1', 'reviewed-mapping').claim_ids, [CLAIM]);
+  assert.equal(pick('finding:c-f1', 'reviewed-mapping').phase2_finding_sha256, source.lineage.entries.find((e) => e.finding.finding_id === 'finding:c-f1').phase2_finding_sha256);
+  // Same paper (Cardin), different finding (the "body temperature" next to the "locomotor activity"): not evidence.
+  assert.equal(pick('finding:c-f2', 'reviewed-mapping'), undefined);
+  assert.deepEqual(pick('finding:c-f2', 'same-paper-candidate').claim_ids, [CLAIM]);
+  const sidecar = JSON.parse(exportWith(links).files.get('knowledge/oratlas/source-native-trust.json'));
+  const claim = sidecar.claims.find((c) => c.claim_id === CLAIM);
+  assert.deepEqual(
+    claim.evidence_links.map((l) => [l.finding_id, l.binding]).sort(),
+    [['finding:c-f1', 'reviewed-mapping'], ['finding:c-f2', 'same-paper-candidate'], ['finding:s-f1', 'reviewed-mapping']],
+  );
+  assert.deepEqual(claim.evidence_links.find((l) => l.binding === 'reviewed-mapping').mappings[0], {
+    claim_id: CLAIM, decision_ref: 'decision:map-001', asserted_at: '2026-01-03T00:00:00Z', basis: 'Synthetic fixture decision.',
+  });
+});
+
+test('the reviewed map fails closed on every mismatch', () => {
+  const source = imported();
+  const cases = [
+    ['lineage_sha256', (m) => { m.lineage_sha256 = `sha256:${'0'.repeat(64)}`; }],
+    ['not an accepted finding', (m) => { m.mappings[0].finding_revision = 2; }],
+    ['not an accepted finding', (m) => { m.mappings[0].finding_id = 'finding:absent'; }],
+    ['phase2_finding_sha256', (m) => { m.mappings[0].phase2_finding_sha256 = `sha256:${'1'.repeat(64)}`; }],
+    ['does not cite', (m) => { m.mappings[0].claim_id = 'clm_3ea62e8a65cbdb75'; }],
+    ['unknown review claim', (m) => { m.mappings[0].claim_id = 'clm_missing'; }],
+    ['twice', (m) => { m.mappings.push({ ...m.mappings[0] }); }],
+    ['decision_ref', (m) => { m.mappings[0].decision_ref = ' '; }],
+    ['basis', (m) => { delete m.mappings[0].basis; }],
+    ['asserted_at', (m) => { m.mappings[0].asserted_at = '2026-01-03'; }],
+    ['schema', (m) => { m.schema = 'comprev.claim-finding-map/0'; }],
+  ];
+  for (const [message, mutate] of cases) {
+    const map = reviewedMap(source);
+    mutate(map);
+    assert.throws(() => lineageToLinks(source.bytes, claimGraph, { claimFindingMap: map }), new RegExp(message.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'), 'u'), message);
+  }
+});
+
+test('the exporter refuses inconsistent bindings', () => {
+  const source = imported();
+  const { links } = lineageToLinks(source.bytes, claimGraph, { claimFindingMap: reviewedMap(source) });
+  const reviewed = () => structuredClone(links);
+  const at = (l) => l.findings.findIndex((f) => f.binding === 'reviewed-mapping');
+  const noBinding = reviewed(); delete noBinding.findings[0].binding;
+  assert.throws(() => exportWith(noBinding), /binding/u);
+  const uncovered = reviewed(); uncovered.findings[at(uncovered)].mappings = [];
+  assert.throws(() => exportWith(uncovered), /mappings/u);
+  const noDigest = reviewed(); delete noDigest.findings[at(noDigest)].phase2_finding_sha256;
+  assert.throws(() => exportWith(noDigest), /phase2_finding_sha256/u);
+  const candidateWithMapping = reviewed();
+  const c = candidateWithMapping.findings.findIndex((f) => f.binding === 'same-paper-candidate');
+  candidateWithMapping.findings[c].mappings = candidateWithMapping.findings[at(candidateWithMapping)].mappings;
+  assert.throws(() => exportWith(candidateWithMapping), /candidate carries no mapping/u);
+});
+
+test('the imported Phase 2 package passes the real Phase 2 and Phase 5 gates, and mapped digests are the vouched ones', () => {
+  const source = imported();
+  const pkg = source.result.phase2;
+  assert.equal(phase2ImportGate(pkg, source.bytes).gate, 'pass');
+  const section = curateIdentitySection(pkg);
+  const gate5 = phase5Gate([section], [pkg], { [pkg.evidence_artifact_id]: source.bytes });
+  assert.equal(gate5.gate, 'pass', JSON.stringify(gate5));
+  assert.ok(pkg.findings.every((f) => f.text_access === 'unknown'));
+  const vouched = new Set(pkg.findings.map(phase2FindingDigest));
+  for (const mapping of reviewedMap(source).mappings) assert.ok(vouched.has(mapping.phase2_finding_sha256));
+  // Editing an imported finding after import breaks the binding: text_access "unknown" is no longer vouched.
+  const edited = structuredClone(pkg);
+  edited.findings[0].claim = `${edited.findings[0].claim} (edited)`;
+  const editedGate = phase5Gate([curateIdentitySection(edited)], [edited], { [edited.evidence_artifact_id]: source.bytes });
+  assert.equal(editedGate.gate, 'fail');
+  // A native (non-import) section may not use text_access "unknown" at all.
+  const native = { ...curateIdentitySection(pkg), import_provenance: undefined };
+  assert.equal(phase5Gate([native], [pkg], {}).per_section_results[native.section_id].TEXT_ACCESS_VALID, 'fail');
 });

@@ -1,7 +1,7 @@
 # Unreleased: evidence-packet links v2 and S2 → S3 bridge (ORAtlas #198)
 
 - Added `comprev.evidence-packet-links/2` (additive; `/1` unchanged): finding revision, passage digests and match state, verification level, native `seip-support-v1` assessment refs, and an optional packet locator (a DOI or a GitHub release asset URL).
-- Added `scripts/source-evidence/lineage-to-links.mjs`, which turns the S2 `source-evidence-lineage.json` into a links file by exact DOI equality. See `docs/ORATLAS_EXPORT.md`.
+- Added `scripts/source-evidence/lineage-to-links.mjs`, which turns the S2 `source-evidence-lineage.json` into a links file. DOI equality yields only `same-paper-candidate` links; a finding becomes evidence for a claim only through a reviewed `comprev.claim-finding-map/1` decision bound to the lineage bytes and the Phase 2 finding digest. See `docs/ORATLAS_EXPORT.md`.
 
 # Unreleased: Diggypaper source-evidence-packet import (issue #10)
 

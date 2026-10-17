@@ -120,18 +120,63 @@ accepted, and the digest still decides authenticity:
 
 An absent locator is exported as `packet_locator: null` and must be read as "location not declared".
 
+#### Binding: reviewed mapping versus same-paper candidate
+
+A DOI match proves only that a finding is about a paper the claim cites. A paper can report several
+outcomes, so a DOI match is never treated as evidence for a particular claim. Every `/2` record
+declares a `binding`:
+
+| `binding` | Meaning | Extra fields |
+| --- | --- | --- |
+| `reviewed-mapping` | A review author recorded that these claims use this finding revision. | `phase2_finding_sha256` (digest of the imported Phase 2 finding) and `mappings[]` (`claim_id`, `decision_ref`, `asserted_at`, `basis`), covering exactly `claim_ids`. |
+| `same-paper-candidate` | The finding is about a paper the claims cite. Nothing more. | none |
+
+Reviewed mappings come from `knowledge/claim-finding-map.json`, schema `comprev.claim-finding-map/1`:
+
+```json
+{
+  "schema": "comprev.claim-finding-map/1",
+  "lineage_sha256": "sha256:<digest of the exact source-evidence-lineage.json bytes>",
+  "mappings": [
+    {
+      "claim_id": "clm_…",
+      "finding_id": "finding:…",
+      "finding_revision": 1,
+      "phase2_finding_sha256": "sha256:<lineage entry phase2_finding_sha256>",
+      "decision_ref": "<pointer into the review's decision log>",
+      "asserted_at": "2026-01-03T00:00:00Z",
+      "basis": "<why this claim uses this finding>"
+    }
+  ]
+}
+```
+
+The bridge fails closed when the map is bound to other lineage bytes, names a finding revision that was
+not accepted, carries a different Phase 2 digest, maps a claim that does not cite the finding's paper,
+repeats a pair, or lacks a decision reference, timestamp or basis. No reviewer identity is recorded.
+Findings of a cited paper that are not mapped to a claim are still exported for that claim, as
+`same-paper-candidate`.
+
+The imported Phase 2 package must itself pass the executable Phase 2 import gate and Phase 5 gate
+(`phase2ImportGate`, `phase5Gate`; run with `--check-gates`). Phase 5 accepts the importer's
+`text_access: "unknown"` only for findings vouched for by a verified lineage sidecar; editing an
+imported finding breaks that. These are executable ports of the skill gates; the skills remain the
+authority for agent-run curation.
+
 Bridge from the S2 importer (no hand-written links file):
 
 ```bash
 node scripts/source-evidence/lineage-to-links.mjs \
   --lineage evidence/import/<run>/source-evidence-lineage.json \
   --claim-graph knowledge/claim_graph.json \
+  [--claim-finding-map knowledge/claim-finding-map.json] \
   [--locator-doi 10.5281/zenodo.1234567 | --locator-url https://github.com/<o>/<r>/releases/download/<tag>/<asset>] \
   --out knowledge/evidence-links.json
 ```
 
-A finding is bound to a review citation by exact DOI equality only; a DOI the review does not cite, or
-one that maps to several citation keys, produces no link and is reported on stderr.
+A finding is associated with a review citation by exact DOI equality only; that association is a
+candidate unless the map makes it a reviewed mapping. A DOI the review does not cite, or one that maps
+to several citation keys, produces no link and is reported on stderr.
 
 To link findings, pass `--evidence-links` (schema `comprev.evidence-packet-links/1`,
 see `tests/fixtures/oratlas/evidence-links.synthetic.json`). Each link names a
