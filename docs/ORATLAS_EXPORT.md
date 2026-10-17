@@ -99,6 +99,40 @@ ten relation criteria, no 0–1 aggregate, no assessor or reviewer identity, no
 | **Review claim** | A sentence authored in this review, identified by `claim_id`. | `claims.jsonl`, and `provenance_level: review_claim` in the sidecar. |
 | **Graph relation** | A claim→citation edge in `claim_graph.json`, derived by the TRUST validator. Human confirmation is only whatever the graph records (`human_review_required`, decision references); the exporter never adds it. | `relations.jsonl`; the full edge set is in the sidecar. |
 
+### Passage-level lineage: `comprev.evidence-packet-links/2`
+
+Schema `/1` (below) binds a review citation to a finding by id and source hash only. Schema `/2` is
+additive and also carries, per finding, what is needed to follow it to the exact passage in the
+external packet: `finding_revision`, `verification_level`, `passages[]` (`passage_id`,
+`quote_sha256`, `quote_state`, `match_status`) and `assessments[]` (`assessment_id`, `protocol`
+`seip-support-v1`, `status`). No quote text, reviewer pseudonym or rationale is copied. The sidecar
+records `finding_source_sha256_basis: "article-source-snapshot"`: `source_sha256` is the digest of the
+cited article's captured source snapshot, not of the finding. `packet.sha256` is the SHA-256 of the
+packet's `manifest.json` bytes.
+
+`packet.locator` is optional and says where the exact packet can be fetched. Only two forms are
+accepted, and the digest still decides authenticity:
+
+```json
+{ "kind": "doi", "doi": "10.5281/zenodo.1234567" }
+{ "kind": "github-release-asset", "url": "https://github.com/<owner>/<repo>/releases/download/<tag>/<asset>" }
+```
+
+An absent locator is exported as `packet_locator: null` and must be read as "location not declared".
+
+Bridge from the S2 importer (no hand-written links file):
+
+```bash
+node scripts/source-evidence/lineage-to-links.mjs \
+  --lineage evidence/import/<run>/source-evidence-lineage.json \
+  --claim-graph knowledge/claim_graph.json \
+  [--locator-doi 10.5281/zenodo.1234567 | --locator-url https://github.com/<o>/<r>/releases/download/<tag>/<asset>] \
+  --out knowledge/evidence-links.json
+```
+
+A finding is bound to a review citation by exact DOI equality only; a DOI the review does not cite, or
+one that maps to several citation keys, produces no link and is reported on stderr.
+
 To link findings, pass `--evidence-links` (schema `comprev.evidence-packet-links/1`,
 see `tests/fixtures/oratlas/evidence-links.synthetic.json`). Each link names a
 finding ID, its source SHA-256, the review citation key (and optional DOI), and the
