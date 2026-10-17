@@ -1,0 +1,26 @@
+{
+  "schema": "comprev.evidence-packet-links/1",
+  "synthetic_fixture": true,
+  "note": "Synthetic IDs and hashes for regression tests only. Replace with the real Diggypaper evidence-packet finding IDs and source hashes when exporting a real review.",
+  "producer": "diggypaper",
+  "packet": {
+    "id": "diggypaper-packet-synthetic-0001",
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "findings": [
+    {
+      "finding_id": "synthetic-finding-cardin-0001",
+      "source_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "cite_key": "Cardin2009",
+      "doi": "10.1038/nature08002",
+      "claim_ids": ["clm_7659634fb095cdce"]
+    },
+    {
+      "finding_id": "synthetic-finding-sohal-0001",
+      "source_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "cite_key": "Sohal2009",
+      "doi": "10.1038/nature07991",
+      "claim_ids": ["clm_7659634fb095cdce"]
+    }
+  ]
+}
