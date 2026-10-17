@@ -1,3 +1,10 @@
+# Unreleased: Diggypaper source-evidence-packet import (issue #10)
+
+- Added `scripts/import-source-evidence-packet.mjs` and `scripts/source-evidence/`: optional, offline, deterministic Phase 2 importer for `source-evidence-packet/0.1.0` (validation, `accepted`/`rejected`/`withheld`/`incomplete` results, immutable `source-evidence-lineage.json`). Default evidence gathering is unchanged. See `docs/SOURCE_EVIDENCE_IMPORT.md`.
+- Vendored the frozen contract schemas and fixtures (pinned to Diggypaper `303e377`).
+- Gates: `CONFLICTS_NONEMPTY` becomes `CONFLICTS_DECLARED` (a declared empty conflict set is legitimate); Phase 5 `TEXT_ACCESS_VALID` accepts `unknown` only for verified imports; `ALL_CONFLICTS_ASSIGNED` is vacuous on an empty set.
+- `scripts/release-artifacts/json-schema.mjs` now supports `anyOf`, `not`, `if/then/else`.
+
 # Skill catalogue v28 → v29
 
 ## File changes

@@ -6,7 +6,7 @@ const SUPPORTED_KEYWORDS = new Set([
   'type', 'const', 'enum', 'required', 'properties', 'additionalProperties',
   'items', 'minItems', 'maxItems', 'uniqueItems', 'contains', 'minContains', 'maxContains',
   'minimum', 'maximum', 'minLength', 'maxLength', 'pattern', 'format',
-  'allOf', 'oneOf',
+  'allOf', 'oneOf', 'anyOf', 'not', 'if', 'then', 'else',
 ]);
 
 function jsonType(value) {
@@ -43,6 +43,16 @@ function isUri(value) {
 export function validateJsonSchema(instance, schema, root = schema, path = '$', errors = []) {
   if (schema.$ref) return validateJsonSchema(instance, pointer(root, schema.$ref), root, path, errors);
   for (const part of schema.allOf || []) validateJsonSchema(instance, part, root, path, errors);
+  if (schema.anyOf && !schema.anyOf.some((part) => validateJsonSchema(instance, part, root, path, []).length === 0)) {
+    errors.push(`${path}: expected at least one anyOf branch to match`);
+  }
+  if (schema.not && validateJsonSchema(instance, schema.not, root, path, []).length === 0) {
+    errors.push(`${path}: matches a schema it must not match`);
+  }
+  if (schema.if) {
+    const branch = validateJsonSchema(instance, schema.if, root, path, []).length === 0 ? schema.then : schema.else;
+    if (branch) validateJsonSchema(instance, branch, root, path, errors);
+  }
   if (schema.oneOf) {
     const matches = schema.oneOf.filter(
       (part) => validateJsonSchema(instance, part, root, path, []).length === 0,
@@ -127,8 +137,11 @@ function auditNode(schema, root, path, seen) {
   if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
     auditNode(schema.additionalProperties, root, `${path}.additionalProperties`, seen);
   }
-  for (const keyword of ['allOf', 'oneOf']) {
+  for (const keyword of ['allOf', 'oneOf', 'anyOf']) {
     (schema[keyword] || []).forEach((child, index) => auditNode(child, root, `${path}.${keyword}[${index}]`, seen));
+  }
+  for (const keyword of ['not', 'if', 'then', 'else']) {
+    if (schema[keyword] && typeof schema[keyword] === 'object') auditNode(schema[keyword], root, `${path}.${keyword}`, seen);
   }
 }
 

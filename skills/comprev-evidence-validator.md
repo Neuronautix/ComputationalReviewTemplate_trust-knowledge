@@ -34,7 +34,7 @@ These verify the evidence JSON structure as a hard requirement; any failure is a
 
 These are binary gate checks. Each returning cluster must satisfy every applicable check.
 
-- **CONFLICTS_NONEMPTY**: `conflicts[]` non-empty per cluster. **pass/fail**
+- **CONFLICTS_DECLARED**: `conflicts[]` is non-empty per cluster, **or** it is empty and the cluster declares why via `conflict_assessment: {"status": "none_found" | "not_assessed", "basis": "<non-empty text>"}`. `none_found` requires a `basis` naming the contradiction queries that returned no opposing primary study (see `CONTRADICTION_QUERIES_EXECUTED`); `not_assessed` is used only by the opt-in fixed-corpus import (`docs/SOURCE_EVIDENCE_IMPORT.md`) and means no conflict search was run. A bare empty `conflicts[]` with no declaration still fails. Replaces the former `CONFLICTS_NONEMPTY`. **pass/fail**
 - **WEAKEST_EVIDENCE_SUBSTANTIVE**: `weakest_evidence_cited` substantive (not "all strong" / null / empty). **pass/fail**
 - **FIGURE_DATA_PRESENT**: `figure_data[]` non-empty per cluster. **pass/fail**
 - **PAPER_COUNT_FLOOR**: `papers_reviewed_count` ≥ `evidence_parameters.min_papers_per_cluster` (when not null). **pass/fail**
@@ -71,7 +71,7 @@ These checks catch fabrication signals in evidence packages.
 
 ## Aggregate Gates
 - **PAPER_COUNT**: Unique DOIs ≥ target? **pass/fail**
-- **CONFLICT_COUNT**: Conflicts > 0? **pass/fail**
+- **CONFLICT_COUNT**: Conflicts > 0, or every cluster with zero conflicts passes `CONFLICTS_DECLARED`? **pass/fail**
 - **FIGURE_DATA**: figure_data ≥ 2 per cluster? **pass/fail**
 - **COMPLIANCE_RATE**: ≥95% of findings pass all per-finding checks? **pass/fail**
 
@@ -81,7 +81,7 @@ These checks catch fabrication signals in evidence packages.
   "phase": 2, "gate": "pass|fail", "total_findings": N,
   "checks": {"DOI_RESOLVES": {"pass": N, "fail": N, "failures": [...]}, ...},
   "schema_compliance": {"CONFLICT_FIELDS_EXACT": "pass|fail", "NULLS_NOT_STRINGS": "pass|fail", "FIGURE_DATA_DOIS_UNIQUE": "pass|fail"},
-  "compliance": {"CONFLICTS_NONEMPTY": "pass|fail", "...": "..."},
+  "compliance": {"CONFLICTS_DECLARED": "pass|fail", "...": "..."},
   "anti_fabrication": {"SHAPE_NOT_UNIFORM": "pass|fail", "SATURATION_LOGGED": "pass|fail", "DOI_TITLE_CROSSCHECK": "pass|fail"},
   "aggregates": {"PAPER_COUNT": "pass|fail", "COMPLIANCE_RATE": {"rate": 0.XX, "verdict": "pass|fail"}},
   "failures": [{"check": "...", "detail": "...", "cluster": "..."}]
@@ -97,3 +97,7 @@ The orchestrator saves this structured output as `provenance/gate_evidence_compl
 ## Rate Limiting
 - Europe PMC: max 10 req/s. Use 200ms delay between requests.
 - CrossRef: max 50 req/s with `mailto=` UA. Sample-based `DOI_TITLE_CROSSCHECK` keeps total CrossRef calls bounded; never call CrossRef for every paper.
+
+## Imported Fixed-Corpus Packages (opt-in)
+
+A cluster package produced by `scripts/import-source-evidence-packet.mjs` carries `import_provenance` and `evidence_parameters_applied.mode = "fixed_corpus_import"`. It is a fixed corpus reviewed by humans upstream, not the output of a search, so checks that measure search effort, retrieval or corpus size are reported as **exempt with a stated reason** in the package's `pilot_exceptions` list rather than passed or silently skipped. The list is authoritative in `scripts/source-evidence/import.mjs` (`PILOT_EXCEPTIONS`). Retrieval-dependent checks (`DOI_RESOLVES`, `SOURCE_PROVENANCE`, `FULLTEXT_HONEST*`) are exempt because the importer is offline and `text_access` is `unknown`: it is never deduced from document size, or from a sentence appearing in both the abstract and the full text. `BIBLIOGRAPHY_FLOOR_HARD` still requires the coordinator to record the user's decision under `user_signoff` in `gate_evidence_compliance.json`. Native (agent-gathered) packages are unaffected by this section.
