@@ -500,5 +500,6 @@ Organize by **debates and open questions**, not just topics. Each section: histo
 
 ---
 
+## Optional: Fixed-Corpus Import (opt-in, off by default)
 
-
+Agent-based evidence acquisition above is the default and is unchanged. Only when the user explicitly supplies a Diggypaper `source-evidence-packet/0.1.0` directory may the coordinator run `node scripts/import-source-evidence-packet.mjs --packet <dir> --out <dir>` instead of delegating a cluster to a LITREVIEW agent. The importer is offline and deterministic; it maps approved, human-reviewed *source-paper findings* to the finding schema above, writes a separate immutable `source-evidence-lineage.json`, and reports every accepted, rejected, withheld and incomplete record. Imported findings are what a paper reports, not review-authored claims, and carry no TRUST value. See `docs/SOURCE_EVIDENCE_IMPORT.md`.

@@ -1,0 +1,29 @@
+name: Source evidence import tests
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/source-evidence/**'
+      - 'scripts/import-source-evidence-packet.mjs'
+      - 'scripts/release-artifacts/json-schema.mjs'
+      - 'docs/contracts/source-evidence-packet/**'
+      - 'tests/source-evidence-import.test.mjs'
+      - 'tests/fixtures/source-evidence-packet/**'
+      - 'tests/helpers/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Offline importer tests
+        run: node --test tests/source-evidence-import.test.mjs
+      - name: Existing schema consumers still pass
+        run: node --test tests/release-diff-capsule.test.mjs tests/federated-archive.test.mjs

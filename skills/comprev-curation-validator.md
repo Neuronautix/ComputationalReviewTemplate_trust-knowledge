@@ -38,14 +38,14 @@ A `WRONG_ARTIFACT_TYPE` or `SCHEMA_INVALID` exception fails the gate immediately
 3. **CROSS_SECTION_DIFFERENTIATION**: Same DOI in multiple sections → different `claim_source_sentence`? **pass/fail**
 4. **CITE_KEY_ASSIGNED**: Every finding has non-empty `cite_key`? **pass/fail**
 5. **HAS_DOI**: Every finding has non-empty `doi`? **pass/fail**
-6. **TEXT_ACCESS_VALID**: Every finding's `text_access` is one of `fulltext` or `abstract_only`? **pass/fail** (papers with neither full text nor abstract MUST be excluded entirely — never recorded with a placeholder)
+6. **TEXT_ACCESS_VALID**: Every finding's `text_access` is one of `fulltext` or `abstract_only`? **pass/fail** (papers with neither full text nor abstract MUST be excluded entirely — never recorded with a placeholder). The single exception is a section curated from a package produced by the opt-in fixed-corpus import (`docs/SOURCE_EVIDENCE_IMPORT.md`): its findings may carry `text_access: "unknown"` **only if** the section's `import_provenance` equals the source package's and the lineage sidecar it names hashes to `import_provenance.lineage_sha256`. A native finding with `unknown` still fails. The value is never deduced from size or from a sentence appearing in both the abstract and the full text.
 7. **FINDINGS_ARE_OBJECTS**: Top-level `findings` array contains finding objects (`dict` entries with `cite_key`, `doi`, `claim`), not cite_key strings. Cite_key strings belong in `argument_groups[*].supporting_findings`. **pass/fail**
 
 ## Aggregate Checks
 
 8. **ANTI_COMPRESSION**: Each section retains ≥75% of source cluster findings? **pass/fail**
 9. **ZERO_LOSS**: Total findings across sections ≥ Phase 2 total? **pass/fail**
-10. **ALL_CONFLICTS_ASSIGNED**: Every Phase 2 conflict in ≥1 section? **pass/fail**
+10. **ALL_CONFLICTS_ASSIGNED**: Every Phase 2 conflict in ≥1 section? **pass/fail** (vacuously `pass` when the Phase 2 conflict set is empty; an empty set is legitimate when the cluster declared it via `conflict_assessment`, see `comprev-evidence-validator` `CONFLICTS_DECLARED`. Implementations must not divide by the conflict count)
 
 ## Output Schema
 ```json
