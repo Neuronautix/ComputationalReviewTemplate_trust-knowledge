@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { prettyJson, sha256 } from './canonical.mjs';
+import { canonicalLine, prettyJson, sha256 } from './canonical.mjs';
 import { GOOD_MATCH, VERIFICATION_ORDER, validatePacket } from './validate.mjs';
 
 export const IMPORTER = Object.freeze({ name: 'import-source-evidence-packet', version: '0.1.0' });
@@ -10,6 +10,12 @@ export const FILES = Object.freeze({
   lineage: 'source-evidence-lineage.json',
   report: 'import-report.json',
 });
+/** Digest binding a Phase 2 finding (without any cite_key added by curation) to its lineage entry. */
+export function phase2FindingDigest(finding) {
+  const { cite_key: citeKey, ...rest } = finding;
+  return sha256(Buffer.from(canonicalLine(rest), 'utf8'));
+}
+
 export const STATUSES = ['accepted', 'rejected', 'withheld', 'incomplete'];
 
 const NOT_STATED = [
@@ -182,10 +188,11 @@ function mapAccepted(packetId, finding, paper, chosen, doi) {
   };
 }
 
-function lineageEntry(index, finding, paper, doi, chosen, passages, assessments, flags, loss) {
+function lineageEntry(index, finding, paper, doi, chosen, passages, assessments, flags, loss, phase2) {
   const quoteOf = (p) => (p.quote_state === 'included' ? p.quote : null);
   return {
     package_index: index,
+    phase2_finding_sha256: phase2FindingDigest(phase2),
     doi,
     flags,
     finding: {
@@ -309,7 +316,7 @@ export function importPacket(packetDir, { minVerification = 'human-reviewed' } =
     importer: importerInfo,
     packet: packetInfo,
     statements_not_made: NOT_STATED,
-    entries: accepted.map((a, i) => lineageEntry(i, a.finding, a.paper, a.evaluation.doi, a.evaluation.chosen, a.own, a.assessments, a.evaluation.flags, a.mapped.loss)),
+    entries: accepted.map((a, i) => lineageEntry(i, a.finding, a.paper, a.evaluation.doi, a.evaluation.chosen, a.own, a.assessments, a.evaluation.flags, a.mapped.loss, a.mapped.phase2)),
   };
   const lineageText = prettyJson(lineage);
   const lineageSha = sha256(Buffer.from(lineageText, 'utf8'));

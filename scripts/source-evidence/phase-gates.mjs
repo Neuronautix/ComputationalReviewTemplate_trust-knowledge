@@ -1,5 +1,5 @@
 import { sha256 } from './canonical.mjs';
-import { PILOT_EXCEPTIONS } from './import.mjs';
+import { PILOT_EXCEPTIONS, phase2FindingDigest } from './import.mjs';
 
 /**
  * Executable ports of the gates in skills/comprev-curation-validator.md (Phase 5) and of the
@@ -11,10 +11,28 @@ const TEXT_ACCESS = new Set(['fulltext', 'abstract_only']);
 const CONFLICT_FIELDS = ['paper_a_doi', 'paper_b_doi', 'paper_a_claim', 'paper_b_claim', 'nature_of_conflict', 'resolution_status'];
 const verdict = (ok) => (ok ? 'pass' : 'fail');
 
-/** Imported text_access "unknown" is legitimate only for a package whose sidecar hash verifies. */
-export function importProvenanceVerified(pkg, lineageBytes) {
+/** Digests of the findings the verified sidecar vouches for, or null if the sidecar is missing, altered or unparseable. */
+function lineageDigests(pkg, lineageBytes) {
   const prov = pkg?.import_provenance;
-  return Boolean(prov && lineageBytes && prov.lineage_sha256 === sha256(lineageBytes));
+  if (!prov || !lineageBytes || prov.lineage_sha256 !== sha256(lineageBytes)) return null;
+  try {
+    const entries = JSON.parse(Buffer.from(lineageBytes).toString('utf8')).entries;
+    return Array.isArray(entries) ? entries.map((e) => e.phase2_finding_sha256) : null;
+  } catch { return null; }
+}
+
+/**
+ * Imported text_access "unknown" is legitimate only for a package whose sidecar hash verifies AND whose
+ * findings are exactly the ones the sidecar recorded, in order: editing a finding after import breaks the binding.
+ */
+export function importProvenanceVerified(pkg, lineageBytes) {
+  const digests = lineageDigests(pkg, lineageBytes);
+  return Boolean(
+    digests
+    && Array.isArray(pkg.findings)
+    && digests.length === pkg.findings.length
+    && pkg.findings.every((f, i) => phase2FindingDigest(f) === digests[i]),
+  );
 }
 
 export function conflictsDeclared(pkg) {
@@ -94,9 +112,11 @@ export function phase5Gate(sections, phase2Packages, lineageBytesByArtifact = {}
   const perSection = {};
   const byDoi = new Map();
   for (const section of sections) {
-    const importOk = section.import_provenance
-      && importProvenanceVerified(clusters.get(section.cluster_source), lineageBytesByArtifact[section.cluster_source])
-      && JSON.stringify(section.import_provenance) === JSON.stringify(clusters.get(section.cluster_source).import_provenance);
+    const cluster = clusters.get(section.cluster_source);
+    const importOk = Boolean(section.import_provenance && cluster)
+      && importProvenanceVerified(cluster, lineageBytesByArtifact[section.cluster_source])
+      && JSON.stringify(section.import_provenance) === JSON.stringify(cluster.import_provenance);
+    const vouched = importOk ? new Set(lineageDigests(cluster, lineageBytesByArtifact[section.cluster_source])) : new Set();
     const f = section.findings;
     const sentences = f.map((x) => x.claim_source_sentence);
     perSection[section.section_id] = {
@@ -104,7 +124,7 @@ export function phase5Gate(sections, phase2Packages, lineageBytesByArtifact = {}
       NO_INTRA_SECTION_DUPLICATES: verdict(new Set(sentences).size === sentences.length),
       CITE_KEY_ASSIGNED: verdict(f.every((x) => typeof x.cite_key === 'string' && x.cite_key)),
       HAS_DOI: verdict(f.every((x) => typeof x.doi === 'string' && x.doi)),
-      TEXT_ACCESS_VALID: verdict(f.every((x) => TEXT_ACCESS.has(x.text_access) || (x.text_access === 'unknown' && importOk))),
+      TEXT_ACCESS_VALID: verdict(f.every((x) => TEXT_ACCESS.has(x.text_access) || (x.text_access === 'unknown' && vouched.has(phase2FindingDigest(x))))),
       FINDINGS_ARE_OBJECTS: verdict(f.every((x) => x && typeof x === 'object' && !Array.isArray(x) && 'cite_key' in x && 'doi' in x && 'claim' in x)),
     };
     for (const x of f) byDoi.set(x.doi, [...(byDoi.get(x.doi) || []), [section.section_id, x.claim_source_sentence]]);

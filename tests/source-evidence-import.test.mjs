@@ -456,6 +456,35 @@ test('text_access "unknown" is accepted only for a package whose lineage sidecar
   assert.equal(phase5Gate([curateIdentitySection(labelled)], [labelled], { [key]: lineageBytes }).per_section_results.section_02.TEXT_ACCESS_VALID, 'pass');
 });
 
+test('imported findings are bound to the verified sidecar: editing a finding after import fails the gates', () => {
+  const { phase2, outputs } = importPacket(G2);
+  const lineageBytes = Buffer.from(outputs[FILES.lineage], 'utf8');
+  const key = phase2.evidence_artifact_id;
+  const edited = structuredClone(phase2);
+  edited.findings[0].claim = 'Invented claim that no reviewer saw.';
+  edited.findings[0].claim_source_sentence = 'Invented source sentence.';
+  assert.equal(phase2ImportGate(edited, lineageBytes).checks.IMPORT_PROVENANCE_VERIFIED, 'fail');
+  assert.equal(phase2ImportGate(edited, lineageBytes).gate, 'fail');
+  assert.equal(phase5Gate([curateIdentitySection(edited)], [edited], { [key]: lineageBytes }).gate, 'fail');
+
+  const reordered = structuredClone(phase2);
+  reordered.findings.reverse();
+  assert.equal(phase2ImportGate(reordered, lineageBytes).checks.IMPORT_PROVENANCE_VERIFIED, 'fail');
+  const extra = structuredClone(phase2);
+  extra.findings.push({ ...extra.findings[0], claim: 'extra' });
+  assert.equal(phase2ImportGate(extra, lineageBytes).checks.IMPORT_PROVENANCE_VERIFIED, 'fail');
+
+  // A section may legitimately hold a subset, but cannot alter a finding the sidecar vouches for.
+  const subset = curateIdentitySection(phase2);
+  subset.findings = subset.findings.slice(0, 2);
+  const ok = phase5Gate([subset], [phase2], { [key]: lineageBytes });
+  assert.equal(ok.per_section_results.section_02.TEXT_ACCESS_VALID, 'pass');
+  const altered = curateIdentitySection(phase2);
+  altered.findings[1] = { ...altered.findings[1], claim: 'altered during curation' };
+  assert.equal(phase5Gate([altered], [phase2], { [key]: lineageBytes }).per_section_results.section_02.TEXT_ACCESS_VALID, 'fail');
+  assert.ok(importPacket(G2).lineage.entries.every((e) => /^sha256:[0-9a-f]{64}$/u.test(e.phase2_finding_sha256)));
+});
+
 test('a legitimate empty conflict set is accepted only when declared, in imports and in native packages', () => {
   const { phase2 } = importPacket(G2);
   assert.deepEqual(phase2.conflicts, []);
@@ -512,7 +541,7 @@ test('importing is opt-in: no native pipeline script or skill invokes the import
 });
 
 const FROZEN_DIGESTS = {
-  lineage: 'sha256:e8cb92f863f442efebec3af4333d45fe856c78ddba843e2649ebd63fabbfdfd8',
-  phase2: 'sha256:963c5c06f99fc08401a3a1d7a4932555b99bf8836b6f7df1564b05bff31bdd96',
-  report: 'sha256:e743f4a9ce8ad2676db76c8d2fd3101121399c10d9e50c370711330b431fdd09',
+  lineage: 'sha256:cfafabdd3240df3faccd25b66d2ae0302784c83e081b8f3041a4a007a85d88b5',
+  phase2: 'sha256:8291e8961bc7c0e7435a9a8ac15dbb8257290ac9bcc29b0b26478b4f409f0053',
+  report: 'sha256:006b4494540a6b3450df207e3e091ef8c14e4a045a4ffcaeb88c12efdabd49ce',
 };

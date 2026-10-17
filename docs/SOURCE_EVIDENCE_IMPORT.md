@@ -130,7 +130,7 @@ Bounded gate changes made with this importer (skills updated, with tests):
    `conflict_assessment.status` of `none_found` (with a basis naming the contradiction queries) or `not_assessed`
    (import: no conflict search was run). A bare empty array still fails. `ALL_CONFLICTS_ASSIGNED` is vacuously true for an empty set.
 2. **`text_access: "unknown"`** is valid in Phase 5 only for a section curated from an import whose `import_provenance`
-   matches and whose sidecar hash verifies. Native findings still require `fulltext` or `abstract_only`.
+   matches, whose sidecar hash verifies, and whose findings are exactly those the sidecar recorded (each lineage entry carries `phase2_finding_sha256`, so editing a finding after import breaks the binding). Native findings still require `fulltext` or `abstract_only`.
 
 Known limitation: two accepted findings supported by the same sentence trip `NO_INTRA_SECTION_DUPLICATES` in Phase 5. The importer
 does not merge or deduplicate by text (contract section 5.1); curation must decide.
