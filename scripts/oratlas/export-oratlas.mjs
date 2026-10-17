@@ -43,6 +43,11 @@ export const EXPORT_VERSION = '1.0.0';
 export const SIDECAR_SCHEMA = 'comprev.oratlas-source-native-sidecar/1';
 export const REPORT_SCHEMA = 'comprev.oratlas-compatibility-report/1';
 export const EVIDENCE_LINKS_SCHEMA = 'comprev.evidence-packet-links/1';
+export const EVIDENCE_LINKS_SCHEMA_V2 = 'comprev.evidence-packet-links/2';
+const GITHUB_RELEASE_ASSET = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/releases\/download\/[^/\s?#]+\/[^/\s?#]+$/u;
+const SHA256_TAGGED = /^sha256:[a-f0-9]{64}$/u;
+const VERIFICATION_LEVELS = ['unverified', 'human-reviewed', 'source-verified', 'independently-verified'];
+const MATCH_STATUSES = ['exact', 'normalized', 'not_found', 'ambiguous', 'invalid', 'source_unavailable', 'not_checked', 'incomplete'];
 export const DEFAULT_ARTIFACT_DIR = 'knowledge/oratlas';
 export const FILE_NAMES = {
   claims: 'claims.jsonl',
@@ -150,11 +155,61 @@ function clip(value, max) {
   return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
 }
 
+// Where an externally preserved packet can be fetched. Only an immutable-by-convention address is
+// accepted: a DOI (for example a Zenodo deposit) or a GitHub release asset. The locator never
+// replaces the packet digest; a fetched copy must still hash to packet.sha256.
+export function normalizeLocator(locator, label = 'packet.locator') {
+  if (locator === undefined || locator === null) return null;
+  invariant(isObject(locator), `${label} must be an object`);
+  if (locator.kind === 'doi') {
+    const doi = normalizeDoi(locator.doi);
+    invariant(doi && DOI_PATTERN.test(doi), `${label}.doi must be a bare DOI`);
+    return { kind: 'doi', doi };
+  }
+  if (locator.kind === 'github-release-asset') {
+    invariant(typeof locator.url === 'string' && GITHUB_RELEASE_ASSET.test(locator.url), `${label}.url must be an https://github.com/<owner>/<repo>/releases/download/<tag>/<asset> URL`);
+    return { kind: 'github-release-asset', url: locator.url };
+  }
+  throw new Error(`${label}.kind must be 'doi' or 'github-release-asset'`);
+}
+
+function validateFindingDetail(finding, label) {
+  invariant(Number.isInteger(finding.finding_revision) && finding.finding_revision >= 1, `${label}.finding_revision must be an integer >= 1`);
+  invariant(VERIFICATION_LEVELS.includes(finding.verification_level), `${label}.verification_level is not a packet verification level`);
+  invariant(Array.isArray(finding.passages) && finding.passages.length > 0, `${label}.passages must be non-empty`);
+  const passages = finding.passages.map((passage, index) => {
+    const at = `${label}.passages[${index}]`;
+    invariant(isObject(passage) && typeof passage.passage_id === 'string' && passage.passage_id.length > 0, `${at}.passage_id is required`);
+    invariant(SHA256_TAGGED.test(passage.quote_sha256 || ''), `${at}.quote_sha256 must be sha256:<64 hex>`);
+    invariant(['included', 'withheld-rights'].includes(passage.quote_state), `${at}.quote_state is invalid`);
+    invariant(MATCH_STATUSES.includes(passage.match_status), `${at}.match_status is invalid`);
+    return { passage_id: passage.passage_id, quote_sha256: passage.quote_sha256, quote_state: passage.quote_state, match_status: passage.match_status };
+  });
+  invariant(new Set(passages.map((passage) => passage.passage_id)).size === passages.length, `${label}.passages repeats a passage`);
+  invariant(Array.isArray(finding.assessments ?? []), `${label}.assessments must be an array`);
+  const assessments = (finding.assessments ?? []).map((assessment, index) => {
+    const at = `${label}.assessments[${index}]`;
+    invariant(isObject(assessment) && typeof assessment.assessment_id === 'string', `${at}.assessment_id is required`);
+    invariant(assessment.protocol === 'seip-support-v1', `${at}.protocol must be seip-support-v1`);
+    invariant(typeof assessment.status === 'string' && assessment.status.length > 0, `${at}.status is required`);
+    return { assessment_id: assessment.assessment_id, protocol: assessment.protocol, status: assessment.status };
+  });
+  return {
+    finding_revision: finding.finding_revision,
+    verification_level: finding.verification_level,
+    passages: passages.sort((a, b) => compareText(a.passage_id, b.passage_id)),
+    assessments: assessments.sort((a, b) => compareText(a.assessment_id, b.assessment_id)),
+  };
+}
+
 function validateEvidenceLinks(links, claimsById) {
   if (links === undefined) return [];
-  invariant(isObject(links) && links.schema === EVIDENCE_LINKS_SCHEMA, `evidence links must declare schema ${EVIDENCE_LINKS_SCHEMA}`);
+  invariant(isObject(links) && [EVIDENCE_LINKS_SCHEMA, EVIDENCE_LINKS_SCHEMA_V2].includes(links.schema), `evidence links must declare schema ${EVIDENCE_LINKS_SCHEMA} or ${EVIDENCE_LINKS_SCHEMA_V2}`);
+  const v2 = links.schema === EVIDENCE_LINKS_SCHEMA_V2;
   invariant(links.producer === 'diggypaper', 'evidence links producer must be diggypaper');
   invariant(isObject(links.packet) && typeof links.packet.id === 'string' && /^[a-f0-9]{64}$/u.test(links.packet.sha256 || ''), 'evidence links packet needs an id and sha256');
+  invariant(v2 || links.packet.locator === undefined, 'packet.locator requires schema comprev.evidence-packet-links/2');
+  const locator = normalizeLocator(links.packet.locator);
   invariant(Array.isArray(links.findings), 'evidence links findings must be an array');
   const seen = new Set();
   return links.findings.map((finding, index) => {
@@ -163,6 +218,7 @@ function validateEvidenceLinks(links, claimsById) {
     invariant(/^[a-f0-9]{64}$/u.test(finding.source_sha256 || ''), `${label}.source_sha256 must be a SHA-256`);
     invariant(Array.isArray(finding.claim_ids) && finding.claim_ids.length > 0, `${label}.claim_ids must be non-empty`);
     invariant(typeof finding.cite_key === 'string', `${label}.cite_key is required`);
+    const detail = v2 ? validateFindingDetail(finding, label) : undefined;
     const claim = finding.claim_ids.map((id) => {
       invariant(claimsById.has(id), `${label} references unknown review claim ${id}`);
       return claimsById.get(id);
@@ -175,7 +231,7 @@ function validateEvidenceLinks(links, claimsById) {
         `${label}: finding DOI differs from the DOI the claim graph records for ${finding.cite_key}`,
       );
     }
-    const key = `${finding.finding_id}|${finding.claim_ids.join(',')}|${finding.cite_key}`;
+    const key = `${finding.finding_id}|${detail ? detail.finding_revision : ''}|${finding.claim_ids.join(',')}|${finding.cite_key}`;
     invariant(!seen.has(key), `${label} duplicates another link`);
     seen.add(key);
     return {
@@ -183,11 +239,15 @@ function validateEvidenceLinks(links, claimsById) {
       producer: 'diggypaper',
       packet_id: links.packet.id,
       packet_sha256: links.packet.sha256,
+      ...(v2 ? { packet_locator: locator } : {}),
       finding_id: finding.finding_id,
+      ...(detail ? { finding_revision: detail.finding_revision } : {}),
       finding_source_sha256: finding.source_sha256,
+      ...(v2 ? { finding_source_sha256_basis: 'article-source-snapshot' } : {}),
       cite_key: finding.cite_key,
       doi: finding.doi === undefined ? null : normalizeDoi(finding.doi),
       linked_review_claim_ids: [...finding.claim_ids].sort(compareText),
+      ...(detail ? { verification_level: detail.verification_level, passages: detail.passages, assessments: detail.assessments } : {}),
       note: 'A producer finding describes a cited article. It is not a review claim; the link only records which evidence-packet finding a review citation was drawn from.',
     };
   });
