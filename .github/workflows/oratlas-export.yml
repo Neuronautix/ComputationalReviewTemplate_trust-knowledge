@@ -1,0 +1,42 @@
+name: ORAtlas export contract
+
+on:
+  pull_request:
+    paths:
+      - 'review-manifest.json'
+      - 'knowledge/**'
+      - 'content/references.bib'
+      - 'scripts/oratlas/**'
+      - 'tests/oratlas-export.test.mjs'
+      - '.github/workflows/oratlas-export.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extractor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Check out ORAtlas at the pinned commit
+        run: |
+          PIN=$(node -e "import('./scripts/oratlas/contract-pin.mjs').then(m => console.log(m.ORATLAS_PINNED_COMMIT))")
+          git init ../oratlas
+          git -C ../oratlas fetch --depth 1 https://github.com/dhuzard/oratlas.git "$PIN"
+          git -C ../oratlas checkout --detach FETCH_HEAD
+      - name: Install ORAtlas dependencies
+        working-directory: ../oratlas
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile --ignore-scripts --filter "@oratlas/extractor..."
+      - name: Verify export and run the real ORAtlas extractor
+        env:
+          ORATLAS_DIR: ${{ github.workspace }}/../oratlas
+        run: |
+          node scripts/oratlas/verify-oratlas-export.mjs --directory .
+          node scripts/oratlas/validate-with-oratlas.mjs --oratlas-dir "$ORATLAS_DIR" --directory .
+          node --test tests/oratlas-export.test.mjs
