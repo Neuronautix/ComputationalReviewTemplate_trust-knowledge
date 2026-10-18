@@ -47,6 +47,35 @@ export const EVIDENCE_LINKS_SCHEMA_V2 = 'comprev.evidence-packet-links/2';
 const GITHUB_RELEASE_ASSET = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/releases\/download\/[^/\s?#]+\/[^/\s?#]+$/u;
 const SHA256_TAGGED = /^sha256:[a-f0-9]{64}$/u;
 const VERIFICATION_LEVELS = ['unverified', 'human-reviewed', 'source-verified', 'independently-verified'];
+const BINDINGS = ['reviewed-mapping', 'same-paper-candidate'];
+// Identifier patterns and the assessment status vocabulary of source-evidence-packet/0.1.0
+// (docs/contracts/source-evidence-packet/v0.1.0/schemas). A links/2 file may be written by hand, so
+// native fields are checked against the source contract before they are published as native data.
+const PACKET_ID = (prefix) => new RegExp(`^${prefix}:[A-Za-z0-9._-]{1,100}$`, 'u');
+const FINDING_ID = PACKET_ID('finding');
+const PASSAGE_ID = PACKET_ID('passage');
+const ASSESSMENT_ID = PACKET_ID('assessment');
+const ASSESSMENT_STATUSES = ['supports', 'contradicts', 'insufficient', 'unclear', 'not_assessed', 'unknown', 'restricted'];
+const TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/u;
+
+/**
+ * An RFC 3339 UTC timestamp (`Z` suffix) naming a real calendar date and time. Digit placement alone
+ * is not enough: 2026-13-40T25:61:61Z is rejected. Leap seconds (:60) are not accepted.
+ */
+export function isRfc3339Utc(value) {
+  const match = typeof value === 'string' ? TIMESTAMP.exec(value) : null;
+  if (!match) return false;
+  const [year, month, day, hour, minute, second] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  return (
+    date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
+    && date.getUTCHours() === hour
+    && date.getUTCMinutes() === minute
+    && date.getUTCSeconds() === second
+  );
+}
 const MATCH_STATUSES = ['exact', 'normalized', 'not_found', 'ambiguous', 'invalid', 'source_unavailable', 'not_checked', 'incomplete'];
 export const DEFAULT_ARTIFACT_DIR = 'knowledge/oratlas';
 export const FILE_NAMES = {
@@ -174,12 +203,13 @@ export function normalizeLocator(locator, label = 'packet.locator') {
 }
 
 function validateFindingDetail(finding, label) {
+  invariant(FINDING_ID.test(finding.finding_id || ''), `${label}.finding_id must be a packet finding id (finding:…)`);
   invariant(Number.isInteger(finding.finding_revision) && finding.finding_revision >= 1, `${label}.finding_revision must be an integer >= 1`);
   invariant(VERIFICATION_LEVELS.includes(finding.verification_level), `${label}.verification_level is not a packet verification level`);
   invariant(Array.isArray(finding.passages) && finding.passages.length > 0, `${label}.passages must be non-empty`);
   const passages = finding.passages.map((passage, index) => {
     const at = `${label}.passages[${index}]`;
-    invariant(isObject(passage) && typeof passage.passage_id === 'string' && passage.passage_id.length > 0, `${at}.passage_id is required`);
+    invariant(isObject(passage) && PASSAGE_ID.test(passage.passage_id || ''), `${at}.passage_id must be a packet passage id (passage:…)`);
     invariant(SHA256_TAGGED.test(passage.quote_sha256 || ''), `${at}.quote_sha256 must be sha256:<64 hex>`);
     invariant(['included', 'withheld-rights'].includes(passage.quote_state), `${at}.quote_state is invalid`);
     invariant(MATCH_STATUSES.includes(passage.match_status), `${at}.match_status is invalid`);
@@ -189,12 +219,37 @@ function validateFindingDetail(finding, label) {
   invariant(Array.isArray(finding.assessments ?? []), `${label}.assessments must be an array`);
   const assessments = (finding.assessments ?? []).map((assessment, index) => {
     const at = `${label}.assessments[${index}]`;
-    invariant(isObject(assessment) && typeof assessment.assessment_id === 'string', `${at}.assessment_id is required`);
+    invariant(isObject(assessment) && ASSESSMENT_ID.test(assessment.assessment_id || ''), `${at}.assessment_id must be a packet assessment id (assessment:…)`);
     invariant(assessment.protocol === 'seip-support-v1', `${at}.protocol must be seip-support-v1`);
-    invariant(typeof assessment.status === 'string' && assessment.status.length > 0, `${at}.status is required`);
+    invariant(ASSESSMENT_STATUSES.includes(assessment.status), `${at}.status must be a source-evidence-packet/0.1.0 assessment status`);
     return { assessment_id: assessment.assessment_id, protocol: assessment.protocol, status: assessment.status };
   });
+  // One native judgment must not be presented as several.
+  invariant(new Set(assessments.map((assessment) => assessment.assessment_id)).size === assessments.length, `${label}.assessments repeats an assessment`);
+  // Binding: a same-paper DOI match is only a candidate. A finding becomes evidence for a review
+  // claim only through an explicit, recorded mapping decision bound to the imported Phase 2 finding.
+  invariant(BINDINGS.includes(finding.binding), `${label}.binding must be one of ${BINDINGS.join(', ')}`);
+  let mappings;
+  if (finding.binding === 'reviewed-mapping') {
+    invariant(SHA256_TAGGED.test(finding.phase2_finding_sha256 || ''), `${label}.phase2_finding_sha256 must be sha256:<64 hex>`);
+    invariant(Array.isArray(finding.mappings) && finding.mappings.length > 0, `${label}.mappings must be non-empty for a reviewed mapping`);
+    mappings = finding.mappings.map((mapping, index) => {
+      const at = `${label}.mappings[${index}]`;
+      invariant(isObject(mapping) && typeof mapping.claim_id === 'string', `${at}.claim_id is required`);
+      invariant(typeof mapping.decision_ref === 'string' && mapping.decision_ref.trim(), `${at}.decision_ref is required`);
+      invariant(isRfc3339Utc(mapping.asserted_at), `${at}.asserted_at must be an RFC 3339 UTC timestamp`);
+      invariant(typeof mapping.basis === 'string' && mapping.basis.trim(), `${at}.basis is required`);
+      return { claim_id: mapping.claim_id, decision_ref: mapping.decision_ref, asserted_at: mapping.asserted_at, basis: mapping.basis };
+    });
+    const mapped = mappings.map((mapping) => mapping.claim_id).sort(compareText);
+    invariant(new Set(mapped).size === mapped.length, `${label}.mappings repeats a claim`);
+    invariant(JSON.stringify(mapped) === JSON.stringify([...finding.claim_ids].sort(compareText)), `${label}.mappings must cover exactly claim_ids`);
+  } else {
+    invariant(finding.mappings === undefined && finding.phase2_finding_sha256 === undefined, `${label}: a same-paper candidate carries no mapping`);
+  }
   return {
+    binding: finding.binding,
+    ...(mappings ? { phase2_finding_sha256: finding.phase2_finding_sha256, mappings: mappings.sort((a, b) => compareText(a.claim_id, b.claim_id)) } : {}),
     finding_revision: finding.finding_revision,
     verification_level: finding.verification_level,
     passages: passages.sort((a, b) => compareText(a.passage_id, b.passage_id)),
@@ -231,7 +286,9 @@ function validateEvidenceLinks(links, claimsById) {
         `${label}: finding DOI differs from the DOI the claim graph records for ${finding.cite_key}`,
       );
     }
-    const key = `${finding.finding_id}|${detail ? detail.finding_revision : ''}|${finding.claim_ids.join(',')}|${finding.cite_key}`;
+    const key = detail
+      ? `${finding.finding_id}|${detail.finding_revision}|${detail.binding}|${finding.cite_key}`
+      : `${finding.finding_id}||${finding.claim_ids.join(',')}|${finding.cite_key}`;
     invariant(!seen.has(key), `${label} duplicates another link`);
     seen.add(key);
     return {
@@ -247,8 +304,18 @@ function validateEvidenceLinks(links, claimsById) {
       cite_key: finding.cite_key,
       doi: finding.doi === undefined ? null : normalizeDoi(finding.doi),
       linked_review_claim_ids: [...finding.claim_ids].sort(compareText),
-      ...(detail ? { verification_level: detail.verification_level, passages: detail.passages, assessments: detail.assessments } : {}),
-      note: 'A producer finding describes a cited article. It is not a review claim; the link only records which evidence-packet finding a review citation was drawn from.',
+      ...(detail
+        ? {
+            binding: detail.binding,
+            ...(detail.mappings ? { phase2_finding_sha256: detail.phase2_finding_sha256, mappings: detail.mappings } : {}),
+            verification_level: detail.verification_level,
+            passages: detail.passages,
+            assessments: detail.assessments,
+          }
+        : {}),
+      note: detail?.binding === 'same-paper-candidate'
+        ? 'A producer finding describes a cited article. It is not a review claim. Same-paper candidate: the review cites the article this finding is about; no recorded decision says the review claim uses this finding.'
+        : 'A producer finding describes a cited article. It is not a review claim; the link only records which evidence-packet finding a review citation was drawn from.',
     };
   });
 }
