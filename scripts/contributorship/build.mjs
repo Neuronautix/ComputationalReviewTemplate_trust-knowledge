@@ -271,7 +271,7 @@ function buildSourceCredit(sources, claimGraph, origins) {
   const findings = new Map();
   const byClaim = new Map();
   const seenPackets = new Set();
-  for (const [index, source] of sources.entries()) {
+  const parsed = sources.map((source, index) => {
     const lineage = JSON.parse(Buffer.from(source.lineageBytes).toString('utf8'));
     invariant(isObject(lineage) && lineage.schema_version === 'source-evidence-lineage/0.1.0', `sources[${index}]: not a source-evidence-lineage/0.1.0 file`);
     const packetId = lineage.packet?.packet_id;
@@ -279,8 +279,20 @@ function buildSourceCredit(sources, claimGraph, origins) {
     invariant(origin, `sources[${index}]: packet ${packetId} has no declared source origin; declare whether it is public or private`);
     invariant(!seenPackets.has(packetId), `sources[${index}]: packet ${packetId} is given twice`);
     seenPackets.add(packetId);
+    return { source, lineage, origin };
+  });
+  // Index every lineage before using any map. Fail closed on a finding key shared by two packets: one
+  // origin would otherwise replace the other's disclosure decision, depending on input order.
+  for (const { lineage, origin } of parsed) {
+    for (const entry of lineage.entries) {
+      const key = findingKey(entry.finding.finding_id, entry.finding.revision);
+      const other = findings.get(key)?.origin.packet_id;
+      invariant(!other, `${entry.finding.finding_id} revision ${entry.finding.revision} appears in both ${[other, origin.packet_id].sort(compareText).join(' and ')}`);
+      findings.set(key, { entry, origin });
+    }
+  }
+  for (const { source, lineage, origin } of parsed) {
     const lineageSha = sha256(Buffer.from(source.lineageBytes));
-    for (const entry of lineage.entries) findings.set(findingKey(entry.finding.finding_id, entry.finding.revision), { entry, origin });
     // Fails closed unless the map is bound to these lineage bytes, these finding digests and claims that cite the paper.
     const mappings = validateClaimFindingMap(source.claimFindingMap, lineage, source.lineageBytes, claimGraph);
     for (const mapping of mappings) {
@@ -510,9 +522,13 @@ export function releaseReport(privateDoc, publicDoc) {
 export function validateCompanions({ privateDoc, publicDoc, report }) {
   if (privateDoc) assertSchemaValid(privateDoc, loadSchema('contributorship.private'), 'private contributorship companion');
   if (publicDoc) assertSchemaValid(publicDoc, loadSchema('contributorship.public'), 'public contributorship companion');
-  if (report) assertSchemaValid(report, loadSchema('contributorship-release-report'), 'contributorship release report');
+  if (report) {
+    assertSchemaValid(report, loadSchema('contributorship-release-report'), 'contributorship release report');
+    invariant(privateDoc && publicDoc, 'a release report can only be validated together with both companions');
+  }
   if (privateDoc && publicDoc) {
     invariant(prettyJson(projectPublic(privateDoc)) === prettyJson(publicDoc), 'public companion is not the allowlisted projection of the private companion');
+    if (report) invariant(prettyJson(releaseReport(privateDoc, publicDoc)) === prettyJson(report), 'release report does not match the supplied companions');
   }
   for (const doc of [privateDoc, publicDoc].filter(Boolean)) {
     const people = new Set(doc.contributors.map((c) => c.id));

@@ -100,6 +100,8 @@ privately. A DOI match without a decision credits nothing.
 
 Every lineage's packet must be declared in `source_origins` as `public` or `private`. A private
 origin may carry a `project_ref` and `project_title`; they never leave the private companion.
+A finding id and revision supplied by two packets is rejected: one origin's disclosure decision
+must never silently replace the other's.
 
 ## Disclosure and the public allowlist
 
@@ -119,7 +121,10 @@ Missing clearance means the record stays private. The builder never infers conse
 `contributorship.public.schema.json` name the same fields (tested). The public companion is
 exactly `projectPublic(private)`: records are filtered and restricted to allowlisted keys, values
 are never renamed or recomputed, and only `visibility` differs. `validateCompanions` re-derives the
-projection and rejects any other public file.
+projection and rejects any other public file. Given a release report, it also requires both
+companions and rejects any report other than the one recomputed from them. The private schema
+keeps the declaration invariants: a `verified` ORCID carries its verification, and only `declared`
+assertions lack a `status_ref`.
 
 ## Fixtures and tests
 

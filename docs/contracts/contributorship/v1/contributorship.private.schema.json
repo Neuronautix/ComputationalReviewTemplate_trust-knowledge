@@ -70,7 +70,10 @@
             "verified_at": { "$ref": "#/$defs/timestamp" }
           }
         }
-      }
+      },
+      "if": { "properties": { "status": { "const": "verified" } } },
+      "then": { "required": ["verification"] },
+      "else": { "not": { "required": ["verification"] } }
     },
     "contributor": {
       "type": "object",
@@ -109,7 +112,10 @@
         "source_ref": { "type": "string", "minLength": 1 },
         "asserted_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
         "target": { "$ref": "#/$defs/target" }
-      }
+      },
+      "if": { "properties": { "status": { "const": "declared" } } },
+      "then": { "properties": { "status_ref": { "type": "null" } } },
+      "else": { "properties": { "status_ref": { "type": "string", "minLength": 1 } } }
     },
     "legacyLabelFields": {
       "type": "object",

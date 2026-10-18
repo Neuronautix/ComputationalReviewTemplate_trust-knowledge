@@ -360,3 +360,45 @@ test('the private release report names withheld records and is bound to both com
   assert.deepEqual(report.withheld.relation_proposals, [{ id: 'rel-002', reason: 'uncleared-private-origin' }, { id: 'rel-003', reason: 'proposer-not-disclosed' }]);
   assert.equal(buildPrivate(inputs()).visibility, 'private');
 });
+
+test('a finding id + revision supplied by two packets is rejected, whatever the input order', () => {
+  const collide = (i) => {
+    i.sources[2] = rebindSource(i.sources[2], (lineage) => { lineage.entries[0].finding.finding_id = 'finding:alpha-f1'; });
+    return i;
+  };
+  const message = /finding:alpha-f1 revision 1 appears in both packet:crt17-alpha and packet:crt17-gamma/u;
+  assert.throws(() => build(collide), message);
+  assert.throws(() => build((i) => {
+    collide(i).sources.reverse();
+    return i;
+  }), message);
+});
+
+test('the private schema keeps the verified-ORCID and status-reference invariants', () => {
+  const { privateDoc } = build();
+  const unverified = clone(privateDoc);
+  delete unverified.contributors.find((c) => c.id === 'person-a').orcid.verification;
+  assert.throws(() => validateCompanions({ privateDoc: unverified }), /contributors\[0\]\.orcid: missing verification/u);
+  const claimedWithEvidence = clone(privateDoc);
+  claimedWithEvidence.contributors.find((c) => c.id === 'person-b').orcid.verification = clone(privateDoc.contributors[0].orcid.verification);
+  assert.throws(() => validateCompanions({ privateDoc: claimedWithEvidence }), /orcid: matches a schema it must not match/u);
+  for (const id of ['a-001', 'a-005', 'a-006']) {
+    const missing = clone(privateDoc);
+    missing.credit_assertions.find((a) => a.assertion_id === id).status_ref = null;
+    assert.throws(() => validateCompanions({ privateDoc: missing }), /status_ref: expected string; got null/u, id);
+  }
+  const declaredWithRef = clone(privateDoc);
+  declaredWithRef.credit_assertions.find((a) => a.assertion_id === 'a-002').status_ref = 'decision:x';
+  assert.throws(() => validateCompanions({ privateDoc: declaredWithRef }), /status_ref: expected null; got string/u);
+});
+
+test('a supplied release report must be the one recomputed from both companions', () => {
+  const { privateDoc, publicDoc, report } = build();
+  const stale = clone(report);
+  stale.withheld.contributors = stale.withheld.contributors.filter((c) => c.id !== 'person-c');
+  assert.throws(() => validateCompanions({ privateDoc, publicDoc, report: stale }), /release report does not match the supplied companions/u);
+  const wrongDigest = clone(report);
+  wrongDigest.public_sha256 = `sha256:${'0'.repeat(64)}`;
+  assert.throws(() => validateCompanions({ privateDoc, publicDoc, report: wrongDigest }), /release report does not match/u);
+  assert.throws(() => validateCompanions({ report }), /only be validated together with both companions/u);
+});
