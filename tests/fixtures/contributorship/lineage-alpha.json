@@ -1,0 +1,232 @@
+{
+  "entries": [
+    {
+      "article": {
+        "authors": [
+          "Synthetic-alpha, Ada",
+          "Synthetic-alpha, Bo"
+        ],
+        "identifiers": {
+          "doi": "10.5555/crt17.alpha",
+          "pmcid": "not-available",
+          "pmid": "not-available"
+        },
+        "paper_id": "paper:alpha",
+        "producer_ids": {
+          "article_ref": "article-alpha"
+        },
+        "rights": {
+          "full_text_included": false,
+          "license": "CC-BY-4.0",
+          "redistribution": "allowed"
+        },
+        "source_snapshot": {
+          "sha256": "sha256:312f83d6c1f501137b12a13d746c2b88f7412ae7e7ccbaee9ea2003d77be0da6",
+          "snapshot_ref": "snapshot:alpha-1",
+          "state": "captured"
+        },
+        "source_type": "journal-article",
+        "title": "[SYNTHETIC] alpha title"
+      },
+      "claim_source_passage_id": "passage:alpha-p1",
+      "doi": "10.5555/crt17.alpha",
+      "field_report": [
+        {
+          "disposition": "mapped",
+          "field": "claim",
+          "reason": "wording origin reviewer-interpretation; not attributed to the article authors",
+          "source": "finding.statement"
+        },
+        {
+          "disposition": "mapped-verbatim",
+          "field": "claim_source_sentence",
+          "reason": "exact match; native assessment assessment:alpha-a1 records \"supports\"; the match is not itself support",
+          "source": "passage:alpha-p1"
+        },
+        {
+          "disposition": "mapped",
+          "field": "doi",
+          "reason": "normalized to lower case without resolver prefix",
+          "source": "paper.identifiers.doi"
+        },
+        {
+          "disposition": "unknown-kept",
+          "field": "study_system",
+          "reason": "the packet states the population is unknown; kept as the literal \"unknown\"",
+          "source": "context.population"
+        },
+        {
+          "disposition": "null-absent-in-packet",
+          "field": "effect_size",
+          "reason": "the contract has no effect-size field; none is computed or imputed"
+        },
+        {
+          "disposition": "null-absent-in-packet",
+          "field": "effect_size_source_sentence",
+          "reason": "no effect size is imported, so no sentence is attached to one"
+        },
+        {
+          "disposition": "null-absent-in-packet",
+          "field": "n",
+          "reason": "no numeric result with an n was exported"
+        },
+        {
+          "disposition": "constant",
+          "field": "replication_status",
+          "reason": "packet carries no replication data; independently-verified counts reviewers, not replications"
+        },
+        {
+          "disposition": "constant",
+          "field": "replication_evidence_dois",
+          "reason": "empty: no replication evidence in packet"
+        },
+        {
+          "disposition": "unknown-kept",
+          "field": "text_access",
+          "reason": "the packet does not record whether the passage comes from the abstract or the body, and this cannot be deduced from size or from a sentence appearing in both"
+        },
+        {
+          "disposition": "composed",
+          "field": "evidence",
+          "reason": "context and the packet's numeric results with their n-definitions, as written",
+          "source": "context, numeric_results"
+        }
+      ],
+      "finding": {
+        "context": {
+          "comparator": "unknown",
+          "experimental_unit": "unknown",
+          "exposure": "unknown",
+          "outcome": "unknown",
+          "population": "unknown",
+          "time": "unknown"
+        },
+        "created_at": "2026-09-01T00:00:00Z",
+        "export_state": "approved-for-export",
+        "finding_id": "finding:alpha-f1",
+        "numeric_results": [],
+        "origin": "reviewer-interpretation",
+        "producer_ids": {
+          "answer_ref": "answer-alpha",
+          "evidence_refs": [
+            "evidence-alpha-p1"
+          ],
+          "prediction_ref": "prediction-links-v2"
+        },
+        "review_state": "human-reviewed",
+        "revision": 1,
+        "statement": "[SYNTHETIC] alpha finding",
+        "verification_level": "source-verified"
+      },
+      "flags": [],
+      "native_assessments": [
+        {
+          "assessed_at": "2026-09-02T00:00:00Z",
+          "assessed_snapshot_sha256": "sha256:312f83d6c1f501137b12a13d746c2b88f7412ae7e7ccbaee9ea2003d77be0da6",
+          "assessment_id": "assessment:alpha-a1",
+          "passage_id": "passage:alpha-p1",
+          "producer_ids": {
+            "support_assessment_ref": "support-alpha"
+          },
+          "protocol": "seip-support-v1",
+          "rationale": "[SYNTHETIC] alpha rationale, private to the source",
+          "reviewer_ref": "rv-a1a1a1a1a1a1a1a1",
+          "status": "supports"
+        }
+      ],
+      "package_index": 0,
+      "passages": [
+        {
+          "match": {
+            "matcher": "quote-matcher-v1",
+            "receipt_ref": "receipt:alpha-p1",
+            "status": "exact"
+          },
+          "passage_id": "passage:alpha-p1",
+          "producer_ids": {
+            "evidence_ref": "evidence-alpha-p1"
+          },
+          "quote": "[SYNTHETIC] alpha passage text that must never be copied into a contributorship companion",
+          "quote_sha256": "sha256:d83ab2997201a3d2dce12f5a1407e14e7cd2d1f9fefdd087fa24bb4a1b9c09b3",
+          "quote_state": "included",
+          "source": {
+            "end": 99,
+            "snapshot_ref": "snapshot:alpha-1",
+            "start": 10,
+            "view_id": "view:text-v1"
+          }
+        }
+      ],
+      "phase2_finding_sha256": "sha256:13b2c44aed144374546f33b7b35890cc91e369776f8c42610cd58e440184f855"
+    }
+  ],
+  "immutable": true,
+  "importer": {
+    "min_verification": "human-reviewed",
+    "mode": "fixed_corpus_import",
+    "name": "import-source-evidence-packet",
+    "version": "0.1.0"
+  },
+  "packet": {
+    "access_scope": {
+      "level": "public",
+      "redistributable_full_text": false
+    },
+    "artifact_sha256": {
+      "assessments.jsonl": "sha256:de27728aa6f073072838542b807d5b4d586af8a5c9f65cc6065cce4f69b05c32",
+      "findings.jsonl": "sha256:d2174188004b8bd52169b4f6942603e688975c059b09648334196a244a33dfe6",
+      "papers.jsonl": "sha256:3fc0f3b644b82263bd7c5999e61bf98f380fb5c2381a0ea85945dc15991e1a4f",
+      "passages.jsonl": "sha256:08103f72e16aa8c37e27f3cca9825a5dfb9eddc35fe6906d5e3209aeba9df839"
+    },
+    "created_at": "2026-09-03T00:00:00Z",
+    "creation_method": "synthetic-fixture",
+    "export_status": {
+      "reasons": [],
+      "state": "complete",
+      "withheld_counts": {
+        "assessments": 0,
+        "findings": 0,
+        "papers": 0,
+        "passages": 0
+      }
+    },
+    "licenses": [
+      {
+        "applies_to": "packet-metadata",
+        "license_id": "CC0-1.0"
+      },
+      {
+        "applies_to": "quotes",
+        "license_id": "unknown"
+      }
+    ],
+    "manifest_sha256": "sha256:7b663daf0ef47d6fc35bc578d811c388bbd591d55ac1658392b09f79fb186f4c",
+    "packet_id": "packet:crt17-alpha",
+    "producer": {
+      "commit": "synthetic-fixture",
+      "name": "comprev-test-fixture-builder",
+      "schema_refs": [
+        {
+          "name": "evidence-envelope-v1",
+          "version": "1"
+        },
+        {
+          "name": "seip-support-v1",
+          "version": "1"
+        },
+        {
+          "name": "evidence-links-v1",
+          "version": "1"
+        }
+      ]
+    },
+    "schema_version": "source-evidence-packet/0.1.0"
+  },
+  "schema_version": "source-evidence-lineage/0.1.0",
+  "statements_not_made": [
+    "A matched quotation is not semantic support; only the native human assessments recorded in this file are judgments.",
+    "No claim is made that any finding was independently replicated or that the source article is validated.",
+    "Native Diggypaper assessment statuses are not ComputationalReviewTemplate TRUST levels and are not converted to them.",
+    "Source-paper findings are not review-authored claims; article authors are citation metadata, never the origin of a finding."
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "declarations": "declarations.json",
+  "claim_graph": "claim-graph.json",
+  "authors": "authors-mixed.yml",
+  "authors_label": "content/authors.yml",
+  "sources": [
+    { "lineage": "lineage-alpha.json", "claim_finding_map": "map-alpha.json" },
+    { "lineage": "lineage-beta.json", "claim_finding_map": "map-beta.json" },
+    { "lineage": "lineage-gamma.json", "claim_finding_map": "map-gamma.json" }
+  ]
+}

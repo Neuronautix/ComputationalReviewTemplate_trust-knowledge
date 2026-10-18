@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge/docs/contracts/contributorship/v1/contribution-declarations.schema.json",
+  "title": "comprev.contribution-declarations/1",
+  "description": "Private, human-authored input to the contributorship builder: who contributed what (CRediT), which software agents ran, which source origins are private, proposed cross-finding relations, and disclosure approvals. Never published as is.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "subject", "contributors", "credit_assertions", "agent_runs", "source_origins", "relation_proposals", "disclosure_approvals"],
+  "properties": {
+    "schema": { "const": "comprev.contribution-declarations/1" },
+    "subject": { "$ref": "#/$defs/subject" },
+    "contributors": { "type": "array", "items": { "$ref": "#/$defs/contributor" } },
+    "credit_assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" } },
+    "agent_runs": { "type": "array", "items": { "$ref": "#/$defs/agentRun" } },
+    "source_origins": { "type": "array", "items": { "$ref": "#/$defs/sourceOrigin" } },
+    "relation_proposals": { "type": "array", "items": { "$ref": "#/$defs/relationProposal" } },
+    "disclosure_approvals": { "type": "array", "items": { "$ref": "#/$defs/approval" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{1,63}$" },
+    "recordId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9:._-]{0,127}$" },
+    "ref": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/#-]{0,199}$" },
+    "claimId": { "type": "string", "pattern": "^clm_[a-f0-9]{16}$" },
+    "timestamp": { "type": "string", "format": "date-time", "pattern": "Z$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_id", "version"],
+      "properties": {
+        "review_id": { "type": "string", "pattern": "^review-[a-z0-9][a-z0-9-]{2,63}$" },
+        "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" }
+      }
+    },
+    "orcid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[\\dX]$" },
+        "status": { "enum": ["claimed", "verified"] },
+        "verification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "ref", "verified_at"],
+          "properties": {
+            "method": { "enum": ["orcid-oauth", "controller-check"] },
+            "ref": { "$ref": "#/$defs/ref" },
+            "verified_at": { "$ref": "#/$defs/timestamp" }
+          }
+        }
+      },
+      "if": { "properties": { "status": { "const": "verified" } } },
+      "then": { "required": ["verification"] },
+      "else": { "not": { "required": ["verification"] } }
+    },
+    "contributor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "display_name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "display_name": { "$ref": "#/$defs/text" },
+        "orcid": { "$ref": "#/$defs/orcid" },
+        "legacy_author_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "target": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "review" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "claim_id"], "properties": { "kind": { "const": "claim" }, "claim_id": { "$ref": "#/$defs/claimId" } } }
+      ]
+    },
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assertion_id", "contributor", "role", "status", "source_kind", "source_ref", "asserted_at", "target"],
+      "properties": {
+        "assertion_id": { "$ref": "#/$defs/recordId" },
+        "contributor": { "$ref": "#/$defs/id" },
+        "role": { "type": "string" },
+        "degree": { "enum": ["lead", "equal", "supporting"] },
+        "status": { "enum": ["declared", "confirmed", "disputed", "withdrawn"] },
+        "status_ref": { "$ref": "#/$defs/ref" },
+        "source_kind": { "enum": ["self-declared", "corresponding-author", "controller"] },
+        "source_ref": { "$ref": "#/$defs/ref" },
+        "asserted_at": { "$ref": "#/$defs/timestamp" },
+        "target": { "$ref": "#/$defs/target" }
+      },
+      "if": { "properties": { "status": { "const": "declared" } } },
+      "then": { "not": { "required": ["status_ref"] } },
+      "else": { "required": ["status_ref"] }
+    },
+    "agentRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent_id", "name", "version", "workflow_role", "producer"],
+      "properties": {
+        "agent_id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/text" },
+        "version": { "$ref": "#/$defs/text" },
+        "workflow_role": { "$ref": "#/$defs/text" },
+        "producer": { "$ref": "#/$defs/text" },
+        "legacy_author_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sourceOrigin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin_id", "packet_id", "visibility"],
+      "properties": {
+        "origin_id": { "$ref": "#/$defs/id" },
+        "packet_id": { "type": "string", "pattern": "^packet:[A-Za-z0-9._:-]+$" },
+        "visibility": { "enum": ["public", "private"] },
+        "project_ref": { "$ref": "#/$defs/ref" },
+        "project_title": { "$ref": "#/$defs/text" }
+      }
+    },
+    "findingRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding_id", "finding_revision"],
+      "properties": {
+        "finding_id": { "type": "string", "pattern": "^finding:[A-Za-z0-9._:-]+$" },
+        "finding_revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "relationProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relation_id", "proposed_by", "predicate", "finding_refs", "proposed_at"],
+      "properties": {
+        "relation_id": { "$ref": "#/$defs/recordId" },
+        "proposed_by": { "$ref": "#/$defs/id" },
+        "predicate": { "enum": ["supports", "contradicts", "qualifies"] },
+        "claim_id": { "$ref": "#/$defs/claimId" },
+        "finding_refs": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/findingRef" } },
+        "proposed_at": { "$ref": "#/$defs/timestamp" },
+        "rationale": { "$ref": "#/$defs/text" }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["party", "decision_ref", "granted_at"],
+      "properties": {
+        "party": { "enum": ["individual", "controller"] },
+        "decision_ref": { "$ref": "#/$defs/ref" },
+        "granted_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approval_id", "subject_kind", "subject_id", "subject_version", "grants"],
+      "properties": {
+        "approval_id": { "$ref": "#/$defs/recordId" },
+        "subject_kind": { "enum": ["contributor", "source-origin", "relation-proposal"] },
+        "subject_id": { "type": "string", "minLength": 1 },
+        "subject_version": { "type": "string" },
+        "fields": { "type": "array", "uniqueItems": true, "items": { "enum": ["display_name", "orcid", "credit_assertions"] } },
+        "grants": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/grant" } }
+      }
+    }
+  }
+}

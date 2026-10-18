@@ -1,0 +1,242 @@
+{
+  "contributors": [
+    {
+      "credit_statement": "Synthetic Person A: Conceptualization (lead), Writing – original draft (lead).",
+      "display_name": "Synthetic Person A",
+      "id": "person-a",
+      "kind": "person",
+      "orcid": {
+        "id": "0000-0002-1825-0097",
+        "status": "verified"
+      }
+    },
+    {
+      "credit_statement": "Synthetic Person B: Writing – review & editing (equal).",
+      "display_name": "Synthetic Person B",
+      "id": "person-b",
+      "kind": "person"
+    },
+    {
+      "credit_statement": "Synthetic Person D: Conceptualization (equal), Writing – review & editing.",
+      "display_name": "Synthetic Person D",
+      "id": "person-d",
+      "kind": "person"
+    }
+  ],
+  "credit_assertions": [
+    {
+      "asserted_at": "2026-09-06T00:00:00Z",
+      "assertion_id": "a-001",
+      "contributor": "person-a",
+      "degree": "lead",
+      "role": "conceptualization",
+      "role_label": "Conceptualization",
+      "role_uri": "https://credit.niso.org/contributor-roles/conceptualization/",
+      "source_kind": "controller",
+      "status": "confirmed",
+      "target": {
+        "kind": "review"
+      }
+    },
+    {
+      "asserted_at": "2026-09-06T00:00:00Z",
+      "assertion_id": "a-002",
+      "contributor": "person-a",
+      "degree": "lead",
+      "role": "writing-original-draft",
+      "role_label": "Writing – original draft",
+      "role_uri": "https://credit.niso.org/contributor-roles/writing-original-draft/",
+      "source_kind": "self-declared",
+      "status": "declared",
+      "target": {
+        "kind": "review"
+      }
+    },
+    {
+      "asserted_at": "2026-09-06T00:00:00Z",
+      "assertion_id": "a-003",
+      "contributor": "person-a",
+      "degree": "supporting",
+      "role": "methodology",
+      "role_label": "Methodology",
+      "role_uri": "https://credit.niso.org/contributor-roles/methodology/",
+      "source_kind": "self-declared",
+      "status": "declared",
+      "target": {
+        "claim_id": "clm_c7ed170000000001",
+        "kind": "claim"
+      }
+    },
+    {
+      "asserted_at": "2026-09-06T00:00:00Z",
+      "assertion_id": "a-004",
+      "contributor": "person-b",
+      "degree": "equal",
+      "role": "writing-review-editing",
+      "role_label": "Writing – review & editing",
+      "role_uri": "https://credit.niso.org/contributor-roles/writing-review-editing/",
+      "source_kind": "corresponding-author",
+      "status": "declared",
+      "target": {
+        "kind": "review"
+      }
+    },
+    {
+      "asserted_at": "2026-09-06T00:00:00Z",
+      "assertion_id": "a-008",
+      "contributor": "person-d",
+      "degree": "equal",
+      "role": "conceptualization",
+      "role_label": "Conceptualization",
+      "role_uri": "https://credit.niso.org/contributor-roles/conceptualization/",
+      "source_kind": "controller",
+      "status": "confirmed",
+      "target": {
+        "kind": "review"
+      }
+    },
+    {
+      "asserted_at": null,
+      "assertion_id": "legacy:person-d:writing-review-editing",
+      "contributor": "person-d",
+      "degree": null,
+      "role": "writing-review-editing",
+      "role_label": "Writing – review & editing",
+      "role_uri": "https://credit.niso.org/contributor-roles/writing-review-editing/",
+      "source_kind": "legacy-author-file",
+      "status": "declared",
+      "target": {
+        "kind": "review"
+      }
+    }
+  ],
+  "credit_standard": "ANSI/NISO Z39.104-2022",
+  "production": {
+    "agent_runs": [
+      {
+        "agent_id": "ai-pipeline",
+        "credit_channel": "production",
+        "kind": "software-agent",
+        "name": "Claude",
+        "producer": "Anthropic",
+        "version": "synthetic-model-version",
+        "workflow_role": "evidence-gathering-and-drafting"
+      },
+      {
+        "agent_id": "citation-verifier",
+        "credit_channel": "production",
+        "kind": "software-agent",
+        "name": "comprev-citation-validator",
+        "producer": "ComputationalReviewTemplate",
+        "version": "v29",
+        "workflow_role": "citation-verification"
+      }
+    ]
+  },
+  "relation_proposals": [
+    {
+      "claim_id": "clm_c7ed170000000001",
+      "finding_refs": [
+        {
+          "finding_id": "finding:alpha-f1",
+          "finding_revision": 1
+        },
+        {
+          "finding_id": "finding:beta-f1",
+          "finding_revision": 1
+        }
+      ],
+      "predicate": "supports",
+      "proposed_by": "person-a",
+      "relation_id": "rel-001"
+    }
+  ],
+  "schema": "comprev.contributorship/1",
+  "source_credit": [
+    {
+      "claim_id": "clm_c7ed170000000001",
+      "findings": [
+        {
+          "binding": "reviewed-mapping",
+          "cited_work": {
+            "authors": [
+              "Synthetic-alpha, Ada",
+              "Synthetic-alpha, Bo"
+            ],
+            "cite_key": "synthAlpha2026",
+            "credit_kind": "bibliographic-citation",
+            "doi": "10.5555/crt17.alpha"
+          },
+          "finding_id": "finding:alpha-f1",
+          "finding_revision": 1,
+          "packet": {
+            "manifest_sha256": "sha256:7b663daf0ef47d6fc35bc578d811c388bbd591d55ac1658392b09f79fb186f4c",
+            "packet_id": "packet:crt17-alpha"
+          },
+          "passage_disclosure": "rights-allow",
+          "passages": [
+            {
+              "passage_id": "passage:alpha-p1",
+              "quote_sha256": "sha256:d83ab2997201a3d2dce12f5a1407e14e7cd2d1f9fefdd087fa24bb4a1b9c09b3"
+            }
+          ],
+          "phase2_finding_sha256": "sha256:13b2c44aed144374546f33b7b35890cc91e369776f8c42610cd58e440184f855",
+          "source_assessments": [
+            {
+              "assessment_id": "assessment:alpha-a1",
+              "protocol": "seip-support-v1",
+              "status": "supports"
+            }
+          ],
+          "source_curation": {
+            "credit_channel": "source-native",
+            "review_authorship": false
+          }
+        },
+        {
+          "binding": "reviewed-mapping",
+          "cited_work": {
+            "authors": [
+              "Synthetic-beta, Ada",
+              "Synthetic-beta, Bo"
+            ],
+            "cite_key": "synthBeta2026",
+            "credit_kind": "bibliographic-citation",
+            "doi": "10.5555/crt17.beta"
+          },
+          "finding_id": "finding:beta-f1",
+          "finding_revision": 1,
+          "packet": {
+            "manifest_sha256": "sha256:29a78fbd4f76bfacb7498daaafec27e0770cc62824262443fe21dc6b129ae39d",
+            "packet_id": "packet:crt17-beta"
+          },
+          "passage_disclosure": "rights-allow",
+          "passages": [
+            {
+              "passage_id": "passage:beta-p1",
+              "quote_sha256": "sha256:d7b7671908a6b8421c4065d28822a5e8ad2839eb34726855b7eadbcc494d1fd5"
+            }
+          ],
+          "phase2_finding_sha256": "sha256:2422bef883812378f180a0fa9fdcdb28332d82516771da558915cc4000e050c4",
+          "source_assessments": [
+            {
+              "assessment_id": "assessment:beta-a1",
+              "protocol": "seip-support-v1",
+              "status": "supports"
+            }
+          ],
+          "source_curation": {
+            "credit_channel": "source-native",
+            "review_authorship": false
+          }
+        }
+      ]
+    }
+  ],
+  "subject": {
+    "claim_graph_sha256": "sha256:5d23f7aaac420c4f25cbc4d1843366be3c80d57ef7beec5b3f3e0d1a7fb6ffec",
+    "review_id": "review-synthetic-crt17",
+    "version": "1.0.0"
+  },
+  "visibility": "public"
+}

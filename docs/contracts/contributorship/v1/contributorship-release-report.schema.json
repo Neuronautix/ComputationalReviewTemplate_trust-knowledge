@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Neuronautix/ComputationalReviewTemplate_trust-knowledge/docs/contracts/contributorship/v1/contributorship-release-report.schema.json",
+  "title": "comprev.contributorship-release-report/1",
+  "description": "Controller-facing report of a contributorship release: digests of both companions and of the allowlist, public counts, and every withheld record with its reason. Names private ids; never publish.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "visibility", "subject", "allowlist_sha256", "private_sha256", "public_sha256", "public_counts", "withheld"],
+  "properties": {
+    "schema": { "const": "comprev.contributorship-release-report/1" },
+    "visibility": { "const": "private" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_id", "version", "claim_graph_sha256"],
+      "properties": {
+        "review_id": { "type": "string" },
+        "version": { "type": "string" },
+        "claim_graph_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "allowlist_sha256": { "$ref": "#/$defs/sha256" },
+    "private_sha256": { "$ref": "#/$defs/sha256" },
+    "public_sha256": { "$ref": "#/$defs/sha256" },
+    "public_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contributors", "credit_assertions", "agent_runs", "source_credit_claims", "relation_proposals"],
+      "properties": {
+        "contributors": { "type": "integer", "minimum": 0 },
+        "credit_assertions": { "type": "integer", "minimum": 0 },
+        "agent_runs": { "type": "integer", "minimum": 0 },
+        "source_credit_claims": { "type": "integer", "minimum": 0 },
+        "relation_proposals": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "withheld": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contributors", "orcids", "credit_assertions", "source_credit_claims", "source_origins", "relation_proposals", "passages"],
+      "properties": {
+        "contributors": { "$ref": "#/$defs/withheldList" },
+        "orcids": { "$ref": "#/$defs/withheldList" },
+        "credit_assertions": { "$ref": "#/$defs/withheldList" },
+        "source_credit_claims": { "$ref": "#/$defs/withheldList" },
+        "source_origins": { "$ref": "#/$defs/withheldList" },
+        "relation_proposals": { "$ref": "#/$defs/withheldList" },
+        "passages": { "$ref": "#/$defs/withheldList" }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "withheldList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "reason"],
+        "properties": { "id": { "type": "string", "minLength": 1 }, "reason": { "type": "string", "minLength": 1 } }
+      }
+    }
+  }
+}

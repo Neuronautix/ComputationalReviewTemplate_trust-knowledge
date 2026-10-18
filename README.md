@@ -124,8 +124,10 @@ published computational review without silently rewriting its knowledge state:
 
 The architecture and authority boundaries are documented in
 `docs/HUMAN_REVIEW_AND_PUBLICATION.md`, `docs/AUTONOMOUS_TRUST_AGENTS.md`,
-`docs/EVIDENCE_RADAR.md`, `docs/RELEASE_ARTIFACTS.md`, and
-`docs/ORATLAS_EXPORT.md` (ORAtlas-compatible claims/citations/relations export).
+`docs/EVIDENCE_RADAR.md`, `docs/RELEASE_ARTIFACTS.md`,
+`docs/ORATLAS_EXPORT.md` (ORAtlas-compatible claims/citations/relations export), and
+`docs/CONTRIBUTORSHIP.md` (optional CRediT contributorship and source-finding credit
+companion; humans and software agents are credited through separate channels).
 
 ```bash
 node scripts/validate-community-contracts.js

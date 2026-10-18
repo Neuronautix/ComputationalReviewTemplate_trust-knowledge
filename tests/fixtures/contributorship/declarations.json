@@ -1,0 +1,49 @@
+{
+  "schema": "comprev.contribution-declarations/1",
+  "subject": { "review_id": "review-synthetic-crt17", "version": "1.0.0" },
+  "contributors": [
+    {
+      "id": "person-a",
+      "display_name": "Synthetic Person A",
+      "orcid": { "id": "0000-0002-1825-0097", "status": "verified", "verification": { "method": "orcid-oauth", "ref": "orcid-auth:synthetic-a", "verified_at": "2026-09-05T00:00:00Z" } }
+    },
+    { "id": "person-b", "display_name": "Synthetic Person B", "orcid": { "id": "0000-0000-0000-001X", "status": "claimed" } },
+    { "id": "person-c", "display_name": "Synthetic Unpublished Collaborator C", "orcid": { "id": "0000-0000-0000-0028", "status": "claimed" } },
+    { "id": "person-d", "display_name": "Synthetic Person D", "legacy_author_id": "person-d" },
+    { "id": "person-e", "display_name": "Synthetic Person E" }
+  ],
+  "credit_assertions": [
+    { "assertion_id": "a-001", "contributor": "person-a", "role": "conceptualization", "degree": "lead", "status": "confirmed", "status_ref": "decision:credit-001", "source_kind": "controller", "source_ref": "decision:credit-001", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "review" } },
+    { "assertion_id": "a-002", "contributor": "person-a", "role": "writing-original-draft", "degree": "lead", "status": "declared", "source_kind": "self-declared", "source_ref": "form:synthetic-a", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "review" } },
+    { "assertion_id": "a-003", "contributor": "person-a", "role": "methodology", "degree": "supporting", "status": "declared", "source_kind": "self-declared", "source_ref": "form:synthetic-a", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "claim", "claim_id": "clm_c7ed170000000001" } },
+    { "assertion_id": "a-004", "contributor": "person-b", "role": "writing-review-editing", "degree": "equal", "status": "declared", "source_kind": "corresponding-author", "source_ref": "form:synthetic-corresponding", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "review" } },
+    { "assertion_id": "a-005", "contributor": "person-b", "role": "software", "status": "disputed", "status_ref": "dispute:synthetic-005", "source_kind": "self-declared", "source_ref": "form:synthetic-b", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "review" } },
+    { "assertion_id": "a-006", "contributor": "person-b", "role": "supervision", "status": "withdrawn", "status_ref": "withdrawal:synthetic-006", "source_kind": "self-declared", "source_ref": "form:synthetic-b", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "review" } },
+    { "assertion_id": "a-007", "contributor": "person-c", "role": "investigation", "status": "declared", "source_kind": "self-declared", "source_ref": "form:synthetic-c", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "review" } },
+    { "assertion_id": "a-008", "contributor": "person-d", "role": "conceptualization", "degree": "equal", "status": "confirmed", "status_ref": "decision:credit-008", "source_kind": "controller", "source_ref": "decision:credit-008", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "review" } },
+    { "assertion_id": "a-009", "contributor": "person-e", "role": "validation", "status": "declared", "source_kind": "self-declared", "source_ref": "form:synthetic-e", "asserted_at": "2026-09-06T00:00:00Z", "target": { "kind": "review" } }
+  ],
+  "agent_runs": [
+    { "agent_id": "ai-pipeline", "name": "Claude", "version": "synthetic-model-version", "workflow_role": "evidence-gathering-and-drafting", "producer": "Anthropic", "legacy_author_id": "ai-pipeline" },
+    { "agent_id": "citation-verifier", "name": "comprev-citation-validator", "version": "v29", "workflow_role": "citation-verification", "producer": "ComputationalReviewTemplate" }
+  ],
+  "source_origins": [
+    { "origin_id": "origin-alpha", "packet_id": "packet:crt17-alpha", "visibility": "public" },
+    { "origin_id": "origin-beta", "packet_id": "packet:crt17-beta", "visibility": "public" },
+    { "origin_id": "origin-gamma", "packet_id": "packet:crt17-gamma", "visibility": "private", "project_ref": "project:private-gamma-7f3a", "project_title": "Synthetic Private Gamma Project" }
+  ],
+  "relation_proposals": [
+    { "relation_id": "rel-001", "proposed_by": "person-a", "predicate": "supports", "claim_id": "clm_c7ed170000000001", "finding_refs": [{ "finding_id": "finding:alpha-f1", "finding_revision": 1 }, { "finding_id": "finding:beta-f1", "finding_revision": 1 }], "proposed_at": "2026-09-07T00:00:00Z", "rationale": "Synthetic private rationale for rel-001" },
+    { "relation_id": "rel-002", "proposed_by": "person-b", "predicate": "qualifies", "finding_refs": [{ "finding_id": "finding:alpha-f1", "finding_revision": 1 }, { "finding_id": "finding:gamma-f1", "finding_revision": 1 }], "proposed_at": "2026-09-07T00:00:00Z", "rationale": "Synthetic private rationale for rel-002" },
+    { "relation_id": "rel-003", "proposed_by": "person-c", "predicate": "contradicts", "finding_refs": [{ "finding_id": "finding:alpha-f1", "finding_revision": 1 }, { "finding_id": "finding:beta-f1", "finding_revision": 1 }], "proposed_at": "2026-09-07T00:00:00Z" }
+  ],
+  "disclosure_approvals": [
+    { "approval_id": "ap-a", "subject_kind": "contributor", "subject_id": "person-a", "subject_version": "1.0.0", "fields": ["display_name", "orcid", "credit_assertions"], "grants": [{ "party": "individual", "decision_ref": "consent:synthetic-a", "granted_at": "2026-09-08T00:00:00Z" }, { "party": "controller", "decision_ref": "decision:disclose-a", "granted_at": "2026-09-08T00:00:00Z" }] },
+    { "approval_id": "ap-b", "subject_kind": "contributor", "subject_id": "person-b", "subject_version": "1.0.0", "fields": ["display_name", "credit_assertions"], "grants": [{ "party": "individual", "decision_ref": "consent:synthetic-b", "granted_at": "2026-09-08T00:00:00Z" }, { "party": "controller", "decision_ref": "decision:disclose-b", "granted_at": "2026-09-08T00:00:00Z" }] },
+    { "approval_id": "ap-c", "subject_kind": "contributor", "subject_id": "person-c", "subject_version": "1.0.0", "fields": ["display_name", "orcid", "credit_assertions"], "grants": [{ "party": "individual", "decision_ref": "consent:synthetic-c", "granted_at": "2026-09-08T00:00:00Z" }] },
+    { "approval_id": "ap-d", "subject_kind": "contributor", "subject_id": "person-d", "subject_version": "1.0.0", "fields": ["display_name", "credit_assertions"], "grants": [{ "party": "individual", "decision_ref": "consent:synthetic-d", "granted_at": "2026-09-08T00:00:00Z" }, { "party": "controller", "decision_ref": "decision:disclose-d", "granted_at": "2026-09-08T00:00:00Z" }] },
+    { "approval_id": "ap-e", "subject_kind": "contributor", "subject_id": "person-e", "subject_version": "0.9.0", "fields": ["display_name", "credit_assertions"], "grants": [{ "party": "individual", "decision_ref": "consent:synthetic-e", "granted_at": "2026-08-01T00:00:00Z" }, { "party": "controller", "decision_ref": "decision:disclose-e", "granted_at": "2026-08-01T00:00:00Z" }] },
+    { "approval_id": "ap-rel-001", "subject_kind": "relation-proposal", "subject_id": "rel-001", "subject_version": "1.0.0", "grants": [{ "party": "controller", "decision_ref": "decision:disclose-rel-001", "granted_at": "2026-09-08T00:00:00Z" }] },
+    { "approval_id": "ap-rel-002", "subject_kind": "relation-proposal", "subject_id": "rel-002", "subject_version": "1.0.0", "grants": [{ "party": "controller", "decision_ref": "decision:disclose-rel-002", "granted_at": "2026-09-08T00:00:00Z" }] }
+  ]
+}
