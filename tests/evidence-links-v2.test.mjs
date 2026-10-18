@@ -244,3 +244,26 @@ test('the imported Phase 2 package passes the real Phase 2 and Phase 5 gates, an
   const native = { ...curateIdentitySection(pkg), import_provenance: undefined };
   assert.equal(phase5Gate([native], [pkg], {}).per_section_results[native.section_id].TEXT_ACCESS_VALID, 'fail');
 });
+
+test('native fields are checked against the packet contract, not just for presence', () => {
+  const { links } = lineageToLinks(lineage(), claimGraph);
+  const cases = [
+    ['status', (l) => { l.findings[0].assessments[0].status = 'trust-verified'; }],
+    ['status', (l) => { l.findings[0].assessments[0].status = 'verified'; }],
+    ['assessment_id', (l) => { l.findings[0].assessments[0].assessment_id = ''; }],
+    ['assessment_id', (l) => { l.findings[0].assessments[0].assessment_id = 'a1'; }],
+    ['passage_id', (l) => { l.findings[0].passages[0].passage_id = 'p1'; }],
+    ['finding_id', (l) => { l.findings[0].finding_id = 'c-f1'; }],
+  ];
+  for (const [field, mutate] of cases) {
+    const broken = structuredClone(links);
+    mutate(broken);
+    assert.throws(() => exportWith(broken), new RegExp(field, 'u'), field);
+  }
+  // Every status the contract defines is accepted as written.
+  for (const status of ['supports', 'contradicts', 'insufficient', 'unclear', 'not_assessed', 'unknown', 'restricted']) {
+    const ok = structuredClone(links);
+    ok.findings[0].assessments[0].status = status;
+    assert.doesNotThrow(() => exportWith(ok), status);
+  }
+});
