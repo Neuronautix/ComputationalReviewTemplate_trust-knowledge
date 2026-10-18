@@ -17,7 +17,8 @@ import { resolve, dirname } from 'node:path';
 // Genuinely unsupported constructs — multi-line block scalars (`|`, `>`),
 // anchors/aliases (`&`, `*`), and multi-line flow collections — throw, so the
 // caller's try/catch surfaces a clear error rather than silently mis-parsing.
-function parseMiniYaml(text) {
+// Also used by scripts/contributorship/ to read the same author files.
+export function parseMiniYaml(text) {
   const stripComment = (s) => {
     let inS = false;
     let inD = false;

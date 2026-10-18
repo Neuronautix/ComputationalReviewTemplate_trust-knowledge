@@ -1,0 +1,36 @@
+# Synthetic MyST author file: one AI pipeline entry (as in content/authors.yml) and one human whose
+# free-text roles include a label that is not a CRediT role.
+version: 1
+
+project:
+  affiliations:
+    - id: synthetic-lab
+      name: Synthetic Laboratory
+
+  contributors:
+    - id: ai-pipeline
+      name: Claude
+      roles:
+        - Investigation
+        - Data Curation
+        - Writing – original draft
+      affiliations:
+        - synthetic-lab
+      is_ai_tool: true
+      credit_levels:
+        - role: Investigation
+          level: lead
+          description: "Synthetic description"
+    - id: person-d
+      name: Synthetic Person D
+      orcid: 0000-0000-0000-0036
+      roles:
+        - Conceptualization
+        - Writing - Review & Editing
+        - Statistics
+      affiliations:
+        - synthetic-lab
+      credit_levels:
+        - role: Conceptualization
+          level: lead
+          description: "Synthetic description"

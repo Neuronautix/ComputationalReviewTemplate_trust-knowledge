@@ -1,0 +1,33 @@
+name: Contributorship companion tests
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/contributorship/**'
+      - 'docs/contracts/contributorship/**'
+      - 'plugins/authorship-plugin.mjs'
+      - 'content/authors.yml'
+      - 'scripts/source-evidence/lineage-to-links.mjs'
+      - 'scripts/release-artifacts/json-schema.mjs'
+      - 'tests/contributorship.test.mjs'
+      - 'tests/fixtures/contributorship/**'
+      - '.github/workflows/contributorship.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Golden fixture is current
+        run: node tests/fixtures/contributorship/build-fixture.mjs --check
+      - name: Offline contributorship tests
+        run: node --test tests/contributorship.test.mjs
+      - name: Existing consumers still pass
+        run: node --test tests/source-evidence-import.test.mjs tests/evidence-links-v2.test.mjs tests/oratlas-export.test.mjs

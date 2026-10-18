@@ -1,3 +1,10 @@
+# Unreleased: CRediT contributorship and source-finding credit lineage (issue #17)
+
+- Added the optional `comprev.contributorship/1` companion (`docs/contracts/contributorship/v1/`) and `scripts/contributorship/`: a deterministic, offline builder that turns private `comprev.contribution-declarations/1`, the MyST author file (read only), the claim graph and reviewed S2 lineage + `comprev.claim-finding-map/1` pairs into a private companion, its allowlisted public projection and a private release report. See `docs/CONTRIBUTORSHIP.md`.
+- Human credit uses only the 14 ANSI/NISO Z39.104-2022 CRediT roles (degree, `declared|confirmed|disputed|withdrawn`, assertion source, claimed vs verified ORCID). Software agents go to `production.agent_runs` only. Legacy `authors.yml` labels are kept verbatim; unmappable ones are marked, never guessed.
+- Source findings are credited only through reviewed mappings (packet manifest digest, finding revision, Phase 2 digest, passage hashes when rights allow). Source curators stay source-native and are never review authors; DOI equality credits nothing. A claim with any uncleared private origin publishes no source credit.
+- `plugins/authorship-plugin.mjs` now exports its YAML parser; widget output is unchanged (pinned by a test). `review-manifest.json`, the S2 importer and the S3/ORAtlas exporter are untouched.
+
 # Unreleased: evidence-packet links v2 and S2 → S3 bridge (ORAtlas #198)
 
 - Added `comprev.evidence-packet-links/2` (additive; `/1` unchanged): finding revision, passage digests and match state, verification level, native `seip-support-v1` assessment refs, and an optional packet locator (a DOI or a GitHub release asset URL).

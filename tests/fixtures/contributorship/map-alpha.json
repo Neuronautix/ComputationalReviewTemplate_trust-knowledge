@@ -1,0 +1,15 @@
+{
+  "lineage_sha256": "sha256:8544e2788c74e1d1b0c06786e56b0d71f4fc9fa23fcdb19c51decc7b11ba4249",
+  "mappings": [
+    {
+      "asserted_at": "2026-09-04T00:00:00Z",
+      "basis": "Synthetic fixture decision.",
+      "claim_id": "clm_c7ed170000000001",
+      "decision_ref": "decision:map-alpha",
+      "finding_id": "finding:alpha-f1",
+      "finding_revision": 1,
+      "phase2_finding_sha256": "sha256:13b2c44aed144374546f33b7b35890cc91e369776f8c42610cd58e440184f855"
+    }
+  ],
+  "schema": "comprev.claim-finding-map/1"
+}

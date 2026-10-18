@@ -1,0 +1,82 @@
+{
+  "allowlist_sha256": "sha256:1e642f0847ba888154c0c717ac447c089e83f1f7f705d72b1159d6744701905a",
+  "private_sha256": "sha256:91aa4dfd4bde8e797ee6d8673debd2b498368301f2cc51204d34aa8026af7703",
+  "public_counts": {
+    "agent_runs": 2,
+    "contributors": 3,
+    "credit_assertions": 6,
+    "relation_proposals": 1,
+    "source_credit_claims": 1
+  },
+  "public_sha256": "sha256:81e2298fdca02a91493d2ad1f0e71c6ed0bc9ac9086c0ed44b86f320ea41b90f",
+  "schema": "comprev.contributorship-release-report/1",
+  "subject": {
+    "claim_graph_sha256": "sha256:5d23f7aaac420c4f25cbc4d1843366be3c80d57ef7beec5b3f3e0d1a7fb6ffec",
+    "review_id": "review-synthetic-crt17",
+    "version": "1.0.0"
+  },
+  "visibility": "private",
+  "withheld": {
+    "contributors": [
+      {
+        "id": "person-c",
+        "reason": "missing-required-grant"
+      },
+      {
+        "id": "person-e",
+        "reason": "approval-for-other-version"
+      }
+    ],
+    "credit_assertions": [
+      {
+        "id": "a-005",
+        "reason": "status-disputed"
+      },
+      {
+        "id": "a-006",
+        "reason": "status-withdrawn"
+      },
+      {
+        "id": "a-007",
+        "reason": "contributor-withheld"
+      },
+      {
+        "id": "a-009",
+        "reason": "contributor-withheld"
+      }
+    ],
+    "orcids": [
+      {
+        "id": "person-b",
+        "reason": "orcid-not-approved"
+      },
+      {
+        "id": "person-d",
+        "reason": "orcid-not-approved"
+      }
+    ],
+    "passages": [],
+    "relation_proposals": [
+      {
+        "id": "rel-002",
+        "reason": "uncleared-private-origin"
+      },
+      {
+        "id": "rel-003",
+        "reason": "proposer-not-disclosed"
+      }
+    ],
+    "source_credit_claims": [
+      {
+        "id": "clm_c7ed170000000002",
+        "reason": "uncleared-private-origin"
+      }
+    ],
+    "source_origins": [
+      {
+        "id": "origin-gamma",
+        "reason": "no-approval"
+      }
+    ]
+  }
+}
