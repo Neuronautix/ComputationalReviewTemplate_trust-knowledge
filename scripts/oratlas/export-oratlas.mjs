@@ -56,7 +56,26 @@ const FINDING_ID = PACKET_ID('finding');
 const PASSAGE_ID = PACKET_ID('passage');
 const ASSESSMENT_ID = PACKET_ID('assessment');
 const ASSESSMENT_STATUSES = ['supports', 'contradicts', 'insufficient', 'unclear', 'not_assessed', 'unknown', 'restricted'];
-const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u;
+const TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/u;
+
+/**
+ * An RFC 3339 UTC timestamp (`Z` suffix) naming a real calendar date and time. Digit placement alone
+ * is not enough: 2026-13-40T25:61:61Z is rejected. Leap seconds (:60) are not accepted.
+ */
+export function isRfc3339Utc(value) {
+  const match = typeof value === 'string' ? TIMESTAMP.exec(value) : null;
+  if (!match) return false;
+  const [year, month, day, hour, minute, second] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  return (
+    date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
+    && date.getUTCHours() === hour
+    && date.getUTCMinutes() === minute
+    && date.getUTCSeconds() === second
+  );
+}
 const MATCH_STATUSES = ['exact', 'normalized', 'not_found', 'ambiguous', 'invalid', 'source_unavailable', 'not_checked', 'incomplete'];
 export const DEFAULT_ARTIFACT_DIR = 'knowledge/oratlas';
 export const FILE_NAMES = {
@@ -205,6 +224,8 @@ function validateFindingDetail(finding, label) {
     invariant(ASSESSMENT_STATUSES.includes(assessment.status), `${at}.status must be a source-evidence-packet/0.1.0 assessment status`);
     return { assessment_id: assessment.assessment_id, protocol: assessment.protocol, status: assessment.status };
   });
+  // One native judgment must not be presented as several.
+  invariant(new Set(assessments.map((assessment) => assessment.assessment_id)).size === assessments.length, `${label}.assessments repeats an assessment`);
   // Binding: a same-paper DOI match is only a candidate. A finding becomes evidence for a review
   // claim only through an explicit, recorded mapping decision bound to the imported Phase 2 finding.
   invariant(BINDINGS.includes(finding.binding), `${label}.binding must be one of ${BINDINGS.join(', ')}`);
@@ -216,7 +237,7 @@ function validateFindingDetail(finding, label) {
       const at = `${label}.mappings[${index}]`;
       invariant(isObject(mapping) && typeof mapping.claim_id === 'string', `${at}.claim_id is required`);
       invariant(typeof mapping.decision_ref === 'string' && mapping.decision_ref.trim(), `${at}.decision_ref is required`);
-      invariant(typeof mapping.asserted_at === 'string' && TIMESTAMP.test(mapping.asserted_at), `${at}.asserted_at must be an RFC 3339 UTC timestamp`);
+      invariant(isRfc3339Utc(mapping.asserted_at), `${at}.asserted_at must be an RFC 3339 UTC timestamp`);
       invariant(typeof mapping.basis === 'string' && mapping.basis.trim(), `${at}.basis is required`);
       return { claim_id: mapping.claim_id, decision_ref: mapping.decision_ref, asserted_at: mapping.asserted_at, basis: mapping.basis };
     });
@@ -292,7 +313,9 @@ function validateEvidenceLinks(links, claimsById) {
             assessments: detail.assessments,
           }
         : {}),
-      note: 'A producer finding describes a cited article. It is not a review claim; the link only records which evidence-packet finding a review citation was drawn from.',
+      note: detail?.binding === 'same-paper-candidate'
+        ? 'A producer finding describes a cited article. It is not a review claim. Same-paper candidate: the review cites the article this finding is about; no recorded decision says the review claim uses this finding.'
+        : 'A producer finding describes a cited article. It is not a review claim; the link only records which evidence-packet finding a review citation was drawn from.',
     };
   });
 }

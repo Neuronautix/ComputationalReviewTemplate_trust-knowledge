@@ -25,11 +25,10 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { compareText, invariant, isObject, parseArgs, stableJson, writeText } from '../release-artifacts/lib.mjs';
 import { sha256 } from './canonical.mjs';
-import { EVIDENCE_LINKS_SCHEMA_V2, normalizeLocator } from '../oratlas/export-oratlas.mjs';
+import { EVIDENCE_LINKS_SCHEMA_V2, isRfc3339Utc, normalizeLocator } from '../oratlas/export-oratlas.mjs';
 
 export const CLAIM_FINDING_MAP_SCHEMA = 'comprev.claim-finding-map/1';
 const TAGGED = /^sha256:[a-f0-9]{64}$/u;
-const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u;
 const strip = (hash) => String(hash).replace(/^sha256:/u, '');
 const normalizeDoi = (doi) => String(doi ?? '').trim().replace(/^(?:doi:\s*|https?:\/\/(?:dx\.)?doi\.org\/)/iu, '').toLowerCase();
 
@@ -63,7 +62,7 @@ export function validateClaimFindingMap(map, lineage, lineageBytes, claimGraph) 
     invariant(Number.isInteger(mapping.finding_revision) && mapping.finding_revision >= 1, `${label}.finding_revision must be an integer >= 1`);
     invariant(TAGGED.test(mapping.phase2_finding_sha256 || ''), `${label}.phase2_finding_sha256 must be sha256:<64 hex>`);
     invariant(typeof mapping.decision_ref === 'string' && mapping.decision_ref.trim(), `${label}.decision_ref is required`);
-    invariant(typeof mapping.asserted_at === 'string' && TIMESTAMP.test(mapping.asserted_at), `${label}.asserted_at must be an RFC 3339 UTC timestamp`);
+    invariant(isRfc3339Utc(mapping.asserted_at), `${label}.asserted_at must be an RFC 3339 UTC timestamp`);
     invariant(typeof mapping.basis === 'string' && mapping.basis.trim(), `${label}.basis is required`);
     const entry = lineage.entries.find((candidate) => candidate.finding.finding_id === mapping.finding_id && candidate.finding.revision === mapping.finding_revision);
     invariant(entry, `${label}: ${mapping.finding_id} revision ${mapping.finding_revision} is not an accepted finding in the lineage sidecar`);

@@ -5,7 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { exportFromSources, readSources } from '../scripts/oratlas/export-oratlas.mjs';
+import { exportFromSources, isRfc3339Utc, readSources } from '../scripts/oratlas/export-oratlas.mjs';
 import { CLAIM_FINDING_MAP_SCHEMA, lineageToLinks } from '../scripts/source-evidence/lineage-to-links.mjs';
 import { importPacket, phase2FindingDigest } from '../scripts/source-evidence/import.mjs';
 import { curateIdentitySection, phase2ImportGate, phase5Gate } from '../scripts/source-evidence/phase-gates.mjs';
@@ -266,4 +266,39 @@ test('native fields are checked against the packet contract, not just for presen
     ok.findings[0].assessments[0].status = status;
     assert.doesNotThrow(() => exportWith(ok), status);
   }
+});
+
+test('a repeated assessment id is refused rather than shown as two judgments', () => {
+  const { links } = lineageToLinks(lineage(), claimGraph);
+  const repeated = structuredClone(links);
+  repeated.findings[0].assessments.push({ ...repeated.findings[0].assessments[0] });
+  assert.throws(() => exportWith(repeated), /repeats an assessment/u);
+});
+
+test('a same-paper candidate does not claim the citation was drawn from the finding', () => {
+  const source = imported();
+  const { links } = lineageToLinks(source.bytes, claimGraph, { claimFindingMap: reviewedMap(source) });
+  const sidecar = JSON.parse(exportWith(links).files.get('knowledge/oratlas/source-native-trust.json'));
+  const candidate = sidecar.evidence_links.find((l) => l.binding === 'same-paper-candidate');
+  const reviewed = sidecar.evidence_links.find((l) => l.binding === 'reviewed-mapping');
+  assert.doesNotMatch(candidate.note, /drawn from/u);
+  assert.match(candidate.note, /no recorded decision says the review claim uses this finding/u);
+  assert.match(reviewed.note, /drawn from/u);
+});
+
+test('asserted_at must be a real RFC 3339 UTC date and time', () => {
+  for (const value of ['2026-01-03T00:00:00Z', '2024-02-29T23:59:59Z', '2026-01-03T00:00:00.123Z']) {
+    assert.equal(isRfc3339Utc(value), true, value);
+  }
+  for (const value of ['2026-13-40T25:61:61Z', '2026-02-30T00:00:00Z', '2025-02-29T00:00:00Z', '2026-01-03T24:00:00Z', '2026-01-03T00:00:60Z', '2026-01-03T00:00:00+01:00', '2026-01-03', 7]) {
+    assert.equal(isRfc3339Utc(value), false, String(value));
+  }
+  const source = imported();
+  const map = reviewedMap(source);
+  map.mappings[0].asserted_at = '2026-13-40T25:61:61Z';
+  assert.throws(() => lineageToLinks(source.bytes, claimGraph, { claimFindingMap: map }), /asserted_at/u);
+  const { links } = lineageToLinks(source.bytes, claimGraph, { claimFindingMap: reviewedMap(source) });
+  const broken = structuredClone(links);
+  broken.findings.find((f) => f.binding === 'reviewed-mapping').mappings[0].asserted_at = '2026-02-30T00:00:00Z';
+  assert.throws(() => exportWith(broken), /asserted_at/u);
 });
