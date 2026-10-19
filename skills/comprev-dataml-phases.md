@@ -730,6 +730,9 @@ Phase 14 MUST also:
   2. Read `gate_scope.json` to determine the section range (`n_sections = len(scope["sections"])`)
   3. For each section `1..n_sections`, extract that section's findings, conflicts, and figure_data
   4. Save as `evidence/evidence_section_NN.json` with required keys:
+     `section_id`, `section_title`, `findings` (array of finding **objects**, not cite_key strings),
+     `argument_groups` (object), `conflicts`, `figure_data`, `unique_papers`, `total_findings`
+  5. Verify all `n_sections` files exist and are non-empty before proceeding
 
 - **Refresh trust claim graph artifacts.**
   1. Read all `:::{trust-claim}` directives from `content/*.md`.
@@ -762,9 +765,6 @@ Phase 14 MUST also:
   - Every `:::{trust-claim}` tag must reference either an existing `claim_id` or `claim-id-placeholder`.
   - Every non-placeholder claim id must resolve in `knowledge/claim_graph.json`.
   - Every resolved claim entry must include `trust_score.overall_score` and `trust_score.trust_label`.
-     `section_id`, `section_title`, `findings` (array of finding **objects**, not cite_key strings),
-     `argument_groups` (object), `conflicts`, `figure_data`, `unique_papers`, `total_findings`
-  5. Verify all `n_sections` files exist and are non-empty before proceeding
 a) Create `content/evidence_database.md` with `:::{evidence-explorer}` directive. Declare
    `:availability: available` once the loader binds at least one package (replace the
    template's `:availability: not_provided`). A review deliberately published without an
@@ -812,13 +812,15 @@ before handing off to the validator. Treat these as a hard gate:
    (don't proceed with empty placeholders — the evidence-explorer widget
    will load nothing).
 
-   Then run the explorer's own loader and record its diagnostics in
-   `gate_assembly.json`:
+   Then run the explorer's own loader with the `:availability:` declared in
+   `content/evidence_database.md` and record its diagnostics in `gate_assembly.json`:
    ```js
    import { loadEvidenceDirectory, applyEvidenceAvailability } from './plugins/evidence-explorer-plugin.mjs'
-   const result = applyEvidenceAvailability(loadEvidenceDirectory('evidence'), 'available')
-   if (!['loaded', 'loaded_zero_findings'].includes(result.status)) throw new Error(result.status)
-   if (result.diagnostics.rejected.length) throw new Error('rejected evidence packages')
+   const result = applyEvidenceAvailability(loadEvidenceDirectory('evidence'), declaredAvailability)
+   const ok = declaredAvailability === 'not_provided'
+     ? result.diagnostics.loaded.length === 0
+     : ['loaded', 'loaded_zero_findings'].includes(result.status)
+   if (!ok || result.diagnostics.rejected.length) throw new Error(result.status)
    ```
    `partial_loading` is a failure here even though the widget would render the
    partial set: repair or remove the rejected package. Finally write
@@ -1150,7 +1152,9 @@ for bulk uploads — it can push wrong file contents to multiple paths).
 **Push protocol:**
 1. `git clone` the repository
 2. `git rm` ONLY the pipeline-generated outputs: section `content/*.md` files written by
-   this run, `figures/`, `evidence/evidence_section_*.json`, the run's gate artifacts in
+   this run, `figures/`, `evidence/evidence_section_*.json`, any `evidence/manifest.json` and
+   legacy `evidence/section_*_evidence*.json` from an earlier run (a stale manifest would
+   override discovery), the run's gate artifacts in
    `provenance/`, and generated `latex/` manuscript files. Never `git rm -r` a whole
    `content/`, `provenance/` or `scripts/` tree: in this TRUST fork those trees also hold
    template infrastructure (widgets, validators, importers, exporters, schemas).

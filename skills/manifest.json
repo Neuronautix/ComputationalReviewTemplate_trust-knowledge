@@ -24,8 +24,8 @@
     {
       "name": "comprev-dataml-phases",
       "file": "skills/comprev-dataml-phases.md",
-      "bytes": 69436,
-      "sha256": "aaef80050692aade0ff41bcf9109cc184c85f63f55c6d827cf89ac747f245a09"
+      "bytes": 69720,
+      "sha256": "ce82f720b80f9039c84a86fcda25da24fc9240d987e6014d7ee9f49a26e4c6c7"
     },
     {
       "name": "comprev-deploy-polish",

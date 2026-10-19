@@ -78,6 +78,25 @@ class PluginChecks(unittest.TestCase):
         self.assertNotEqual(code, 0)
         self.assertIn("content/02_section.md", line(out, "NO_EXAMPLE_REVIEW_DATA_BOUND"))
 
+    def test_disguised_or_nested_example_paths_are_caught(self):
+        for index, path in enumerate(["../community/./examples/a.json",
+                                      "../community/schemas/../examples/a.json",
+                                      "../community//examples/a.json"]):
+            page = self.tree / "content" / "nested" / "page_{}.md".format(index)
+            page.parent.mkdir(exist_ok=True)
+            page.write_text(":::{human-reviews}\n:submissions-path: " + path + "\n:::\n", encoding="utf-8")
+            code, out = audit(self.tree)
+            self.assertNotEqual(code, 0, path)
+            self.assertIn("page_{}.md".format(index), line(out, "NO_EXAMPLE_REVIEW_DATA_BOUND"))
+            page.unlink()
+
+    def test_community_paths_outside_examples_are_not_flagged(self):
+        (self.tree / "content" / "02_section.md").write_text(
+            "See ../community/schemas/human_submission.schema.json and ../community/human_submissions.json\n",
+            encoding="utf-8")
+        code, out = audit(self.tree)
+        self.assertEqual(code, 0, out)
+
 
 if __name__ == "__main__":
     unittest.main()

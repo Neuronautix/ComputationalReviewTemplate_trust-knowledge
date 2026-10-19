@@ -48,8 +48,8 @@
         }
       }
     },
-    "conflicts": { "type": "array" },
-    "figure_data": { "type": "array" },
+    "conflicts": { "type": "array", "items": { "type": "object" } },
+    "figure_data": { "type": "array", "items": { "type": "object" } },
     "evidence_gaps": { "type": "array" },
     "replication": { "type": "object" },
     "provenance": { "type": "object" },

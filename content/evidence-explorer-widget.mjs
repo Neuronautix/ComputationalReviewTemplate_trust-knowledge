@@ -15,9 +15,12 @@ function render({ model, el }) {
   
   // === Schema normalization helpers ===
   function normConflict(c) {
-    // Handle 4+ different conflict schemas
+    // Handle 4+ different conflict schemas. The plugin keeps the native record
+    // under source_conflict; variants its normalized copy does not carry are read
+    // from there.
+    const src = (c.source_conflict && typeof c.source_conflict === 'object') ? c.source_conflict : c;
     let desc = c.nature_of_conflict || c.description || c.topic || '—';
-    let reason = c.likely_reason || c.resolution_notes || c.resolution_status || '';
+    let reason = c.likely_reason || src.resolution_notes || c.resolution_status || '';
     let doiA = c.paper_a_doi || '';
     let doiB = c.paper_b_doi || '';
     let sideA = '', sideB = '';
@@ -32,10 +35,6 @@ function render({ model, el }) {
       else if (c.side_b.position) { sideB = c.side_b.position; }
     }
     
-    // The plugin keeps the native record under source_conflict; the remaining
-    // variants are read from it so its normalized copy cannot hide them.
-    const src = (c.source_conflict && typeof c.source_conflict === 'object') ? c.source_conflict : c;
-
     // Schema: side_a_dois/side_b_dois arrays
     if (src.side_a_dois) { doiA = src.side_a_dois[0] || ''; }
     if (src.side_b_dois) { doiB = src.side_b_dois[0] || ''; }

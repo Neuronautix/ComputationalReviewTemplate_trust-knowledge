@@ -1,3 +1,27 @@
+# Unreleased: template sync to upstream 8cc8383 (pipeline v30) and evidence-contract port
+
+- Merged `source-template/main` 8cc8383: unversioned `comprev-orchestrator`, Claude Science
+  runtime notes, `comprev-writing-style`, `skills/manifest.json` (22 skills: upstream 21 plus
+  `comprev-trust-score-validator`), prose-fidelity and template-consistency audits,
+  deferred-check semantics and cross-package coherence checks. Phases 5b/5bV and 16T, the
+  TRUST validator checks (now #28/#29 after upstream #26/#27) and section trust tags are kept.
+- Kept the local authorship plugin, widgets and `content/authors.yml`; the remote
+  AuthorshipExtractor release and upstream named authors are not imported (README,
+  *Authorship integration boundary*).
+- Phase 20 no longer `git rm -r`s `scripts/`, `content/` or `provenance/` wholesale and lists
+  the TRUST/credit/ORAtlas infrastructure it must preserve.
+- `PLUGINS_DECLARED` allows the explicitly optional human-review plugin; a new
+  `NO_EXAMPLE_REVIEW_DATA_BOUND` check fails if `community/examples` data is bound.
+- Ported the versioned Evidence Explorer contract (`evidence/schema/`), manifest discovery,
+  `:availability:` declaration, loader diagnostics, compatibility report and MyST golden
+  fixtures from template main f205552, combined with upstream's `:sections:`, warnings and
+  rich conflict normalizer. Phase 5 packages (including source-evidence imports) load through
+  the `legacy-section-package` adapter; Phase 5 itself is unchanged. Display adapters copy
+  native data and pass `import_provenance` / `conflict_assessment` through verbatim.
+- New CI: `validate.yml` (Node 24, pinned `mystmd@1.10.1`, golden fixture and clean-copy TRUST
+  site render); upstream `plugins.yml` / `skills.yml` moved to Node 24 actions.
+- Validation record: `docs/upstream-sync-validation.md`.
+
 # Unreleased: CRediT contributorship and source-finding credit lineage (issue #17)
 
 - Added the optional `comprev.contributorship/1` companion (`docs/contracts/contributorship/v1/`) and `scripts/contributorship/`: a deterministic, offline builder that turns private `comprev.contribution-declarations/1`, the MyST author file (read only), the claim graph and reviewed S2 lineage + `comprev.claim-finding-map/1` pairs into a private companion, its allowlisted public projection and a private release report. See `docs/CONTRIBUTORSHIP.md`.

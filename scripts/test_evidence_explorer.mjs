@@ -293,6 +293,62 @@ const cases = [
     }
   }],
 
+  ['display fallbacks never override a native finding field', () => {
+    const native = { claim: 'Native claim.', cite_key: 'NativeKey2026', doi: '', tier: 'contested',
+      sources: [{ source_id: 'OtherSource', doi: '10.1234/other', supporting_passages: [{ text: 'Source passage.' }] }] };
+    const dir = scratch('template_like', { 'evidence_section_01.json': JSON.stringify({
+      evidence_package_schema_version: '1.0.0', section: { id: 'one', order: 1, title: 'One' },
+      findings: [native], conflicts: [{ topic: 'kept' }], figure_data: [], evidence_gaps: [], provenance: {},
+    }) });
+    try {
+      const r = render(dir);
+      if (r.threw) return `threw: ${r.threw.message}`;
+      const shown = r.payload.findings[0];
+      for (const [key, value] of Object.entries(native)) {
+        if (JSON.stringify(shown[key]) !== JSON.stringify(value)) return `native ${key} was overridden: ${JSON.stringify(shown[key])}`;
+      }
+      if (shown.claim_source_sentence !== 'Source passage.') return 'absent claim_source_sentence was not filled for display';
+      return null;
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }],
+
+  ['malformed conflict, figure or source entries reject their package instead of crashing', () => {
+    const base = { section_title: 'Bad', figure_data: [],
+      findings: [{ cite_key: 'Author91', doi: '10.1234/demo.91', claim: 'Claim 91.' }], conflicts: [{ topic: 't' }] };
+    const dir = scratch('populated', {
+      'evidence_section_04.json': JSON.stringify({ ...base, conflicts: [null] }),
+      'evidence_section_05.json': JSON.stringify({ ...base, figure_data: ['fig'] }),
+      'evidence_section_06.json': JSON.stringify({ ...base, findings: [{ ...base.findings[0], sources: ['10.1234/demo.91'] }] }),
+    });
+    try {
+      const r = render(dir);
+      if (r.threw) return `threw: ${r.threw.message}`;
+      const rejected = r.payload.diagnostics.rejected.map((e) => e.file).sort();
+      if (JSON.stringify(rejected) !== JSON.stringify(['evidence_section_04.json', 'evidence_section_05.json', 'evidence_section_06.json'])) {
+        return `expected sections 04-06 rejected, got ${JSON.stringify(r.payload.diagnostics.rejected)}`;
+      }
+      return r.payload.sections.length === EXPECTED.sections ? null : 'valid sections were dropped';
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }],
+
+  ['packages present under a not_provided declaration are reported', () => {
+    const r = render('populated', { evidenceAvailability: 'not_provided' });
+    if (r.threw) return `threw: ${r.threw.message}`;
+    if (r.payload.evidence_status !== 'not_provided' || r.payload.findings.length) return 'not_provided must bind nothing';
+    return r.warnings.some((w) => w.includes('not_provided is declared')) ? null : `expected a warning, got: ${r.warnings.join(' | ')}`;
+  }],
+
+  ['zero findings warn even when another package was rejected', () => {
+    const empty = JSON.stringify({ section_title: 'Empty', findings: [], conflicts: [{ topic: 't' }], figure_data: [] });
+    const dir = scratch('template_like', { 'evidence_section_01.json': empty, 'evidence_section_02.json': '{broken' });
+    try {
+      const r = render(dir);
+      if (r.threw) return `threw: ${r.threw.message}`;
+      if (r.payload.evidence_status !== 'partial_loading') return `expected partial_loading, got ${r.payload.evidence_status}`;
+      return r.warnings.some((w) => w.includes('zero findings')) ? null : `expected a zero-findings warning, got: ${r.warnings.join(' | ')}`;
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }],
+
   ['binding never modifies a package file', () => {
     const dir = scratch('populated');
     try {

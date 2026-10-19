@@ -7,8 +7,6 @@ import { sha256 } from '../scripts/source-evidence/canonical.mjs';
 import { FILES, importPacket, phase2FindingDigest, writeImport } from '../scripts/source-evidence/import.mjs';
 import { curateIdentitySection, phase5Gate } from '../scripts/source-evidence/phase-gates.mjs';
 import explorerPlugin, {
-  DISPLAY_FALLBACK_FINDING_FIELDS,
-  DISPLAY_FINDING_FIELDS,
   applyEvidenceAvailability,
   explorerDataFromLoad,
   loadEvidenceDirectory,
@@ -75,7 +73,8 @@ test('packet -> curation -> display keeps lineage, digests and native findings u
   assert.deepEqual(payload.sections[0].import_provenance, curated.import_provenance);
 
   // Every native finding field reaches the payload verbatim; only documented display fields are added.
-  const added = new Set([...DISPLAY_FINDING_FIELDS, ...DISPLAY_FALLBACK_FINDING_FIELDS, 'sources']);
+  // Hard-coded on purpose: the documented display contract, not whatever the plugin exports.
+  const added = new Set(['section', 'section_title', 'cite_key', 'doi', 'claim_source_sentence', 'tier', 'sources']);
   const lineage = JSON.parse(lineageBytes.toString('utf8'));
   assert.equal(payload.findings.length, curated.findings.length);
   payload.findings.forEach((shown, index) => {
@@ -105,6 +104,19 @@ test('a section that carries its conflict assessment shows it verbatim and does 
   assert.equal(payload.sections[0].conflict_assessment.status, 'not_assessed');
   assert.deepEqual(payload.conflicts, []);
   assert.deepEqual(warnings, []);
+});
+
+test('building the payload does not mutate the loaded packages in memory', () => {
+  const { evidenceDir } = stage('memory', (phase2) => ({
+    ...curateIdentitySection(phase2),
+    conflict_assessment: phase2.conflict_assessment,
+    conflicts: [{ side_a: { position: 'A', evidence: '10.1234/x' }, papers_b: ['10.1234/y'] }],
+  }));
+  const loaded = applyEvidenceAvailability(loadEvidenceDirectory(evidenceDir), 'available');
+  const before = JSON.stringify(loaded.packages);
+  const payload = explorerDataFromLoad(loaded);
+  assert.equal(JSON.stringify(loaded.packages), before);
+  assert.deepEqual(payload.conflicts[0].source_conflict, loaded.packages[0].conflicts[0]);
 });
 
 test('rights: a finding without an exportable quote gains no supporting passage text', () => {

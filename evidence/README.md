@@ -71,8 +71,10 @@ The payload exposes one status: `missing_directory`, `invalid_manifest`,
 `no_compatible_files`, `invalid_packages`, `partial_loading`,
 `loaded_zero_findings`, `loaded` or `not_provided`, plus the discovered,
 loaded and rejected file lists. Build warnings also report an interior gap in
-discovered sections, a count that disagrees with `:sections:`, and an empty
-conflict set that no package declares through `conflict_assessment`.
+discovered sections, a count that disagrees with `:sections:`, zero findings, an
+all-empty conflict set that some package leaves undeclared (no `conflict_assessment`),
+and packages that load while `not_provided` is declared. Non-object `conflicts` or
+`figure_data` entries reject their package.
 
 ## How Files Are Generated
 

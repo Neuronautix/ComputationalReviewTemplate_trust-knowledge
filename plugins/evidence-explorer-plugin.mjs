@@ -87,6 +87,11 @@ export function validateCanonicalPackage(value) {
   for (const field of PASSTHROUGH_SECTION_FIELDS) {
     if (hasOwn(value, field) && !object(value[field])) errors.push(`${field} must be an object`);
   }
+  for (const field of ['conflicts', 'figure_data']) {
+    for (const [index, entry] of asArray(value[field]).entries()) {
+      if (!object(entry)) errors.push(`${field}[${index}] must be an object`);
+    }
+  }
   for (const [index, finding] of asArray(value.findings).entries()) {
     if (!object(finding)) { errors.push(`findings[${index}] must be an object`); continue; }
     if (!text(finding.claim)) errors.push(`findings[${index}].claim must be a non-empty string`);
@@ -120,7 +125,12 @@ function legacyFinding(finding, index) {
   if (!text(finding.claim) || !text(sourceId)) {
     throw new Error(`legacy findings[${index}] requires claim and cite_key or doi`);
   }
-  if (hasOwn(finding, 'sources')) return { ...finding };
+  if (hasOwn(finding, 'sources')) {
+    if (!Array.isArray(finding.sources) || !finding.sources.length || !finding.sources.every(object)) {
+      throw new Error(`legacy findings[${index}].sources must be a non-empty array of source objects when present`);
+    }
+    return { ...finding };
+  }
   const source = { source_id: sourceId };
   if (text(finding.doi)) source.doi = finding.doi;
   const passage = finding.claim_source_sentence || finding.supporting_passage;
@@ -347,11 +357,16 @@ function conflictsDeclaredEmpty(pkg) {
  * partial sets from the loader diagnostics. Interior gaps are only meaningful
  * for filename discovery; a manifest declares its packages explicitly and may
  * be deliberately non-contiguous. Long gap lists are truncated with a count.
- * An empty conflict set is reported only when no package declares it through
- * `conflict_assessment`: a declared empty set is legitimate, not a defect.
+ * An all-empty conflict set is reported unless every package declares its empty
+ * set through `conflict_assessment`: a declared empty set is legitimate, not a defect.
  */
 export function evidenceLoadWarnings(result, { sectionCount = 0, evidenceDir = 'evidence directory' } = {}) {
-  if (result.status === 'not_provided') return [];
+  if (result.status === 'not_provided') {
+    const ignored = asArray(result.diagnostics?.loaded).length;
+    return ignored
+      ? [`evidence-explorer: :availability: not_provided is declared, but ${ignored} package(s) in ${evidenceDir} load; they are not shown.`]
+      : [];
+  }
   const warnings = [];
   let gaps = { listed: [], total: 0n, unsafe: 0 };
   if (result.discovery_mode === 'pattern') {
@@ -374,7 +389,7 @@ export function evidenceLoadWarnings(result, { sectionCount = 0, evidenceDir = '
     const rejected = result.diagnostics.rejected.map(entry => `${entry.file}: ${entry.reason}`).join('; ');
     warnings.push(`evidence-explorer: ${result.diagnostics.rejected.length} package(s) in ${evidenceDir} were rejected (${rejected}); the explorer renders a partial set, which review gates reject.`);
   }
-  if (result.status === 'loaded_zero_findings') {
+  if (loadedSections && result.packages.every(pkg => pkg.findings.length === 0)) {
     warnings.push(`evidence-explorer: ${loadedSections} package(s) loaded from ${evidenceDir} but they contain zero findings; the explorer will render empty finding panels.`);
   }
   const conflictCount = result.packages.reduce((sum, pkg) => sum + pkg.conflicts.length, 0);

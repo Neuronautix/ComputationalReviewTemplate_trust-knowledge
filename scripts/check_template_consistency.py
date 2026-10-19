@@ -12,6 +12,7 @@ explicit allowance for opt-in plugins that must not be bound to example data).
 Exit status is non-zero when any check fails. Standard library only.
 """
 import json
+import posixpath
 import re
 import sys
 from pathlib import Path
@@ -128,9 +129,17 @@ def audit():
     stale = set(OPTIONAL_PLUGINS) - local_plugins
     check("OPTIONAL_PLUGINS_EXIST", not stale, str(sorted(stale)))
 
-    # an optional plugin is opt-in; example acceptances must never be what turns it on
-    bound = [str(p.relative_to(ROOT)) for p in [ROOT / "myst.yml"] + sorted((ROOT / "content").glob("*.md"))
-             if "community/examples" in p.read_text(encoding="utf-8")]
+    # an optional plugin is opt-in; example acceptances must never be what turns it on.
+    # Paths are normalized first, so community/./examples or schemas/../examples still count.
+    def binds_examples(text):
+        for token in re.findall(r"""[^\s"'`()<>\[\]]*community[^\s"'`()<>\[\]]*""", text):
+            normalized = posixpath.normpath(token.replace("\\", "/"))
+            if re.search(r"(?:^|/)community/examples(?:/|$)", normalized):
+                return True
+        return False
+
+    bound = [str(p.relative_to(ROOT)) for p in [ROOT / "myst.yml"] + sorted((ROOT / "content").rglob("*.md"))
+             if binds_examples(p.read_text(encoding="utf-8"))]
     check("NO_EXAMPLE_REVIEW_DATA_BOUND", not bound, str(bound))
 
     print("\n{}/{} checks passed".format(checks_run[0] - len(failures), checks_run[0]))
