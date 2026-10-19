@@ -351,9 +351,10 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     The test MUST cover both directions of emptiness, because fixing one
     produced the other within a day:
 
-    1. A data directory holding **no** input files renders the documented
-       placeholder and the build survives — an un-instantiated template is
-       not a defect.
+    1. A data directory holding **no** input files, declared with an explicit
+       `:availability: not_provided`, renders the documented placeholder and the
+       build survives — an un-instantiated template is not a defect. The same
+       empty directory under empty or default `available` fails (check 30).
     2. A directory holding input files the plugin matches to **nothing**, or
        that it cannot read, **fails the build** rather than publishing an
        empty widget.
@@ -390,8 +391,10 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     `applyEvidenceAvailability` from `plugins/evidence-explorer-plugin.mjs` and run them on
     `evidence/`. When available, `missing_directory`, `invalid_manifest`,
     `no_compatible_files`, `invalid_packages` and `partial_loading` are hard fails; a valid
-    set with zero findings passes and is reported distinctly. `not_provided` passes only as
-    an explicit declaration. The gate lists the loader's `discovered`, `loaded` (with
+    set with zero findings passes and is reported distinctly. Only an explicit
+    `:availability: not_provided` survives an empty evidence set; an empty `evidence/`
+    under empty or default `available` fails (`missing_directory` or `no_compatible_files`).
+    The gate lists the loader's `discovered`, `loaded` (with
     adapter) and `rejected` files, and `provenance/review_compatibility_report.json`
     validates with `node scripts/review-compatibility-report.mjs validate`. **pass/fail**
 

@@ -72,8 +72,8 @@
     {
       "name": "comprev-myst-validator",
       "file": "skills/comprev-myst-validator.md",
-      "bytes": 27050,
-      "sha256": "a302ab1a4955afb588656b68f8141f32690c9efb1d974ca97429d0e695f977c9"
+      "bytes": 27335,
+      "sha256": "a83ada30937ad01c429aff4e1232017b24a19ba239335ce7cb2ebe8a8c357c58"
     },
     {
       "name": "comprev-orchestrator",

@@ -155,3 +155,21 @@ repaired in `b23c902`, except those listed below.
   checked out at the pinned commit with `pnpm install --frozen-lockfile` (extractor
   subset). The local ORAtlas checkouts themselves are at `f6c834b`, not the pin, and have
   no dependencies installed; CI without `ORATLAS_DIR` still skips that one test.
+
+## Repair pass after independent review
+
+Two required repairs from the independent review of `866002f`:
+
+- **Rendered-widget test gap.** `test/trust-site-render.test.mjs` now derives the expected
+  claim IDs from the `:::{trust-claim}` directives in `content/01_introduction.md` and
+  asserts the rendered `trust-claim-widget` multiset equals them (missing, duplicate and
+  unexpected widgets fail); the score/label assertions against `knowledge/claim_graph.json`
+  are kept. Negative proof, in a disposable copy only (no tracked production code
+  changed): suppressing every widget but the first failed with the three missing IDs;
+  duplicating the first widget failed with the extra `clm_7659634fb095cdce`; the unmutated
+  copy passed.
+- **Validator wording.** `skills/comprev-myst-validator.md` (empty-directory test rule and
+  check 30) now says only an explicit `:availability: not_provided` survives an empty
+  evidence set; an empty `evidence/` under empty or default `available` fails, matching the
+  runtime. `skills/manifest.json` was regenerated for the changed skill hash. Runtime
+  unchanged.

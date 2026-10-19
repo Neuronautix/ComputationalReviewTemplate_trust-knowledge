@@ -77,7 +77,12 @@ test('the TRUST site renders its claim, authorship and evidence widgets from a c
     const graph = JSON.parse(readFileSync(join(repositoryRoot, 'knowledge', 'claim_graph.json'), 'utf8'));
     const claims = new Map(graph.claims.map(claim => [claim.claim_id, claim]));
     const trust = anywidgets(join(html, 'introduction.json')).filter(w => /trust-claim-widget/u.test(w.esm));
-    assert.ok(trust.length > 0, 'no trust-claim widget rendered');
+    const source = readFileSync(join(repositoryRoot, 'content', '01_introduction.md'), 'utf8');
+    const expectedIds = [...source.matchAll(/^:{3,}\{trust-claim\}[^\n]*\n((?:(?!:{3,}\s*$)[^\n]*\n)*)/gmu)]
+      .map(([, body]) => /^:claim-id:\s*(\S+)\s*$/mu.exec(body)?.[1]);
+    assert.ok(expectedIds.length > 0 && expectedIds.every(Boolean), 'every source trust-claim directive must declare :claim-id:');
+    // The complete rendered multiset must equal the source: catches missing, duplicate and unexpected widgets.
+    assert.deepEqual(trust.map(w => w.model.claimId).sort(), [...expectedIds].sort(), 'rendered trust-claim widgets differ from source directives');
     for (const widget of trust) {
       emitted(widget);
       const claim = claims.get(widget.model.claimId);
