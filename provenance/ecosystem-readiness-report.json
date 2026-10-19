@@ -18,7 +18,7 @@
     "PR_ONLY": "PR_ONLY — claimed only by a PR that is not in the pinned tree (draft or unmerged)",
     "BH": "BLOCKED_HUMAN — needs a named human/owner/reviewer decision or action",
     "BS": "BLOCKED_SECURITY — waits on ORAtlas #202 (unratified security ADR, draft PR #211) and the counsel/DPIA gate",
-    "CS": "CANDIDATE_SUPERSEDED — proposed by a maintainer, not owner-ratified; left open"
+    "CS": "CANDIDATE_SUPERSEDED — this report observes overlap with a newer issue; no maintainer proposal or owner ratification is evidenced unless stated; left open"
   },
   "run_vocabulary": {
     "this-run": "executed in this worker run at the pinned commit",
@@ -29,7 +29,7 @@
   "repositories": [
     {
       "name": "Neuronautix/ComputationalReviewTemplate_trust-knowledge",
-      "role": "TRUST fork / native TRUST + CRT + comPrev.contributorship producer (the only repository this run may write)",
+      "role": "TRUST fork / native TRUST + CRT + comprev.contributorship producer (the only repository this run may write)",
       "pinned_commit": "0db82e1eeacf9ff53037edd7c624464aad6fcf9f",
       "ref": "origin/main (merge of PR #20; PR head e006757)",
       "checkout_validated": "/tmp/trust-ecosystem-1a41 (bound worktree, branch pico/ecosystem-evidence-1a41)",
@@ -86,11 +86,11 @@
     "source-evidence-packet/0.1.0",
     "seip-support-v1",
     "comprev.claim-finding-map/1",
-    "comprev.evidence-links/2",
+    "comprev.evidence-packet-links/2",
     "CRT native TRUST v2",
-    "comPrev.contributorship/1",
+    "comprev.contributorship/1",
     "finding-credit-companion/0.1.0",
-    "roster-assertion/0.1.0 (orcid-playground)",
+    "orcid-playground/roster-assertion (version 0.1.0)",
     "oratlas.source-credit-observations/0.1.0 (offline mapping)",
     "oratlas.private-cross-finding/0.1.0 (contract + pure projector, NOT production ACL)"
   ],
@@ -270,7 +270,8 @@
     "ORAtlas test suites (vitest/e2e/postgres) — not installed; evidence is PR #200/#208/#210/#212 snapshot checks. The local tree is stale (f6c834b) versus remote main 230b8a3.",
     "ORCID: only tests/test_roster.py (24, parent-run) and validate_export; the rest of the ORCID suite and draft PR #7 were not run.",
     "Any private-workspace feature (My Research, connector, cross-finding credit ACL, #53, #16): nothing to run; blocked.",
-    "Real data: none processed. All fixtures are synthetic."
+    "Real data: none processed. All fixtures are synthetic.",
+    "Residual TRUST #17 criterion-3 surfaces (caches, discovery/search, logs, notifications, timing/count side channels, ORAtlas-side surfaces, deployed-site output, real private data): not tested; blocked on ORAtlas #202."
   ],
   "fixture_digests": {
     "trust_contributorship_fixture": {
@@ -335,10 +336,167 @@
     "note": "Proposed extra golden tests were already implemented here and in the generated fixture builder; none duplicated. The builder does not recompute packet manifests without packet bytes."
   },
   "synthetic_scenarios": {
-    "note": "The task text referred to ten requested synthetic scenarios without enumerating them. S1–S10 below are the ten scenario families derived from the mission acceptance statements; the owner should confirm or replace the list.",
-    "scenarios": [
+    "note": "requested_scenarios are the ten scenarios exactly as the user enumerated them. Coverage means named tests on synthetic fixtures only; it is not a scientific-validity claim and no real corpus, pilot, deposit or private workspace was involved. supplemental_credit_subcases are the earlier substituted rows, kept as subcases and not counted toward the requested ten.",
+    "requested_scenarios": [
       {
-        "id": "S1",
+        "id": "R1",
+        "scenario": "One paper with multiple independently curated findings.",
+        "trust_tests": [
+          "tests/source-evidence-import.test.mjs: 'G2: two findings from one article and one from another import with exact source and reviewer provenance', 'the two findings of one article stay distinct and keep their own context, passages and verification', 'findings are never merged by text, even when two share a sentence', 'revisions are never collapsed: only the latest revision of a finding can be imported'",
+          "tests/evidence-links-v2.test.mjs: 'a reviewed map binds only the mapped finding; a second finding of the same paper stays a candidate'"
+        ],
+        "trust_result": "pass (repair run, synthetic packets)",
+        "gaps": [
+          "No TRUST test asserts that the findings of one paper were curated by different people: curator independence is a producer-side (Diggypaper) property. Diggypaper test_findings_api.py::test_two_findings_on_one_article_stay_distinct_and_null_results_retained was read, not run.",
+          "Synthetic G2 packet only; no real paper or pilot."
+        ]
+      },
+      {
+        "id": "R2",
+        "scenario": "Source quotation verification and exact-version provenance.",
+        "trust_tests": [
+          "tests/source-evidence-import.test.mjs: 'validator reproduces the producer reference validator on every upstream fixture', 'corrupt hash, length, version and bytes fail closed with no outputs', 'cross-paper links fail: finding to foreign passage, and assessment to a passage the finding does not cite', 'a numeric value absent from the source passage is flagged, not asserted as sourced', 'imported findings are bound to the verified sidecar: editing a finding after import fails the gates', 'idempotent replay: identical input bytes yield identical files and digests'",
+          "tests/evidence-links-v2.test.mjs: 'native fields are checked against the packet contract, not just for presence'",
+          "scripts/validate-trust.js (script, not node:test): 4 claims, 5 citation contexts, 16 verified passages"
+        ],
+        "trust_result": "pass (repair run)",
+        "gaps": [
+          "The importer checks carried hashes, versions and match statuses; packets carry no article full text, so TRUST does not re-run quote matching against source bytes. The matcher lives in Diggypaper (quote_matcher.py; read, not run).",
+          "Exact-version provenance is a carried snapshot SHA-256 and manifest digest; TRUST cannot recompute a packet manifest without the packet bytes."
+        ]
+      },
+      {
+        "id": "R3",
+        "scenario": "Transfer to CRT with claim-to-finding mappings.",
+        "trust_tests": [
+          "tests/evidence-links-v2.test.mjs: 'the S2 lineage sidecar bridges to links/2 and exports passage-level lineage', 'DOI equality alone yields only same-paper candidates, never claim evidence', 'the reviewed map fails closed on every mismatch', 'the exporter refuses inconsistent bindings', 'a DOI the review does not cite is skipped, never linked by text', 'the imported Phase 2 package passes the real Phase 2 and Phase 5 gates, and mapped digests are the vouched ones'",
+          "tests/source-evidence-import.test.mjs: 'Gate G2: imported packages pass the Phase 2 import gate and the Phase 5 shape and curation gates', 'importing is opt-in: no native pipeline script or skill invokes the importer'"
+        ],
+        "trust_result": "pass (repair run)",
+        "gaps": [
+          "Reviewed mapping decisions in fixtures are synthetic ('Synthetic fixture decision'); no real reviewed mapping or mapping workflow was exercised.",
+          "The ORAtlas lineage fixture exempts 24 Phase-2 checks as pilot exceptions."
+        ]
+      },
+      {
+        "id": "R4",
+        "scenario": "Independent TRUST and human-review assessments.",
+        "trust_tests": [
+          "tests/human-review-plugin.test.mjs: 'transform pairs accepted records with the canonical TRUST target and marks stale text orphaned', 'accepted state requires a real, non-backdated acceptance event and revision', 'loader uses the canonical public contract validator for accepted records', 'fresh production content does not publish example human acceptances'",
+          "tests/human-review-widget.test.mjs: 'card is keyboard-native, exposes version/status, escapes comments, and separates TRUST', 'claim annotations reuse stable TRUST DOM ids without reading or changing the score', 'all human stances have explicit non-numeric labels'",
+          "tests/release-diff-capsule.test.mjs: 'scientific diff compares frozen values without mutation or TRUST recomputation'",
+          "tests/oratlas-export.test.mjs: 'native TRUST v2 is never expressed as an ORAtlas assessment or score'",
+          "tests/contributorship.test.mjs: 'credit lineage is kept apart from TRUST and source SEIP judgments'; tests/source-evidence-import.test.mjs: 'outputs carry no TRUST, replication or full-text fields and no reviewer identity beyond the pseudonym'",
+          "scripts/validate-community-contracts.js (script): human submission/moderation examples PASS"
+        ],
+        "trust_result": "pass (repair run; 'pass' = separation and contract checks on example records)",
+        "gaps": [
+          "Human review is a read-only annotation UI and contract with example records; the identity and moderation services are intentionally unimplemented (docs/HUMAN_REVIEW_AND_PUBLICATION.md).",
+          "No test takes one claim, assesses it by TRUST and by an independent human reviewer, and carries both through export. The ORAtlas exporter carries only the claim's human_review_required flag (scripts/oratlas/export-oratlas.mjs); human submissions are not exported.",
+          "Reviewer independence (blinding, conflicts of interest) is not tested; 'independent' here means the two records are stored and rendered separately."
+        ]
+      },
+      {
+        "id": "R5",
+        "scenario": "ORCID-linked and non-ORCID human contributors.",
+        "trust_tests": [
+          "tests/contributorship.test.mjs: 'verified and claimed ORCIDs stay distinct and are checked', 'contributors need both the individual and the controller, for this version, before anything about them is public', 'assertion status needs a decision reference except when merely declared', 'the private schema keeps the verified-ORCID and status-reference invariants'"
+        ],
+        "trust_result": "pass (repair run)",
+        "gaps": [
+          "Fixture shape: person-a verified ORCID, person-b and person-d claimed ORCID (neither ORCID is published), person-e no ORCID at all (withheld publicly for an approval of another version). No named test asserts a publicly disclosed contributor who has no ORCID.",
+          "'verified' is a declared reference checked by schema, not a live ORCID OAuth check (ORAtlas #203, blocked). ORCID playground roster tests (24 pass) were a read-only parent run, not repeated here."
+        ]
+      },
+      {
+        "id": "R6",
+        "scenario": "Separate AI-agent/tool provenance and CRediT attribution.",
+        "trust_tests": [
+          "tests/contributorship.test.mjs: 'mixed human + agent review: agents are production records only, never people, ORCIDs or CRediT holders', 'the real content/authors.yml maps to one production agent and no human contributor', 'the MyST authorship widget output is unchanged', 'exactly the 14 ANSI/NISO Z39.104-2022 roles, with legacy spellings normalised but never guessed', 'an invented or misspelt role in declarations is rejected rather than mapped'",
+          "tests/authorship-integration-boundary.test.mjs: 'the credit builder still consumes the local parser, and authors.yml names no human'"
+        ],
+        "trust_result": "pass (repair run)",
+        "gaps": [
+          "Agent name, version and workflow role are declared fields; nothing verifies them against a real run or trace.",
+          "CRediT assertions are declarations or decision references on synthetic people, not validated contributions."
+        ]
+      },
+      {
+        "id": "R7",
+        "scenario": "Import into ORAtlas with stable graph identities.",
+        "trust_tests": [
+          "tests/oratlas-export.test.mjs: 'committed export is exactly what the exporter regenerates (idempotent)', 'review-authored claim identities and citation bindings are preserved', 'source-native sidecar keeps the claim graph, atoms, groups and TRUST v2 intact and hash-bound', 'producer findings link to review claims at a separate, labelled provenance level', 'the real ORAtlas extractor ingests the export with zero dropped records'",
+          "tests/evidence-links-v2.test.mjs: 'bridge and exporter are deterministic and order independent'"
+        ],
+        "trust_result": "pass (repair run); the real-extractor test is skipped in the default run and passed 12/12 only with ORATLAS_DIR at pin 9cd3a0c",
+        "gaps": [
+          "The ORAtlas pin 9cd3a0c is not current ORAtlas main (remote 230b8a3 at snapshot).",
+          "Identity stability across repeated ingests into a running ORAtlas graph is ORAtlas-side and was not run; ORAtlas evidence is historical PR checks."
+        ]
+      },
+      {
+        "id": "R8",
+        "scenario": "Versioned publication and evidence exploration.",
+        "trust_tests": [
+          "tests/release-diff-capsule.test.mjs: 'diff rejects mutable, ambiguous, or silently retargeted version lineage', 'RO-Crate 1.3 evidence capsule hashes all four artifact roles deterministically', 'capsule rejects path traversal, hash drift, and incoherent status'",
+          "tests/federated-archive.test.mjs: 'federated export uses durable IDs, named provenance graphs, and all relation types', 'aggregate CLI reproduces committed static archive examples and index hashes'",
+          "tests/source-evidence-display.test.mjs: 'packet -> curation -> display keeps lineage, digests and native findings unchanged'",
+          "test/evidence-explorer-plugin.test.mjs (12 tests, e.g. 'discovers any number of canonical packages in stable numeric order', 'rejects declared future package versions instead of adapting them as legacy'); test/myst-golden-fixtures.test.mjs: 'MyST renders the golden fixture through the production Evidence Explorer'; test/trust-site-render.test.mjs: 'the TRUST site renders its claim, authorship and evidence widgets from a clean copy'",
+          "scripts/test_evidence_explorer.mjs (script, 21 cases); release-artifact schema and bundle validators (scripts)"
+        ],
+        "trust_result": "pass (repair run)",
+        "gaps": [
+          "Persistent-identifier deposit, a production archive operator and formal editorial governance are intentionally unimplemented (docs/HUMAN_REVIEW_AND_PUBLICATION.md); nothing was published.",
+          "The deployed site is built differently from the checks (deploy.yml installs unpinned mystmd and executes notebooks)."
+        ]
+      },
+      {
+        "id": "R9",
+        "scenario": "Private sources must not leak through ANY export or discovery surface.",
+        "trust_tests": [
+          "NEW tests/contributorship-private-leak.test.mjs (6 tests): 'the exact private allowlist is the private companion and the private release report; the public companion is the only public builder output', 'canaries in private builder inputs reach the private companion only; no enumerated public surface contains any, and no input or fixture byte changes', 'a private-scope packet is refused by the importer and produces no public source artifact, canaries included', 'mutation sensitivity: the scanner fails when a canary is inserted into any public artifact', 'mutation sensitivity: a leaking projection in a disposable clone of the builder is caught by the scanner', 'the private origin is bound to the claim that carries no public source credit'",
+          "tests/contributorship.test.mjs: 'nothing from an uncleared private origin, unpublished collaborator or rights-protected text reaches the public companion', 'if one of two origins behind a claim is private and uncleared, the claim publishes no source credit at all', 'rights-restricted sources publish no passage hashes', 'the public companion is exactly the allowlisted projection of the private one'",
+          "tests/source-evidence-import.test.mjs: 'private and embargoed packets are refused by default and only warn with allowRestricted', 'restricted and private content is withheld or refused, never published', 'a paper whose rights are not redistributable cannot reach the outputs even if the producer approved it'"
+        ],
+        "trust_result": "pass (repair run) for the enumerated surfaces only; the requirement as worded is NOT demonstrated",
+        "gaps": [
+          "Tested surfaces (offline, synthetic canaries, scratch directory): the public contributorship companion; the source-evidence importer outputs (phase2, lineage, report) for two public packets; the links/2 bridge output; every file of the ORAtlas export (review-manifest.json, claims, citations, relations, source-native sidecar, compatibility report). The only exempt files are contributorship.private.json and contributorship-release-report.json.",
+          "NOT tested and still blocked on ORAtlas #202 (security gate) with #203 identity and #204 workspaces: caches, search or discovery indexes, logs, notifications, timing or count side channels, ORAtlas-side surfaces, deployed-site output, access control of any kind, real private data.",
+          "The exporter and importer have no ACL API. The private credit origin (gamma) is declarations metadata for the credit builder only, so the exporter is never given private material; the test proves that private credit processing does not alter or leak into independently generated public output, and that a private-scope packet is refused. It does not prove that the exporter filters private input.",
+          "Canaries detect leaked values, not leaked existence or ids, and a finite set of canaries is not universal leak prevention. Mutation checks show the scanner and the builder's allowlist layers react; they do not show the absence of other leaks."
+        ]
+      },
+      {
+        "id": "R10",
+        "scenario": "Conflicting, withdrawn, unsupported and superseded evidence.",
+        "trust_tests": [
+          "tests/source-evidence-import.test.mjs: 'every non-accepted record has an explicit status and reasons, and is absent from the outputs' (reviewer-contradiction, source-unavailable, missing-doi, source-sentence-not-verbatim), 'revisions are never collapsed: only the latest revision of a finding can be imported' (superseded-revision), 'a legitimate empty conflict set is accepted only when declared, in imports and in native packages', 'Phase 5 gates still reject what they always rejected' (ALL_CONFLICTS_ASSIGNED fails)",
+          "tests/source-evidence-display.test.mjs: 'a section that carries its conflict assessment shows it verbatim and does not warn'",
+          "tests/release-diff-capsule.test.mjs: 'diff rejects mutable, ambiguous, or silently retargeted version lineage' (claim succession)",
+          "tests/evidence-radar.test.mjs: 'radar deterministically maps alerts and new works to canonical claims' (a retraction alert yields an advisory proposal only)",
+          "tests/contributorship.test.mjs: 'contributors need both the individual and the controller, for this version, before anything about them is public' (disputed and withdrawn CRediT assertions stay private)",
+          "scripts/test-trust-validator.js (script): asserts the 'overextended' evidence relation; scripts/validate-trust.js also derives 'unsupported' and emits unsupported_citation"
+        ],
+        "trust_result": "pass (repair run) for the listed behaviours",
+        "gaps": [
+          "Cross-paper conflict detection is not performed: an import sets conflict_assessment to not_assessed, and an empty conflicts[] means not assessed, not that no conflict exists.",
+          "No test imports a withdrawn or retracted paper or finding and follows it to export; the retraction alert is advisory and writes nothing. 'Withdrawn' is tested only for CRediT assertions and for the human-submission lifecycle in the community contract validator.",
+          "The native 'unsupported' relation path has no dedicated named test in test-trust-validator.js; no test carries a superseded or conflicting finding through the ORAtlas export."
+        ]
+      }
+    ],
+    "new_regression_tests_file": "tests/contributorship-private-leak.test.mjs",
+    "new_regression_test_names": [
+      "the exact private allowlist is the private companion and the private release report; the public companion is the only public builder output",
+      "canaries in private builder inputs reach the private companion only; no enumerated public surface contains any, and no input or fixture byte changes",
+      "a private-scope packet is refused by the importer and produces no public source artifact, canaries included",
+      "mutation sensitivity: the scanner fails when a canary is inserted into any public artifact",
+      "mutation sensitivity: a leaking projection in a disposable clone of the builder is caught by the scanner",
+      "the private origin is bound to the claim that carries no public source credit"
+    ],
+    "supplemental_credit_subcases": [
+      {
+        "id": "C1",
         "name": "Two findings from one article, one CRT claim; source curators are not review authors",
         "trust": [
           "tests/contributorship.test.mjs: 'one review claim credits two source findings without making their curators review authors'",
@@ -349,7 +507,7 @@
         "gap": "Real packet; ORAtlas-side run on current main"
       },
       {
-        "id": "S2",
+        "id": "C2",
         "name": "Mixed human + agent review; AI stays a production identity, never a person/ORCID/CRediT holder",
         "trust": [
           "tests/contributorship.test.mjs: 'mixed human + agent review…', 'the real content/authors.yml maps to one production agent and no human contributor'",
@@ -360,7 +518,7 @@
         "gap": "none identified at contract level"
       },
       {
-        "id": "S3",
+        "id": "C3",
         "name": "Claimed vs verified ORCID; human-asserted verification is not destination verification",
         "trust": [
           "tests/contributorship.test.mjs: 'verified and claimed ORCIDs stay distinct and are checked', 'assertion status needs a decision reference except when merely declared', 'the private schema keeps the verified-ORCID and status-reference invariants'"
@@ -370,7 +528,7 @@
         "gap": "Live ORCID OAuth verification does not exist (ORAtlas #203, blocked)"
       },
       {
-        "id": "S4",
+        "id": "C4",
         "name": "14 CRediT roles, explicit decision references for confirmed assertions",
         "trust": [
           "tests/contributorship.test.mjs: 'exactly the 14 ANSI/NISO Z39.104-2022 roles…', 'an invented or misspelt role in declarations is rejected rather than mapped', 'assertion status needs a decision reference…'"
@@ -380,7 +538,7 @@
         "gap": "dispute/audit workflow in ORAtlas not evidenced"
       },
       {
-        "id": "S5",
+        "id": "C5",
         "name": "Reviewed claim-finding map vs same-paper DOI candidate",
         "trust": [
           "tests/evidence-links-v2.test.mjs: 'DOI equality alone yields only same-paper candidates, never claim evidence', 'a reviewed map binds only the mapped finding; a second finding of the same paper stays a candidate', 'the reviewed map fails closed on every mismatch'",
@@ -391,7 +549,7 @@
         "gap": "none identified"
       },
       {
-        "id": "S6",
+        "id": "C6",
         "name": "Duplicate finding id+revision from two packets rejected in both input orders",
         "trust": [
           "tests/contributorship.test.mjs: 'a finding id + revision supplied by two packets is rejected, whatever the input order'",
@@ -402,7 +560,7 @@
         "gap": "none identified"
       },
       {
-        "id": "S7",
+        "id": "C7",
         "name": "Lineage binding, exact claim-graph binding and release-report recomputation",
         "trust": [
           "tests/contributorship.test.mjs: 'the committed fixture and golden outputs are exactly what the generator and builder produce', 'the private release report names withheld records and is bound to both companions', 'a supplied release report must be the one recomputed from both companions', 'build is deterministic and independent of input order'",
@@ -414,17 +572,17 @@
         "gap": "The builder carries packet.manifest_sha256 and does not recompute a packet manifest without the packet bytes; ORAtlas claim-graph bytes are optional (reported, not failed)"
       },
       {
-        "id": "S8",
+        "id": "C8",
         "name": "Private origin / unpublished collaborator / rights-restricted text never reaches the public companion",
         "trust": [
           "tests/contributorship.test.mjs: 'nothing from an uncleared private origin, unpublished collaborator or rights-protected text reaches the public companion', 'if one of two origins… is private and uncleared, the claim publishes no source credit at all', 'rights-restricted sources publish no passage hashes', 'contributors need both the individual and the controller…', 'the public companion is exactly the allowlisted projection of the private one'"
         ],
         "trust_result": "pass (this run)",
         "other": "ORAtlas lineage integration 'never exposes the restricted, unreviewed finding or any quote text anywhere public' (CI only)",
-        "gap": "No cross-artifact scan (other sidecars, ORAtlas export, caches) for a private title/credit — see TRUST #17 criterion 3"
+        "gap": "Cross-artifact canary scan added in the repair (tests/contributorship-private-leak.test.mjs); caches, discovery, ACL and real private data remain untested and blocked (see requested scenario 9)"
       },
       {
-        "id": "S9",
+        "id": "C9",
         "name": "Public original packet import allowed; private/embargoed packet import denied; no real data",
         "trust": [
           "tests/source-evidence-import.test.mjs: 'private and embargoed packets are refused by default and only warn with allowRestricted', 'restricted and private content is withheld or refused, never published', 'a paper whose rights are not redistributable cannot reach the outputs…'"
@@ -434,7 +592,7 @@
         "gap": "ORAtlas #210 adapters are private/offline only and have no import-denial test"
       },
       {
-        "id": "S10",
+        "id": "C10",
         "name": "Rights grant is not scientific support; native TRUST / source SEIP / CRediT credit stay separate",
         "trust": [
           "tests/contributorship.test.mjs: 'credit lineage is kept apart from TRUST and source SEIP judgments'",
@@ -453,8 +611,8 @@
       "number": 17,
       "title": "[CREDIT] Export CRediT contribution statements and source-finding credit lineage without authorship inflation",
       "snapshot_state": "OPEN",
-      "whole_issue_assessment": "slice-delivered; whole issue not complete (criterion 3 partial; private wiring blocked)",
-      "engineering_slice": "PR #18 (merge a19a8dc, carried into 0db82e1): comprev.contributorship/1 builder, schemas, synthetic fixtures, 22 golden tests",
+      "whole_issue_assessment": "slice-delivered; whole issue not complete (criterion 3 partial, now with a bounded offline cross-artifact regression; private wiring blocked)",
+      "engineering_slice": "PR #18 (merge a19a8dc, carried into 0db82e1): comprev.contributorship/1 builder, schemas, synthetic fixtures, 22 golden tests. Repair adds an offline cross-artifact regression (6 tests in tests/contributorship-private-leak.test.mjs) for criterion 3",
       "criterion_status_counts": {
         "BS": 1,
         "IE": 4,
@@ -478,9 +636,9 @@
         {
           "criterion": "A private origin leaks no title, credit/ORCID, relation or protected passage, including sidecars, caches and fixtures",
           "status": "PART",
-          "run": "this-run",
-          "evidence": "contributorship tests 'nothing from an uncleared private origin… reaches the public companion', 'if one of two origins… is private and uncleared, the claim publishes no source credit at all', 'rights-restricted sources publish no passage hashes', 'the public companion is exactly the allowlisted projection of the private one'. Pass.",
-          "gap": "Assertions cover the public contributorship companion only. No test scans the other sidecars, exports or caches for the private title/credit. Candidate follow-up: a cross-artifact negative scan (see handoff TRUST objective)."
+          "run": "this-run (repair)",
+          "evidence": "Existing: contributorship tests 'nothing from an uncleared private origin… reaches the public companion', 'if one of two origins… is private and uncleared, the claim publishes no source credit at all', 'rights-restricted sources publish no passage hashes', 'the public companion is exactly the allowlisted projection of the private one'. NEW `tests/contributorship-private-leak.test.mjs` (6 tests, pass): unique canaries (private project ref/title, unpublished collaborator name and schema-valid ORCID, curator ref, packet passage and paper title) are injected into realistic private builder inputs bound to the new lineage digest; the credit builder and the existing public pipeline (importer → links/2 bridge → ORAtlas export, scratch directory, two public packets) are run; the complete output of every enumerated public surface is scanned and no canary appears; public-pipeline bytes are identical before and after private processing; fixture tree and builder inputs are byte-unchanged; a private-scope packet is refused by the importer with no outputs; the scanner fails when a canary is inserted into any public artifact; leaking mutations of a disposable clone of the builder are detected.",
+          "gap": "Still `PART`. Tested surfaces are the enumerated offline artifacts only. Untested and blocked on ORAtlas #202 (with #203 identity and #204 workspaces): caches, discovery/search, logs, notifications, timing/count side channels, ORAtlas-side surfaces, deployed-site output and any real private data. The exporter and importer have no ACL: the private origin is credit-builder metadata and is deliberately never fed to the exporter, so this does not show that the exporter filters private input. Canaries detect leaked values, not ids or existence, and a finite set is not universal leak prevention. The carried `packet.manifest_sha256` of committed fixtures is not recomputed without packet bytes."
         },
         {
           "criterion": "Approval produces a reproducible credit manifest; private/public differ only per explicit allowlist",
@@ -510,7 +668,7 @@
       "number": 16,
       "title": "[INTEGRATION] Private review workspace artifact manifest for ORAtlas My Research",
       "snapshot_state": "OPEN",
-      "whole_issue_assessment": "not started in code; connector authorization blocked",
+      "whole_issue_assessment": "not started in code. The issue text allows the offline manifest schema, CLI and fixtures to proceed independently of the production private gate, so that design is actionable now and ORAtlas #202 is not a reason to withhold it; not implemented in this repair. The cross-repository consumer contract with ORAtlas My Research is unresolved; the connector authorization stays blocked on #202.",
       "engineering_slice": "none (building blocks only: sha256-bound lineage, claim-graph-bound contributorship subject)",
       "criterion_status_counts": {
         "BS": 1,
@@ -523,14 +681,14 @@
           "status": "NE",
           "run": "this-run",
           "evidence": "No generator or schema found (searched scripts/, docs/, tests/). review-manifest.json and scripts/release-artifacts are public release bundles, a different thing.",
-          "gap": "Design only after ORAtlas #202."
+          "gap": "Offline schema, CLI and fixtures are actionable now (not blocked by #202); unimplemented; the ORAtlas consumer contract must be agreed first."
         },
         {
           "criterion": "Connector lists only principal-authorized artifacts; invalid/expired access fails closed",
           "status": "BS",
           "run": "not-run",
           "evidence": "No principal/authorization concept on the CRT side; existing 'fail closed' is import validation, not access control.",
-          "gap": "Do not build before ORAtlas #202."
+          "gap": "Production connector and authorization are blocked on ORAtlas #202; do not build them before it."
         },
         {
           "criterion": "Exact source hashes/versions and contribution assertions attributable; drafts not presented as peer reviewed/archived",
@@ -551,7 +709,7 @@
           "status": "NE",
           "run": "this-run",
           "evidence": "tests/fixtures/contributorship has a claim graph and companions but no draft/released-version demo or manifest.",
-          "gap": "Needs the generator first."
+          "gap": "Needs the offline generator first (actionable, see above)."
         }
       ]
     },
@@ -973,7 +1131,7 @@
           "status": "BS",
           "run": "not-run",
           "evidence": "No connector, descriptor, grant or OAuth code; only LEAD-only GET /{project_id}/findings/export (restricted by default).",
-          "gap": "ORAtlas #202/#204 first."
+          "gap": "ORAtlas #202, then the #203 identity plan, then #204."
         },
         {
           "criterion": "Stranger / other member / same-name ORCID cannot discover projects",
@@ -1196,7 +1354,7 @@
       "title": "[R0][SECURITY GATE] Threat model and authorization contract for private research workspaces",
       "snapshot_state": "OPEN",
       "whole_issue_assessment": "architecture only; UNRATIFIED; no test implementation",
-      "engineering_slice": "Draft PR #211 (ADR) — OPEN, draft, 14 checks pass / 1 fail (aggregate e2e flake)",
+      "engineering_slice": "Draft PR #211 (ADR) — OPEN, draft, 14 checks pass / 1 fail (aggregate e2e; root cause unverified, no logs read)",
       "criterion_status_counts": {
         "BH": 1,
         "BS": 1,
@@ -1302,7 +1460,7 @@
       "number": 204,
       "title": "[R2] Authenticated research project workspaces, group roles and private artifact registry",
       "snapshot_state": "OPEN",
-      "whole_issue_assessment": "not started; blocked on #202",
+      "whole_issue_assessment": "not started; depends on #202 and on the #203 identity plan (do not order #204 before #203)",
       "engineering_slice": "none",
       "criterion_status_counts": {
         "BS": 1,
@@ -1316,7 +1474,7 @@
           "status": "BS",
           "run": "not-run",
           "evidence": "No workspace model; docs list #204 as follow-up.",
-          "gap": ""
+          "gap": "Needs #202 ratified and the #203 identity plan first."
         },
         {
           "criterion": "Invite/revoke members; server-side membership check on every API/file/token",
@@ -1804,7 +1962,7 @@
       "number": 5,
       "title": "create a social layer were you can follow ORCID s and have upadtes and some stats and interactions, networks and AI enriched features",
       "snapshot_state": "OPEN",
-      "whole_issue_assessment": "CANDIDATE_SUPERSEDED by #6 — proposed by the ORCID maintainer, not owner-ratified; left open and unresolved",
+      "whole_issue_assessment": "CANDIDATE_SUPERSEDED by #6 — this report observes overlap with #6; no comment or issue-body evidence shows a maintainer proposing that #6 supersedes it, and nothing is owner-ratified; left open and unresolved",
       "engineering_slice": "none",
       "criterion_status_counts": {
         "CS": 1
@@ -1824,7 +1982,7 @@
     {
       "id": "B1",
       "kind": "security-gate",
-      "text": "ORAtlas #202 security ADR is unratified (draft PR #211, aggregate e2e red from the sign-in flake); counsel/DPIA gate on D11 retention/roles. Blocks every private feature: ORAtlas #203–#207, Diggypaper #53, TRUST #16, ORCID #9 private integration. Nothing here auto-approves it.",
+      "text": "ORAtlas #202 security ADR is unratified (draft PR #211; its aggregate e2e check is red with the root cause unverified); counsel/DPIA gate on D11 retention/roles. Blocks the production private features: ORAtlas #203–#207, Diggypaper #53, the TRUST #16 connector and authorization, ORCID #9 private integration. Offline design that the issues allow independently (for example TRUST #16 schema/CLI/fixtures) is not blocked by it. Nothing here auto-approves it.",
       "owner": "ORAtlas owner"
     },
     {
@@ -1854,7 +2012,7 @@
     {
       "id": "B6",
       "kind": "ci",
-      "text": "ORAtlas PR #213 (sign-in flake: aggregate e2e fails while all shards succeed) and #214 (CI budget; checks queued/in progress at snapshot) are open. Not merged or assessed for merge by this run.",
+      "text": "ORAtlas aggregate e2e fails on #211 and #213 while the snapshot shows every e2e-shard as success; no job logs were read, so the root cause is unverified. PR #213's author attributes it to a sign-in flake (their explanation, not verified here). #214 (CI budget) is open with checks queued at the snapshot; an open PR is not authorization to merge. None were merged or assessed for merge by this run.",
       "owner": "ORAtlas owner"
     },
     {
@@ -1866,7 +2024,7 @@
     {
       "id": "B8",
       "kind": "ratification",
-      "text": "ORCID #5 is a CANDIDATE_SUPERSEDED by #6 (maintainer proposal, not owner-ratified).",
+      "text": "ORCID #5 overlaps #6 and is a candidate superseded issue; no maintainer proposal is evidenced and nothing is owner-ratified.",
       "owner": "ORCID owner"
     }
   ],
@@ -1902,15 +2060,16 @@
       "items": [
         "Diggypaper #55: producer-side compatibility check against SourceCreditObservations mapping",
         "ORAtlas #209: named rights!=support test; pinned-byte check; run on 230b8a3",
-        "TRUST #17: cross-artifact private non-leak scan (authorized repo)",
-        "ORCID #9: golden canonical-digest producer test"
+        "TRUST #17: cross-artifact private non-leak scan - done offline in the repair (tests/contributorship-private-leak.test.mjs); residual surfaces stay blocked",
+        "ORCID #9: golden canonical-digest producer test",
+        "TRUST #16: offline manifest schema/CLI/fixtures design (issue allows it independently of #202; not implemented; ORAtlas consumer contract unresolved)"
       ]
     },
     {
-      "level": "L4 blocked on #202 (private)",
+      "level": "L4 production private features blocked on #202",
       "items": [
-        "ORAtlas #204 workspaces -> #203 ORCID OAuth / #205 discovery / #206 connectors -> #207 cross-finding credit",
-        "then Diggypaper #53, TRUST #16, ORCID #9 private integration"
+        "ORAtlas #202 ratification -> #203 identity plan (ORCID OAuth) -> #204 workspaces (depends on #202 and #203) -> #205 discovery / #206 connectors -> #207 cross-finding credit",
+        "then Diggypaper #53, the TRUST #16 production connector, ORCID #9 private integration"
       ]
     },
     {
@@ -1923,5 +2082,123 @@
       ]
     }
   ],
-  "no_issue_closure_recommendation": "No issue is recommended for closure by this report. Evidence is per criterion; merged PR titles and issue open/closed state were not used as evidence."
+  "no_issue_closure_recommendation": "No issue is recommended for closure by this report. Evidence is per criterion; merged PR titles and issue open/closed state were not used as evidence.",
+  "repair": {
+    "note": "Review repair of the evidence pass. Changes only docs/ecosystem-readiness.md, docs/ecosystem-handoff.md, this file and the new tests/contributorship-private-leak.test.mjs; no runtime, schema, contract, policy or foreign-repository change; no GitHub, push, PR or worktree operation. This file stays descriptive, not an interchange contract.",
+    "worktree": "/tmp/trust-ecosystem-repair-1a41",
+    "branch": "pico/ecosystem-repair-1a41",
+    "base_commit": "8bfe33002d78e67273118b7f0969b07f564ce913",
+    "parent_run_id": "run-1a41a3886630",
+    "traceparent": "run1a41a3886630",
+    "corrections": [
+      "section 7 / synthetic_scenarios now lists the ten scenarios exactly as the user enumerated them; the earlier wrong claim that the list was not given is withdrawn and the substituted credit rows are supplemental subcases C1-C10",
+      "protocol ids use the exact schema strings: comprev.contributorship/1, comprev.evidence-packet-links/2, comprev.claim-finding-map/1, oratlas.source-credit-observations/0.1.0, oratlas.private-cross-finding/0.1.0, orcid-playground/roster-assertion (0.1.0)",
+      "ORAtlas #204 depends on #202 and on the #203 identity plan; it is no longer ordered before #203",
+      "aggregate e2e failure on ORAtlas #211/#213: root cause unverified (no job logs read); the sign-in explanation is the PR author's; an open #214 is not authorization to merge",
+      "TRUST #16: offline manifest schema/CLI/fixtures design is actionable independently of #202 and was not implemented; the ORAtlas consumer contract is unresolved; the production connector/authorization stays blocked on #202",
+      "ORCID #5: no maintainer proposal is evidenced; it is only an observed candidate overlap with #6, not owner-ratified",
+      "TRUST #17 criterion 3 re-scoped to the new offline regression; status stays PART"
+    ]
+  },
+  "validation_repair_run": {
+    "worktree": "/tmp/trust-ecosystem-repair-1a41",
+    "base_commit": "8bfe33002d78e67273118b7f0969b07f564ce913",
+    "node": "v24.21.0",
+    "python": "3.12.3",
+    "logs": "/tmp/ecosystem-repair-1a41-logs/ (not persisted)",
+    "foreign_ci_claimed": false,
+    "commands": [
+      {
+        "command": "node scripts/validate-trust.js",
+        "exit_code": 0,
+        "result": "4 claims, 5 citation contexts, 16 verified passages"
+      },
+      {
+        "command": "node scripts/test-trust-validator.js",
+        "exit_code": 0,
+        "result": "TRUST validator tests passed"
+      },
+      {
+        "command": "node scripts/validate-community-contracts.js",
+        "exit_code": 0,
+        "result": "examples PASS; community contract validator tests passed"
+      },
+      {
+        "command": "node --test tests/*.test.mjs test/*.test.mjs (20 files: 16 + 4; mystmd 1.10.1 on PATH from /tmp/trust-sync-eb51dbbd-tools)",
+        "exit_code": 0,
+        "result": "175 tests: 174 pass, 0 fail, 0 cancelled, 1 skipped (the real-ORAtlas-extractor test, needs ORATLAS_DIR)"
+      },
+      {
+        "command": "node --test tests/*.test.mjs (16 files, run separately)",
+        "exit_code": 0,
+        "result": "150 tests: 149 pass, 0 fail, 1 skipped (includes the 6 new tests)"
+      },
+      {
+        "command": "node --test test/*.test.mjs (4 files, run separately)",
+        "exit_code": 0,
+        "result": "25 tests: 25 pass, 0 skipped"
+      },
+      {
+        "command": "node --test tests/contributorship-private-leak.test.mjs",
+        "exit_code": 0,
+        "result": "6 tests: 6 pass (the new regression, positive and negative cases)"
+      },
+      {
+        "command": "ORATLAS_DIR=/tmp/trust-sync-eb51dbbd-oratlas (HEAD 9cd3a0c284400b30dd0044cf3acb24df1047275d == native pin) node --test tests/oratlas-export.test.mjs",
+        "exit_code": 0,
+        "result": "12/12 pass, 0 skipped, including the real extractor ingest"
+      },
+      {
+        "command": "node scripts/oratlas/validate-with-oratlas.mjs --oratlas-dir /tmp/trust-sync-eb51dbbd-oratlas --directory .",
+        "exit_code": 0,
+        "result": "extractor loaded 4 claims, 5 citations, 5 relations with zero dropped records"
+      },
+      {
+        "command": "node scripts/oratlas/verify-oratlas-export.mjs --directory .",
+        "exit_code": 0,
+        "result": "ORAtlas export verified"
+      },
+      {
+        "command": "node tests/fixtures/contributorship/build-fixture.mjs --check",
+        "exit_code": 0,
+        "result": "contributorship fixture is current (fixtures and goldens unchanged)"
+      },
+      {
+        "command": "node scripts/release-artifacts/validate-release-artifact-schemas.mjs --root .",
+        "exit_code": 0,
+        "result": "9 documents"
+      },
+      {
+        "command": "node scripts/release-artifacts/validate-release-artifact-bundle.mjs --directory release_artifacts/examples",
+        "exit_code": 0,
+        "result": "release-example-v1-1-0, 4 indexed artifacts"
+      },
+      {
+        "command": "python3 scripts/build_skill_manifest.py --check",
+        "exit_code": 0,
+        "result": "22 skills, pipeline v30"
+      },
+      {
+        "command": "python3 scripts/check_template_consistency.py",
+        "exit_code": 0,
+        "result": "14/14 checks passed"
+      },
+      {
+        "command": "python3 scripts/test_check_template_consistency.py",
+        "exit_code": 0,
+        "result": "6 tests OK"
+      },
+      {
+        "command": "python3 scripts/check_prose_fidelity.py --self-test",
+        "exit_code": 0,
+        "result": "16/16 self-test cases behaved correctly"
+      },
+      {
+        "command": "node scripts/test_evidence_explorer.mjs",
+        "exit_code": 0,
+        "result": "21/21 passed"
+      }
+    ],
+    "clean_myst_build": "Clean MyST build in a disposable clone (/tmp/ecosystem-repair-build-1a41, clone of 8bfe330 with this repair's file changes copied in; docs/, provenance/ and tests/ are not MyST inputs, content/ is unchanged): BASE_URL=/ComputationalReviewTemplate_trust-knowledge myst build --html → exit 0, 5 pages. The same two pre-existing myst.yml contributor warnings as before appear, and the unpinned book-theme template was again fetched from GitHub. Not a CI run and not a deployed-site check."
+  }
 }

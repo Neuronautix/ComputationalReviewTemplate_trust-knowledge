@@ -1,6 +1,6 @@
 # Ecosystem handoff: exact launches, objectives and the authorization boundary
 
-Parent run `run-1a41a3886630` · companion to [`ecosystem-readiness.md`](ecosystem-readiness.md) (evidence) and [`../provenance/ecosystem-readiness-report.json`](../provenance/ecosystem-readiness-report.json) (descriptive report).
+Parent run `run-1a41a3886630` · repaired on branch `pico/ecosystem-repair-1a41` from `8bfe330`; companion to [`ecosystem-readiness.md`](ecosystem-readiness.md) (evidence) and [`../provenance/ecosystem-readiness-report.json`](../provenance/ecosystem-readiness-report.json) (descriptive report).
 
 ## 1. Where the program stops
 
@@ -21,7 +21,7 @@ The program deliberately stops at this boundary. Everything below is a launch yo
 
 ### What this handoff will not do
 
-- It does not approve ORAtlas #202 (the security ADR is unratified; draft PR #211) or the counsel/DPIA gate on D11. Those need their owner. Until they are ratified, every private feature (ORAtlas #203–#207, Diggypaper #53, TRUST #16, ORCID #9 private integration) stays unstarted. No objective below touches them.
+- It does not approve ORAtlas #202 (the security ADR is unratified; draft PR #211) or the counsel/DPIA gate on D11. Those need their owner. Until they are ratified, every production private feature (ORAtlas #203–#207, Diggypaper #53, the TRUST #16 connector and authorization, ORCID #9 private integration) stays unstarted. No objective below touches them. Offline design that an issue explicitly allows independently of the private gate (TRUST #16 manifest schema, CLI and fixtures) is not blocked by #202 and is listed in §3.1 as actionable; it is not implemented here.
 - It does not spoof environment variables or bypass PICO's session-scope check. `pico run` fails closed when the target and `--repo` disagree; if it stops, fix the cause rather than working around it.
 - It does not synthesize permission policies. PICO validates `.pi/autonomy.yaml`; see §2.
 - It does not claim the Diggypaper → CRT/TRUST → ORAtlas mission is complete.
@@ -40,20 +40,25 @@ The program deliberately stops at this boundary. Everything below is a launch yo
 
 Each block gives the exact command, then the bounded objective to paste **inside the Pi session** that `pico run` opens, then preconditions, tests, acceptance and constraints. All objectives share these rules: work on a new branch from `origin/main`; no commits to `main`; no force-push; no auto-merge; no issue creation or comments; no push or PR unless you explicitly authorize it in that session; stop and report if a precondition fails.
 
-### 3.1 TRUST — authorized now (priority: highest, smallest)
+### 3.1 TRUST — authorized now
 
 ```
 pico run /home/dhuzard/projects/scientific-review-workspace/scientific-review-workspace/workspace/trust-knowledge --repo Neuronautix/ComputationalReviewTemplate_trust-knowledge
 ```
 
+**Done in the repair (branch `pico/ecosystem-repair-1a41` from `8bfe330`, local commit only):** `tests/contributorship-private-leak.test.mjs` (6 tests) is the offline cross-artifact regression for TRUST #17 criterion 3. It injects unique synthetic canaries into realistic private credit-builder inputs, runs the existing builder and the existing public pipeline (importer → `comprev.evidence-packet-links/2` bridge → ORAtlas export) in a scratch directory on separate public packets, scans every file of every enumerated public surface, checks that public output bytes and inputs are unchanged by private processing, checks that a private-scope packet is refused by the importer, and shows the scanner (and a disposable clone of the builder) fail under injected leaks. Exact names and results are in readiness §4 (#17) and §7 (scenario 9). It does **not** show that the exporter filters private input (it has no ACL; the private origin is never given to it), and it does not cover caches, discovery or search, logs, timing or count side channels, ORAtlas-side surfaces, deployed-site output or real private data; those stay blocked on ORAtlas #202, with the #203 identity plan and #204 workspaces ordered after it.
+
+- **Preconditions:** the repair branch or a fresh branch from the repair commit; `mystmd@1.10.1` on `PATH` for the `test/` suite; the `ORATLAS_DIR` pin checkout (`9cd3a0c`) is optional.
+- **Tests to run:** `node scripts/validate-trust.js`; `node scripts/test-trust-validator.js`; `node scripts/validate-community-contracts.js`; `node --test tests/*.test.mjs test/*.test.mjs`; `ORATLAS_DIR=<pin checkout> node --test tests/oratlas-export.test.mjs`; `node tests/fixtures/contributorship/build-fixture.mjs --check`; `python3 scripts/build_skill_manifest.py --check`; `python3 scripts/check_template_consistency.py`. Counts for the repair run are in readiness §6.1.
+- **Acceptance already met:** no existing test, script, schema, fixture, golden or workflow changed; fixture digests unchanged.
+
+**Actionable but not started — TRUST #16 offline design.** The issue text lets the artifact manifest schema, CLI and synthetic fixtures proceed independently of the production private gate, so ORAtlas #202 is not a reason to refuse this work. It was deliberately not implemented in the repair because the cross-repository consumer contract with ORAtlas My Research is unresolved. A bounded objective, if you want it later:
+
 ```
-/orchestrate On a new branch from origin/main (0db82e1), add one test-only change for TRUST #17 acceptance criterion 3 (cross-artifact private non-leak). Using the existing synthetic contributorship fixture whose private origin is "gamma", add a negative scan asserting that the private project_ref and project_title, the private source credit and ORCID, the candidate relation, and rights-protected passage text appear in no file the repository's own pipeline emits other than the private companion and private release report (the public companion, the ORAtlas export and sidecars, and the generated source-evidence/lineage outputs). Put it in a new tests/contributorship-private-leak.test.mjs or extend tests/contributorship.test.mjs. Do not change scripts/, schemas, fixtures, goldens, workflows, skills, TRUST_DECISIONS.md or any policy file; if CI wiring is needed, report it instead. Show negative proof in a disposable copy only (inject a private marker into each scanned artifact; the test must fail). Do not recompute packet manifests without packet bytes. Commit locally; do not push, open a PR, comment on or create issues, or merge.
+/orchestrate On a new branch, design only (no code in scripts/ yet): propose the schema and CLI surface for a portable, versioned private-workspace artifact manifest for TRUST #16 (offline, synthetic fixtures, no principals, no connector, no token, no network, no change to the public exporter). List every open question about the ORAtlas My Research consumer contract and stop there. Do not create or comment on issues, push, open a PR, or merge.
 ```
 
-- **Preconditions:** `ecosystem-base` branch from `origin/main` (§2.2); `mystmd@1.10.1` on `PATH` for the `test/` suite; the `ORATLAS_DIR` pin checkout is optional.
-- **Tests to run before committing:** `node scripts/validate-trust.js`; `node scripts/test-trust-validator.js`; `node scripts/validate-community-contracts.js`; `node --test tests/*.test.mjs` (expect the current 144 plus the new tests; 1 skip without `ORATLAS_DIR`); `node --test test/*.test.mjs`; `node tests/fixtures/contributorship/build-fixture.mjs --check`; `python3 scripts/build_skill_manifest.py --check`; `python3 scripts/check_template_consistency.py`.
-- **Acceptance:** the new test passes on the clean tree and fails under each injected marker; no existing test changed; goldens and fixture digests unchanged (`tests/fixtures/contributorship/expected/*` hashes in the report); `git status` clean after.
-- **Not in scope:** TRUST #16 (blocked on #202), D01–D12 decisions, the unresolved Phase 5 shape question.
+- **Not in scope:** the TRUST #16 production connector and authorization (blocked on ORAtlas #202), D01–D12 decisions, the unresolved Phase 5 shape question.
 
 ### 3.2 Diggypaper — needs your authorization first (priority 2)
 
@@ -83,7 +88,7 @@ pico run /home/dhuzard/projects/scientific-review-workspace/scientific-review-wo
 ```
 
 - **Preconditions:** authorization; `corepack enable`; `pnpm install --frozen-lockfile`; `pnpm --filter @oratlas/db db:generate`.
-- **Tests:** `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm evidence-lineage:verify`; report the e2e flake (#213) as pre-existing if it appears, do not fix it here.
+- **Tests:** `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm evidence-lineage:verify`; if the aggregate `e2e` check fails, report it without attributing a cause: its root cause is unverified (no job logs were read here), PR #213's sign-in explanation is the author's, and PRs #213/#214 are owned separately; do not fix or merge them here.
 - **Acceptance:** new tests fail if a fixture byte or the `accessEffect` value changes; existing `source-credit-adapters`, `private-research-credit` and lineage suites unchanged; no change to any `private-*` contract semantics.
 - **Not in scope:** #160, #178, #195 (independent of the synthetic MVP); all private features.
 
@@ -104,7 +109,7 @@ pico run /home/dhuzard/projects/orcid-playground --repo dhuzard/orcid-playground
 - **Preconditions:** durable clone chosen and authorized; `pip install -e ".[dev]"` in a virtualenv.
 - **Tests:** `pytest -q`, `node --test web/orcid-biosketch.test.mjs`. (The parent ran only `tests/test_roster.py`, 24 passed, on the temporary capture.)
 - **Acceptance:** new test passes and fails on a one-byte change; existing roster tests unchanged; schema and fixture hashes unchanged.
-- **Owner decisions this does not make:** merging draft PR #7; ratifying that #6 supersedes #5 (candidate only); the ORCID API access/sync model.
+- **Owner decisions this does not make:** merging draft PR #7; ratifying whether #6 supersedes #5 (candidate only; no maintainer proposal is evidenced); the ORCID API access/sync model.
 
 ### 3.5 Reference fork — read-only verification (priority 5)
 
@@ -146,12 +151,12 @@ pico run /home/dhuzard/projects/scientific-review-workspace/scientific-review-wo
 | 2 | Choose a durable ORCID clone path | user | §3.4 |
 | 3 | Refresh/rebase local bases as in §2.2 | user | all launches |
 | 4 | Ratify or reject ORAtlas #202 (PR #211) and complete the counsel/DPIA review of D11 | ORAtlas owner | every private feature |
-| 5 | Decide on ORAtlas PRs #213 (sign-in flake) and #214 (CI budget) | ORAtlas owner | trustworthy aggregate `e2e` signal |
+| 5 | Review ORAtlas PRs #213 and #214 (CI budget). The aggregate `e2e` failure's root cause is unverified; #213's sign-in explanation is the author's. An open PR is not authorization to merge | ORAtlas owner | trustworthy aggregate `e2e` signal |
 | 6 | Accept, reject or revise TRUST decisions D01–D12 (all `proposed`) | TRUST owner | native-TRUST export semantics |
-| 7 | Confirm the ten synthetic scenarios listed in readiness §7 (the brief referred to ten without listing them) | user | scenario coverage claim |
+| 7 | Review the coverage gaps listed against your ten requested scenarios in readiness §7 (notably scenario 9: only the enumerated offline surfaces are tested) | user | scenario coverage claim |
 | 8 | Record acceptance, conflicts and sign-off for the proposed SEIP pilot reviewers and adjudicator | Diggypaper owner | Diggypaper #7, #1 |
 | 9 | Decide the rights of the lineage fixture's `citation_contexts` excerpts and whether a real packet deposit may be made | owners of the packet | ORAtlas #198 real-data workflow |
 | 10 | Decide MVP v0.1 release (ORAtlas #199) | ORAtlas owner | — |
-| 11 | Ratify (or reject) that ORCID #6 supersedes #5; review draft PR #7 | ORCID owner | ORCID epic |
+| 11 | Ratify or reject whether ORCID #6 supersedes #5 (candidate only); review draft PR #7 | ORCID owner | ORCID epic |
 
 The public synthetic path (Diggypaper packet → TRUST importer → ORAtlas lineage view) does not wait on items 4–5; the private path waits on item 4 and nothing else can substitute for it.
