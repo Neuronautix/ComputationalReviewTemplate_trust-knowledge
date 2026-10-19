@@ -765,7 +765,12 @@ Phase 14 MUST also:
      `section_id`, `section_title`, `findings` (array of finding **objects**, not cite_key strings),
      `argument_groups` (object), `conflicts`, `figure_data`, `unique_papers`, `total_findings`
   5. Verify all `n_sections` files exist and are non-empty before proceeding
-a) Create `content/evidence_database.md` with `:::{evidence-explorer}` directive
+a) Create `content/evidence_database.md` with `:::{evidence-explorer}` directive. Declare
+   `:availability: available` once the loader binds at least one package (replace the
+   template's `:availability: not_provided`). A review deliberately published without an
+   evidence database keeps `:availability: not_provided`; that is the only valid empty
+   state. Packages are copied into `evidence/` unchanged — the Phase 5 shape is loaded
+   through the explorer's `legacy-section-package` adapter (`evidence/README.md`).
 b) Create `content/provenance.md` with pipeline summary from gate artifacts
 c) Add `:::{authorship-explorer}` with `:authors: ./authors.yml` to `content/00_frontmatter.md` ONLY (after the abstract, before the body)
 d) Verify `myst.yml` `project.toc` lists ALL `content/*.md` files (count must match)
@@ -806,6 +811,23 @@ before handing off to the validator. Treat these as a hard gate:
    If any file is missing, undersized, or malformed, re-run the split
    (don't proceed with empty placeholders — the evidence-explorer widget
    will load nothing).
+
+   Then run the explorer's own loader and record its diagnostics in
+   `gate_assembly.json`:
+   ```js
+   import { loadEvidenceDirectory, applyEvidenceAvailability } from './plugins/evidence-explorer-plugin.mjs'
+   const result = applyEvidenceAvailability(loadEvidenceDirectory('evidence'), 'available')
+   if (!['loaded', 'loaded_zero_findings'].includes(result.status)) throw new Error(result.status)
+   if (result.diagnostics.rejected.length) throw new Error('rejected evidence packages')
+   ```
+   `partial_loading` is a failure here even though the widget would render the
+   partial set: repair or remove the rejected package. Finally write
+   `provenance/review_compatibility_report.json` from the build, citation and loader
+   determinations with
+   `node scripts/review-compatibility-report.mjs generate <determinations.json> provenance/review_compatibility_report.json`
+   (`docs/evidence-compatibility.md`); the TRUST claim graph is reported there as an
+   extension with the verbatim `node scripts/validate-trust.js` result, never
+   re-scored. A non-zero exit is a hard Phase 14 failure.
 
 3. **MyST build smoke test.** `myst build --html` MUST exit 0 and emit
    the rendered widgets in `_build/html/`. Grep the rendered HTML for
@@ -975,7 +997,11 @@ Apply fixes in **reverse document order** (last occurrence first) to prevent off
      citation without cleaning up the dependent prose. Send the affected lines back
      to the Phase 18 agent via `send_message` for sentence-level repair before
      proceeding to Phase 20.
-6. **Save** final `.tex` and `.bib` files.
+6. Refresh `provenance/review_compatibility_report.json` from the final build,
+   citation and loader determinations with
+   `node scripts/review-compatibility-report.mjs generate <determinations.json> provenance/review_compatibility_report.json`.
+   A contradictory or invalid report is a hard Phase 19 failure.
+7. **Save** final `.tex` and `.bib` files.
 
 
 ## Phase 20a: Methods Ledger Refresh (pre-push)
@@ -1145,8 +1171,10 @@ for bulk uploads — it can push wrong file contents to multiple paths).
    - Every .bib: contains `@article` or `@misc`
    - Every .md: first non-empty line starts with `#` or `---`
    - If ANY signature check fails → abort push, report which files are wrong
-6. `git add -A && git commit && git push`
-7. Save gate_repository_push.json with file counts and signature check results
+6. Run `node scripts/review-compatibility-report.mjs validate provenance/review_compatibility_report.json`;
+   abort the push on any error.
+7. `git add -A && git commit && git push`
+8. Save gate_repository_push.json with file counts and signature check results
 
 **GATE ARTIFACT:** After all files are pushed:
 
@@ -1172,7 +1200,9 @@ advance_phase('14_github_push', '<saved_version_id>')
 After `git push`, verify:
 a) `myst.yml` `project.toc` entry count matches the number of `.md` files in `content/`
 b) `site.nav` structure is preserved from the repo scaffold (do not restructure existing nav)
-c) Install mystmd (`npm install -g mystmd`) and run `myst build --html`. Assert zero "Could not link citation" and zero "Cannot find image" errors. This is MANDATORY, not optional.
+c) Install mystmd (`npm install -g mystmd@1.10.1`, the version CI validates) and run `myst build --html`. Assert zero "Could not link citation" and zero "Cannot find image" errors. This is MANDATORY, not optional.
+d) Run the compatibility-report validator in the fresh clone so the checked
+   artifact, not a pre-copy workspace file, is the one accepted.
 
 
 ## Repository Structure

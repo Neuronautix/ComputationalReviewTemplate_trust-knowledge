@@ -8,6 +8,8 @@ function render({ model, el }) {
   const findings = data.findings || [];
   const conflicts = data.conflicts || [];
   const figureData = data.figure_data || [];
+  const evidenceStatus = data.evidence_status || 'loaded';
+  const diagnostics = data.diagnostics || {};
   
   const height = model.get('height') || '700px';
   
@@ -30,29 +32,33 @@ function render({ model, el }) {
       else if (c.side_b.position) { sideB = c.side_b.position; }
     }
     
+    // The plugin keeps the native record under source_conflict; the remaining
+    // variants are read from it so its normalized copy cannot hide them.
+    const src = (c.source_conflict && typeof c.source_conflict === 'object') ? c.source_conflict : c;
+
     // Schema: side_a_dois/side_b_dois arrays
-    if (c.side_a_dois) { doiA = c.side_a_dois[0] || ''; }
-    if (c.side_b_dois) { doiB = c.side_b_dois[0] || ''; }
+    if (src.side_a_dois) { doiA = src.side_a_dois[0] || ''; }
+    if (src.side_b_dois) { doiB = src.side_b_dois[0] || ''; }
     // Schema: side_a/side_b objects with evidence_dois
-    if (!doiA && c.side_a && typeof c.side_a === 'object' && c.side_a.evidence_dois) { doiA = c.side_a.evidence_dois[0] || ''; }
-    if (!doiB && c.side_b && typeof c.side_b === 'object' && c.side_b.evidence_dois) { doiB = c.side_b.evidence_dois[0] || ''; }
+    if (!doiA && src.side_a && typeof src.side_a === 'object' && src.side_a.evidence_dois) { doiA = src.side_a.evidence_dois[0] || ''; }
+    if (!doiB && src.side_b && typeof src.side_b === 'object' && src.side_b.evidence_dois) { doiB = src.side_b.evidence_dois[0] || ''; }
     
     // Schema: sides array [{position, evidence_dois}]
-    if (c.sides && Array.isArray(c.sides)) {
-      if (c.sides[0]) { sideA = c.sides[0].position || ''; doiA = (c.sides[0].evidence_dois||[])[0] || ''; }
-      if (c.sides[1]) { sideB = c.sides[1].position || ''; doiB = (c.sides[1].evidence_dois||[])[0] || ''; }
+    if (src.sides && Array.isArray(src.sides)) {
+      if (src.sides[0]) { sideA = src.sides[0].position || ''; doiA = (src.sides[0].evidence_dois||[])[0] || ''; }
+      if (src.sides[1]) { sideB = src.sides[1].position || ''; doiB = (src.sides[1].evidence_dois||[])[0] || ''; }
     }
     
     // Schema: paper_dois array
-    if (!doiA && c.paper_dois && Array.isArray(c.paper_dois)) {
-      doiA = c.paper_dois[0] || '';
-      doiB = c.paper_dois[1] || '';
+    if (!doiA && src.paper_dois && Array.isArray(src.paper_dois)) {
+      doiA = src.paper_dois[0] || '';
+      doiB = src.paper_dois[1] || '';
     }
     
     // Schema: finding_dois
-    if (!doiA && c.finding_dois && Array.isArray(c.finding_dois)) {
-      doiA = c.finding_dois[0] || '';
-      doiB = c.finding_dois[1] || '';
+    if (!doiA && src.finding_dois && Array.isArray(src.finding_dois)) {
+      doiA = src.finding_dois[0] || '';
+      doiB = src.finding_dois[1] || '';
     }
     
     return { desc, reason, doiA, doiB, sideA, sideB, section: c.section || '' };
@@ -100,7 +106,36 @@ function render({ model, el }) {
   el.innerHTML = '';
   const container = document.createElement('div');
   container.className = 'evidence-explorer';
+  container.dataset.evidenceStatus = evidenceStatus;
   container.style.cssText = `max-height:${height};overflow:auto;font-family:system-ui,-apple-system,sans-serif;`;
+
+  const statusMessages = {
+    not_provided: 'No Evidence Database was provided for this review.',
+    missing_directory: 'Evidence Database unavailable: the evidence directory is missing.',
+    invalid_manifest: 'Evidence Database unavailable: its manifest is invalid.',
+    no_compatible_files: 'Evidence Database unavailable: no compatible evidence packages were found.',
+    invalid_packages: 'Evidence Database unavailable: discovered packages are invalid.',
+    partial_loading: 'Evidence Database is only partially available: one or more packages were rejected.',
+    loaded_zero_findings: 'Evidence packages loaded successfully; they legitimately contain zero findings.',
+  };
+  if (statusMessages[evidenceStatus]) {
+    const banner = document.createElement('div');
+    const severe = ['missing_directory', 'invalid_manifest', 'no_compatible_files', 'invalid_packages'].includes(evidenceStatus);
+    banner.className = 'evidence-explorer-status';
+    banner.dataset.status = evidenceStatus;
+    banner.setAttribute('role', severe ? 'alert' : 'status');
+    banner.setAttribute('aria-live', severe ? 'assertive' : 'polite');
+    banner.style.cssText = `margin:0 0 16px;padding:12px 14px;border-radius:6px;font-size:13px;line-height:1.45;background:${severe ? '#fef2f2' : '#fffbeb'};border:1px solid ${severe ? '#fecaca' : '#fde68a'};color:${severe ? '#991b1b' : '#854d0e'};`;
+    banner.textContent = statusMessages[evidenceStatus];
+    const detail = diagnostics.message || (diagnostics.rejected || []).map(item => `${item.file}: ${item.reason}`).join('; ');
+    if (detail && evidenceStatus !== 'not_provided') {
+      const diagnostic = document.createElement('div');
+      diagnostic.style.cssText = 'margin-top:6px;font-size:11px;word-break:break-word;';
+      diagnostic.textContent = detail;
+      banner.appendChild(diagnostic);
+    }
+    container.appendChild(banner);
+  }
   
   // Tab bar
   const tabs = ['Overview', 'Findings', 'Conflicts', 'Figure Data'];
@@ -162,6 +197,22 @@ function render({ model, el }) {
         <td style="padding:8px;text-align:right;">${s.conflicts}</td>
       </tr>`).join('')}</tbody>
     </table>`;
+  // Source-evidence imports: name the packet and lineage digest, verbatim.
+  const imported = sections.filter(s => s.import_provenance && typeof s.import_provenance === 'object');
+  if (imported.length) {
+    const note = document.createElement('div');
+    note.className = 'evidence-explorer-import-provenance';
+    note.style.cssText = 'margin-top:16px;font-size:12px;color:#475569;line-height:1.5;';
+    imported.forEach(s => {
+      const line = document.createElement('div');
+      const prov = s.import_provenance;
+      line.textContent = `\u00a7${s.section}: imported from source-evidence packet ${prov.packet_id || '(unnamed)'}`
+        + (prov.lineage_sha256 ? `; lineage ${prov.lineage_sha256}` : '')
+        + '. Native assessments stay in the lineage sidecar; nothing here is a TRUST score.';
+      note.appendChild(line);
+    });
+    overview.appendChild(note);
+  }
   panels['Overview'] = overview;
   container.appendChild(overview);
   
@@ -279,6 +330,17 @@ function render({ model, el }) {
         ${c.reason ? `<div style="font-size:12px;color:#666;"><strong>Resolution:</strong> ${c.reason}</div>` : ''}
       </div>`).join('');
   
+  // An empty conflict set is shown with the package's own declaration, never as "none".
+  sections.filter(s => s.conflicts === 0 && s.conflict_assessment && typeof s.conflict_assessment === 'object')
+    .forEach(s => {
+      const declared = document.createElement('div');
+      declared.className = 'evidence-explorer-conflict-assessment';
+      declared.style.cssText = 'font-size:12px;color:#475569;margin-bottom:8px;';
+      declared.textContent = `\u00a7${s.section}: conflict assessment ${s.conflict_assessment.status || 'undeclared'}`
+        + (s.conflict_assessment.basis ? ` \u2014 ${s.conflict_assessment.basis}` : '');
+      conflictsPanel.appendChild(declared);
+    });
+
   panels['Conflicts'] = conflictsPanel;
   container.appendChild(conflictsPanel);
   

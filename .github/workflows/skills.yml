@@ -13,9 +13,9 @@ jobs:
   manifest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -28,3 +28,8 @@ jobs:
       # generation quoted consistently, referenced files present.
       - name: Template consistency audit
         run: python scripts/check_template_consistency.py
+
+      # The optional-plugin allowance must not hide an undeclared plugin or let
+      # example acceptances enable the human-review layer.
+      - name: Template consistency audit tests
+        run: python scripts/test_check_template_consistency.py

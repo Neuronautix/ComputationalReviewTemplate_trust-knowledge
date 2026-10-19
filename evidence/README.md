@@ -3,10 +3,44 @@
 This directory contains the structured evidence packages that power the
 interactive Evidence Explorer widget on the review site.
 
-## Expected File Format
+## Two accepted package shapes
 
-The `evidence-explorer-plugin.mjs` scans this directory for per-section
-JSON files named:
+The explorer reads packages through one loader
+(`plugins/evidence-explorer-plugin.mjs`) and reports which adapter loaded each
+file:
+
+| Adapter | Shape | Who writes it |
+|---|---|---|
+| `canonical-v1` | Versioned contract **1.0.0**: [`schema/package.schema.json`](schema/package.schema.json) (`evidence_package_schema_version`, `section{id,order,title}`, `findings[]` with `sources[]`, `conflicts`, `figure_data`, `evidence_gaps`, `provenance`) | Producers that opt into the versioned contract |
+| `legacy-section-package` | The Phase 5 section package (`section_id`, `section_title`, `findings[]` with `cite_key`/`doi`/`claim`, `argument_groups`, `conflicts`, `figure_data`, optional `conflict_assessment` and `import_provenance`) | This fork's Phase 5 curation, and the fixed-corpus source-evidence import (`docs/SOURCE_EVIDENCE_IMPORT.md`) |
+
+In this TRUST fork the Phase 5 shape is still the production shape: the Phase 5
+and 5b gates, the claim-seed builder and the source-evidence importer are
+defined against it. Moving Phase 5 to emit `canonical-v1` is an open owner
+decision, not something this loader decides. Despite its name, the
+`legacy-section-package` adapter is therefore a supported path, not a
+deprecation.
+
+Adapters copy and never write back. A package file is never modified, and the
+bound payload carries the native records unchanged:
+
+- each finding keeps every native field; the payload only adds `section` and
+  `section_title`, and fills `cite_key`, `doi`, `claim_source_sentence` and
+  `tier` only where the native finding lacks them;
+- each conflict is normalized for display and keeps the native record under
+  `source_conflict`;
+- section-level `import_provenance` and `conflict_assessment` are passed into
+  the payload's `sections[]` verbatim. Lineage sidecars, digests, rights and
+  native `seip-support-v1` judgments are not read or converted by the explorer.
+
+## Discovery
+
+Use `manifest.json` (schema [`schema/manifest.schema.json`](schema/manifest.schema.json))
+for an explicit package list and ordering. Manifest filenames and orders must
+each be unique, and every listed file must resolve to a file inside this
+directory (no `..`, no symlink escape). Without a manifest the explorer
+discovers these filenames and orders them by numeric section order, never
+filesystem order:
 
 ```
 evidence_section_01.json
@@ -15,74 +49,37 @@ evidence_section_02.json
 evidence_section_NN.json
 ```
 
-One file per review section, numbered from **01** and covering every section in
-the user's table of contents — the Introduction included. The plugin discovers
-whichever sections are present rather than assuming a count, so the number of
-sections is set by the table of contents alone.
+`section_NN_evidence_package.json` and `section_NN_evidence.json` are still read
+for older trees. Loaded packages must have unique section orders. A package
+that declares an unknown or future schema version is rejected explicitly; it is
+never interpreted as a legacy package.
 
-Two earlier naming conventions, `section_NN_evidence_package.json` and
-`section_NN_evidence.json`, are still read for older trees. New work should use
-`evidence_section_NN.json`; the plugin prefers it.
+## Declared availability and diagnostics
 
-## JSON Schema
+The `:::{evidence-explorer}` directive declares `:availability:`:
 
-What the explorer reads from each file is a small contract: `section_title`,
-`findings[]`, `conflicts[]` and `figure_data[]`. Findings must be objects —
-`argument_groups.*.supporting_findings` holds cite-key *strings* and is not a
-source of finding records.
+- `available` (default): at least one compatible package must load. A missing
+  directory, an invalid manifest, no compatible files, or only invalid packages
+  **fails the build**. A partial set renders with a build warning and is
+  rejected by the review gates.
+- `not_provided`: an explicit, truthful "no Evidence Database" state. This is the
+  only valid empty state; an empty directory is never silently accepted. The
+  un-instantiated template declares it in `content/evidence_database.md`, and
+  Phase 14 switches it to `available` once packages exist.
 
-Phase 5 writes considerably more than this (`argument_groups`, `thesis`,
-`subsections`, `citation_key_map`, `cross_references` and others); those keys are
-carried for downstream phases and ignored by the explorer. The authoritative
-shape is the Phase 5 section in `skills/comprev-dataml-phases.md` — this file
-documents only the explorer's contract, so the two cannot drift.
-
-The fields below are the ones the widget renders:
-
-```json
-{
-  "section_title": "Human-readable section title",
-  "findings": [
-    {
-      "claim": "What the paper found",
-      "claim_source_sentence": "Verbatim sentence from paper",
-      "effect_size": "Quantitative magnitude (or 'not reported')",
-      "effect_size_source_sentence": "Verbatim sentence supporting the effect size",
-      "n": 0,
-      "study_system": "mouse | human | ...",
-      "replication_status": "independently_replicated | replication_unknown | contested",
-      "replication_evidence_dois": ["10.xxxx/..."],
-      "doi": "10.xxxx/...",
-      "text_access": "fulltext | abstract_only",
-      "evidence": "Optional supporting context"
-    }
-  ],
-  "conflicts": [
-    {
-      "paper_a_doi": "10.xxxx/...",
-      "paper_b_doi": "10.xxxx/...",
-      "nature_of_conflict": "Description",
-      "resolution_status": "unresolved | partially_resolved | resolved"
-    }
-  ],
-  "figure_data": [],
-  "unique_papers": 0,
-  "total_findings": 0
-}
-```
+The payload exposes one status: `missing_directory`, `invalid_manifest`,
+`no_compatible_files`, `invalid_packages`, `partial_loading`,
+`loaded_zero_findings`, `loaded` or `not_provided`, plus the discovered,
+loaded and rejected file lists. Build warnings also report an interior gap in
+discovered sections, a count that disagrees with `:sections:`, and an empty
+conflict set that no package declares through `conflict_assessment`.
 
 ## How Files Are Generated
 
 The pipeline's Phase 5 (Evidence Curation) builds per-section evidence
-packages from the raw cluster evidence. Phase 14 (Assembly) should split
-and copy these into this directory.
+packages from the raw cluster evidence. Phase 14 (Assembly) copies them into
+this directory unchanged.
 
 A combined `evidence_database.json` may also be generated, but the
 evidence-explorer plugin does **not** read it directly — it requires
 the individual per-section files.
-
-If this directory holds no JSON at all, the page renders a placeholder and the
-build passes: that is an un-instantiated template awaiting a run. If it holds
-JSON that matches none of the names above, or a file that cannot be read, the
-build **fails** rather than publishing an empty explorer.
-

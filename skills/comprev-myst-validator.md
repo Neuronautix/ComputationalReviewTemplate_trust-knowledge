@@ -384,6 +384,17 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     Unresolved IDs, missing score fields, ambiguous anchors, or citation drift are a hard fail.
     **pass/fail**
 
+30. **EVIDENCE_DATABASE_DECLARED_AND_LOADABLE** *(Phase 14V, 19V, 20V)*: Parse the
+    `:::{evidence-explorer}` directive; `:availability:` must be `available` or
+    `not_provided` (absent means `available`). Import `loadEvidenceDirectory` and
+    `applyEvidenceAvailability` from `plugins/evidence-explorer-plugin.mjs` and run them on
+    `evidence/`. When available, `missing_directory`, `invalid_manifest`,
+    `no_compatible_files`, `invalid_packages` and `partial_loading` are hard fails; a valid
+    set with zero findings passes and is reported distinctly. `not_provided` passes only as
+    an explicit declaration. The gate lists the loader's `discovered`, `loaded` (with
+    adapter) and `rejected` files, and `provenance/review_compatibility_report.json`
+    validates with `node scripts/review-compatibility-report.mjs validate`. **pass/fail**
+
 ## Output Schema
 
 The validator's gate JSON (e.g. `gate_sections_drafted.json` at 7V, `gate_assembly.json` at 14V, `gate_repository_push.json` at 20V — and the in-memory return value at 19V, which has no named gate file) MUST be a single JSON object containing — at minimum — these keys:
@@ -419,6 +430,7 @@ The validator's gate JSON (e.g. `gate_sections_drafted.json` at 7V, `gate_assemb
     "EVIDENCE_PARAMETERS_HONORED": "pass|fail|n/a",
     "CLAIM_KB_FILES_PRESENT": "pass|fail",
     "TRUST_CLAIM_TAG_LINKAGE": "pass|fail",
+    "EVIDENCE_DATABASE_DECLARED_AND_LOADABLE": "pass|fail",
     "...": "every other check in this skill, by exact NAME"
   },
   "gate_passed": bool

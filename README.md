@@ -124,10 +124,21 @@ it can optionally be published from Customize → Skills, but this is not requir
 | Plugin | What it does |
 |--------|-------------|
 | `authorship-plugin.mjs` | Renders interactive CRediT authorship widget (local fork plugin; see *Authorship integration boundary* below) |
-| `evidence-explorer-plugin.mjs` | Loads evidence packages into interactive browser |
+| `evidence-explorer-plugin.mjs` | Loads evidence packages into interactive browser through the versioned contract (`evidence/schema/`) or the Phase 5 adapter, with explicit `:availability:` and loader diagnostics (`evidence/README.md`) |
 | `figure-lightbox-plugin.mjs` | Click-to-zoom lightbox for inline figures |
 | `trust-claim-plugin.mjs` | Renders margin trust claim-tags with expandable evidence and score context |
-| `human-review-plugin.mjs` | Pairs accepted human comments with exact versioned claim/text anchors as a separate, non-numeric review layer |
+| `human-review-plugin.mjs` | Pairs accepted human comments with exact versioned claim/text anchors as a separate, non-numeric review layer. **Opt-in:** not registered in `myst.yml` by default; `scripts/check_template_consistency.py` names it in `OPTIONAL_PLUGINS` and fails if example acceptances are bound |
+
+#### Authorship integration boundary
+
+Upstream ComputationalReviewTemplate now loads a remote AuthorshipExtractor release and
+ships named human authors in `content/authors.yml`. This fork deliberately does neither:
+it keeps the local `plugins/authorship-plugin.mjs`, `content/authorship-widget.*` and its
+own `content/authors.yml`, because the CRediT companion (`scripts/contributorship/`)
+imports the plugin's `parseMiniYaml` and its golden outputs are bound to those bytes, and
+because a mutable `releases/latest` URL would make the rendered authorship unreproducible.
+`tests/authorship-integration-boundary.test.mjs` pins the boundary. Upstream authorship
+changes are adopted only by porting them into the local plugin, with tests.
 
 ### Knowledge Base (`knowledge/`)
 
@@ -183,6 +194,25 @@ Pre-configured pages that the pipeline populates:
 - `.github/workflows/deploy.yml` — Auto-builds MyST site and deploys to GitHub Pages
 - `scripts/shared_style.py` — Common figure style (colors, fonts, 300 DPI)
 - `content/authors.yml` — Author metadata for the authorship widget (extended into `myst.yml`)
+- `.github/workflows/validate.yml` — deterministic validation with the pinned `mystmd@1.10.1`: evidence contract, compatibility report, generic MyST golden fixture, and a clean-copy build of this TRUST site whose rendered claim, authorship and evidence widgets are inspected (`node --test test/*.test.mjs`). The deploy workflow differs: it installs an unpinned `mystmd` and executes the figure notebooks at build time, so the deployed figures are regenerated rather than byte-checked.
+
+### Compatibility reporting
+
+Assembly writes `provenance/review_compatibility_report.json` covering article rendering,
+citation resolution, evidence-package loading and the presence of optional extensions. In
+this fork the TRUST claim graph is reported there as an extension with the verbatim
+`validate-trust.js` result; the report never assigns or interprets scores. See
+[the compatibility-report contract](docs/evidence-compatibility.md).
+
+### Generic MyST fixtures
+
+`test/fixtures/myst-golden` covers citations, bibliography, figures, tables,
+cross-references, admonitions, mathematics, margin content, custom directives,
+and the Evidence Explorer directive using the production plugin and widget. It
+deliberately avoids TRUST and claim-graph semantics; `test/trust-site-render.test.mjs`
+covers those on the real site. Install the pinned CLI with
+`npm install --global mystmd@1.10.1`, then run `node --test test/*.test.mjs`
+(set `MYST_COMMAND` only when the CLI is installed under a non-standard name).
 
 ## Pipeline Architecture
 
