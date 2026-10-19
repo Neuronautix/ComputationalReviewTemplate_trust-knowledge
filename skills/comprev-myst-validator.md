@@ -1,3 +1,8 @@
+---
+name: comprev-myst-validator
+description: "Expert Review Pipeline v30 (ComputationalReviewTemplate): MyST Validator — Binary Gate for Phases 7, 14, 19, 20"
+---
+
 # MyST Validator — Binary Gate for Phases 7, 14, 19, 20
 
 **Purpose:** Validate MyST markdown syntax and build integrity.
@@ -64,7 +69,7 @@ re.findall(r"\{cite:[pt]\}[A-Za-z]", text)     # missing opening backtick AFTER 
 Any hit is a fail. Each hit converts a citation into a literal code span and breaks rendering. Report offenders as `path:line:fragment`. **pass/fail**
 
 6a. **DIRECTIVE_WHITELIST_VIOLATION** *(Phase 7V, 19V)*: Every `:::{name}` directive in
-    `content/*.md` body files matches the whitelist documented in `comprev-orchestrator-v29`
+    `content/*.md` body files matches the whitelist documented in `comprev-orchestrator`
     §Directive Whitelist (`figure`, `dropdown`, `admonition`, `warning`, `authorship-explorer`
     in frontmatter only, `evidence-explorer`, `trust-claim`, and opt-in `human-reviews`).
     `human-reviews` is allowed only when `plugins/human-review-plugin.mjs` is registered and its
@@ -81,12 +86,39 @@ Any hit is a fail. Each hit converts a citation into a literal code span and bre
 
 ## Build Checks (Phase 14, 19, 20)
 
+**Phase 14V runs a real build.** It is the first gate that can, and the defects it
+catches are the expensive ones — an unresolved `:authors:` path, an unrendered
+directive, a plugin that binds nothing. 19V and Phase 21 repeat it; neither
+replaces it. A 14V gate whose build was never executed is `pass_with_deferred`
+at best, never `pass`.
+
 10. **MYSTMD_INSTALLED**: `npm install -g mystmd` succeeds? **pass/fail**
+
+    A claim that the toolchain is unavailable MUST carry the captured output of
+    the commands that establish it — `which node`, `which npm`, `node --version`,
+    `npm --version`, and the failing `npm install -g mystmd` — recorded verbatim
+    in the gate under `tool_probe`. An unsupported "node/npm not available" note
+    is not a verdict. In the reference run it was false: both were present in a
+    different conda environment than the one probed, and the claim deferred the
+    first real build by five phases. Search the environments available to the
+    session, not only the active one, and record what you ran.
 11. **BUILD_PASSES**: `myst build --html` exits with zero ⛔ errors? **pass/fail**
 12. **ZERO_CITATION_ERRORS**: Zero "Could not link citation" in output? **pass/fail**
 13. **ZERO_IMAGE_ERRORS**: Zero "Cannot find image" in output? **pass/fail**
 
-13a. **BIB_CITE_KEYS_RESOLVE** *(fallback when `myst build` cannot run)*: When the environment lacks `npm`/`mystmd` so checks 10–13 are deferred, the validator MUST run a mechanical citation-binding test in their place. Three sub-checks, all required:
+13a. **BIB_CITE_KEYS_RESOLVE** *(fallback when `myst build` cannot run)*: When the environment lacks `npm`/`mystmd` so checks 10–13 are deferred, the validator MUST run a mechanical citation-binding test in their place.
+
+     This fallback is admissible only with a `tool_probe` record (check #10). Three
+     rules bind it, and together they are the whole point of the fallback:
+
+     1. Checks 10–13 are recorded as `"deferred"`, **never** as `"pass"`. The
+        fallback substitutes for them; it does not satisfy them.
+     2. The gate verdict becomes `pass_with_deferred`, not `pass`, and lists the
+        deferred check names under `deferred_checks`.
+     3. Every later gate that *can* run a deferred check MUST run it and record
+        its own verdict. Citing the upstream fallback — or the upstream
+        `pass_with_deferred` — is forbidden. A deferred check that is never
+        re-run is an open failure, not a closed one. Three sub-checks, all required:
 
 ```python
 import yaml, re, json
@@ -156,7 +188,19 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     `content/*.md`. Forbidden tokens (case-insensitive substring match on `name:` values
     and byline text): `Human Supervisor`, `Anonymous`, `TBD`, `[NAME]`, `<...>` template
     angle-brackets, `Author N` patterns. **pass/fail**
-19. **ALL_PLUGINS_LISTED**: myst.yml lists all 4 plugins? **pass/fail**
+19. **ALL_PLUGINS_LISTED**: every plugin the repository ships is declared in
+    `myst.yml` `project.plugins`. Derive both sides rather than asserting a count:
+    list `plugins/*.mjs` on disk, read the `project.plugins` entries, and require
+    every local file to appear among them. Remote entries (a plugin loaded from a
+    release URL) have no local file and are not expected to have one. The one
+    exception is a plugin named in `OPTIONAL_PLUGINS` of
+    `scripts/check_template_consistency.py` (in this fork, `human-review-plugin.mjs`):
+    it is opt-in, stays undeclared until a real accepted record exists, and is never
+    enabled by pointing it at `community/examples/`.
+
+    Do not hardcode how many plugins there are. A review may add one, and a check
+    that names a number fails a correct repository — this check asserted four
+    against a template that ships three, and had to be waived. **pass/fail**
 20. **HEADING_STYLE_CONSISTENT**: Run `audit_headings()` (defined in `comprev-critic.md`)
     across all `content/*.md` files. Zero problems of any type:
     `MANUAL_NUMBER_PREFIX`, `WRAPPED_HEADING`, `MULTI_SPACE_AFTER_NUMBER`,
@@ -174,7 +218,7 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
        `\bPhases? 1[4-9].20 \(scheduled\)`. Zero hits required.
     2. **Pipeline Execution frame count matches live ledger.** Parse the integer that
        follows `Total session frames: \*\*` in the Pipeline Execution section. Must equal
-       `len(operon.frames(project_id=PROJECT_ID, roots_only=False, has_task=False)['frames'])`
+       `len(host.frames(project_id=PROJECT_ID, roots_only=False, has_task=False)['frames'])`
        within ±1 (allow for the validator's own frame).
     3. **Pipeline Execution phases-completed wording is final.** The phrase
        "All 21 pipeline phases completed" (case-sensitive) must appear in
@@ -275,7 +319,51 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
       fields are null/default: emit `"EVIDENCE_PARAMETERS_HONORED": "n/a"`
       with reason "no custom evidence parameters set".
 
-26. **CLAIM_KB_FILES_PRESENT** *(Phase 14V, 19V, 20V)*:
+26. **PLUGIN_PAYLOAD_MATCHES_SOURCE** *(Phase 14V, 19V, 20V)*: For every
+    plugin that reads files at build time (a `stage: 'document'` transform
+    that calls `readFileSync`), run that transform over each `content/*.md`
+    page invoking its directive and compare the **bound payload** with the
+    files on disk. For `evidence-explorer`: the payload's `sections`,
+    `findings`, `conflicts` and `figure_data` lengths MUST equal the number
+    of evidence packages and the summed lengths of those arrays across
+    `evidence/evidence_section_*.json`, and every entry of `findings` MUST be
+    an object.
+
+    Require **equality, not non-emptiness**. A bind that drops three of
+    twelve sections passes any non-empty test while publishing an incomplete
+    explorer, and `argument_groups.*.supporting_findings` holds cite-key
+    *strings*, so a payload can be non-empty and still hold no findings.
+
+    This is the check that was missing: at 14V the pipeline previously
+    confirmed only that the directive was invoked (#21) and that the packages
+    were populated (#22), both of which passed while the Evidence Database
+    page published empty. The equivalent Phase 21 check (`PLUGIN_DATA_BOUND`
+    in `comprev-deploy-polish`) runs after deployment and is a re-check, not
+    the first line of defence. No `myst build` is required — invoke the
+    transform directly, which is what makes this affordable at 14V.
+    **HARD FAIL** on any mismatch.
+
+27. **DATA_PLUGIN_NEGATIVE_TEST** *(Phase 14V, 19V, 20V)*: Every
+    file-reading plugin MUST ship an executable test, and the validator MUST
+    run it and require exit status 0. For this template:
+    `node scripts/test_evidence_explorer.mjs`.
+
+    The test MUST cover both directions of emptiness, because fixing one
+    produced the other within a day:
+
+    1. A data directory holding **no** input files, declared with an explicit
+       `:availability: not_provided`, renders the documented placeholder and the
+       build survives — an un-instantiated template is not a defect. The same
+       empty directory under empty or default `available` fails (check 30).
+    2. A directory holding input files the plugin matches to **nothing**, or
+       that it cannot read, **fails the build** rather than publishing an
+       empty widget.
+
+    A suite that cannot fail is not evidence. Confirm it detects a real
+    regression by running it against the last known-bad plugin revision
+    before trusting a pass. **pass/fail**.
+
+28. **CLAIM_KB_FILES_PRESENT** *(Phase 14V, 19V, 20V)*:
     Verify all required TRUST knowledge files exist and parse:
     - `knowledge/claim_seed_index.json`
     - `knowledge/claim_graph.json`
@@ -284,7 +372,7 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     - `knowledge/schemas/claim_graph.schema.json`
     Missing or invalid JSON is a hard fail. **pass/fail**
 
-27. **TRUST_CLAIM_TAG_LINKAGE** *(Phase 14V, 19V, 20V)*:
+29. **TRUST_CLAIM_TAG_LINKAGE** *(Phase 14V, 19V, 20V)*:
     For every `:::{trust-claim}` in `content/*.md`:
     - if `:claim-id: != claim-id-placeholder`, it must resolve in `knowledge/claim_graph.json` `claims[].claim_id`
     - resolved claim must include `trust_score.overall_score` and `trust_score.trust_label`
@@ -297,6 +385,19 @@ Any other import is a fail. Reports offenders as `notebook:line:module`. **pass/
     Unresolved IDs, missing score fields, ambiguous anchors, or citation drift are a hard fail.
     **pass/fail**
 
+30. **EVIDENCE_DATABASE_DECLARED_AND_LOADABLE** *(Phase 14V, 19V, 20V)*: Parse the
+    `:::{evidence-explorer}` directive; `:availability:` must be `available` or
+    `not_provided` (absent means `available`). Import `loadEvidenceDirectory` and
+    `applyEvidenceAvailability` from `plugins/evidence-explorer-plugin.mjs` and run them on
+    `evidence/`. When available, `missing_directory`, `invalid_manifest`,
+    `no_compatible_files`, `invalid_packages` and `partial_loading` are hard fails; a valid
+    set with zero findings passes and is reported distinctly. Only an explicit
+    `:availability: not_provided` survives an empty evidence set; an empty `evidence/`
+    under empty or default `available` fails (`missing_directory` or `no_compatible_files`).
+    The gate lists the loader's `discovered`, `loaded` (with
+    adapter) and `rejected` files, and `provenance/review_compatibility_report.json`
+    validates with `node scripts/review-compatibility-report.mjs validate`. **pass/fail**
+
 ## Output Schema
 
 The validator's gate JSON (e.g. `gate_sections_drafted.json` at 7V, `gate_assembly.json` at 14V, `gate_repository_push.json` at 20V — and the in-memory return value at 19V, which has no named gate file) MUST be a single JSON object containing — at minimum — these keys:
@@ -304,7 +405,9 @@ The validator's gate JSON (e.g. `gate_sections_drafted.json` at 7V, `gate_assemb
 ```json
 {
   "phase": 7|14|19|20,
-  "gate": "pass|fail",
+  "gate": "pass|pass_with_deferred|fail",
+  "deferred_checks": [],
+  "tool_probe": {},
   "per_file_results": {...},
   "build_result": {"myst_errors": int, "myst_warnings": int},
   "structural_results": {
@@ -323,11 +426,14 @@ The validator's gate JSON (e.g. `gate_sections_drafted.json` at 7V, `gate_assemb
     "NO_WRITER_SCRATCHPAD": "pass|fail",
     "CITE_DIRECTIVE_SYNTAX_CLEAN": "pass|fail",
     "PLUGIN_DIRECTIVES_INVOKED": "pass|fail",
+    "PLUGIN_PAYLOAD_MATCHES_SOURCE": "pass|fail",
+    "DATA_PLUGIN_NEGATIVE_TEST": "pass|fail",
     "FIGURE_WIDTH_DECLARED": "pass|fail",
     "BIB_CITE_KEYS_RESOLVE": "pass|fail|n/a",
     "EVIDENCE_PARAMETERS_HONORED": "pass|fail|n/a",
-        "CLAIM_KB_FILES_PRESENT": "pass|fail",
-        "TRUST_CLAIM_TAG_LINKAGE": "pass|fail",
+    "CLAIM_KB_FILES_PRESENT": "pass|fail",
+    "TRUST_CLAIM_TAG_LINKAGE": "pass|fail",
+    "EVIDENCE_DATABASE_DECLARED_AND_LOADABLE": "pass|fail",
     "...": "every other check in this skill, by exact NAME"
   },
   "gate_passed": bool

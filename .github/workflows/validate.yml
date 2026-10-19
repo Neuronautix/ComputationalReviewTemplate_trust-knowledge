@@ -1,0 +1,34 @@
+name: Validate rendered template
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      # Deterministic: a pinned CLI, no notebook execution. The deploy workflow
+      # still executes figure notebooks and installs an unpinned mystmd.
+      - name: Install pinned MyST CLI
+        run: npm install --global mystmd@1.10.1
+
+      # Evidence contract, compatibility report, the generic MyST golden fixture,
+      # and a clean-copy build of this TRUST site with its rendered widgets.
+      - name: Run Node and rendered golden tests
+        run: node --test test/*.test.mjs

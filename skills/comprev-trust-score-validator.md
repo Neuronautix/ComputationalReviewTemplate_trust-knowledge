@@ -1,3 +1,8 @@
+---
+name: comprev-trust-score-validator
+description: "Expert Review Pipeline v30 (ComputationalReviewTemplate): TRUST Score Validator — Binary Gate for Phase 16T"
+---
+
 # TRUST Score Validator - Binary Gate for Dedicated TRUST Scoring
 
 **Purpose:** Compute and validate claim-level TRUST scores from structured claim contexts using deterministic rules.
