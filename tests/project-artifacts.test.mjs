@@ -65,6 +65,12 @@ test('traversal, URLs, hidden credential paths and symlink escape are refused', 
     assert.throws(() => buildManifest(mutation((d) => { d.artifacts[0].path = value; }), root));
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'project-artifacts-'));
   try {
+    const newlineName = 'draft.txt\n';
+    fs.copyFileSync(path.join(root, 'files/draft.txt'), path.join(scratch, newlineName));
+    const newlineInput = input();
+    newlineInput.artifacts = [{ ...newlineInput.artifacts[0], path: newlineName }];
+    assert.ok(fs.existsSync(path.join(scratch, newlineName)), 'the trailing-newline file really exists');
+    assert.throws(() => buildManifest(newlineInput, scratch), /unsafe artifact path/);
     fs.symlinkSync(path.join(root, 'files'), path.join(scratch, 'files'));
     assert.throws(() => buildManifest(input(), scratch), /escapes root/);
   } finally { fs.rmSync(scratch, { recursive: true, force: true }); }

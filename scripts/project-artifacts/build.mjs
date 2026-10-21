@@ -22,11 +22,12 @@ export function buildManifest(declaration, root) {
     if (artifact.clearance !== 'current') fail('withdrawn artifact clearance');
     // POSIX relative identifiers are portable; no Windows drives, URL, query,
     // traversal, hidden credential/config files or ambiguous separators.
-    if (!/^[A-Za-z0-9_-][A-Za-z0-9_./-]*$/.test(artifact.path)
+    if (!/^[A-Za-z0-9_-][A-Za-z0-9_./-]*(?![\s\S])/.test(artifact.path)
         || artifact.path.split('/').some((part) => !part || part === '.' || part === '..' || part.startsWith('.')))
       fail('unsafe artifact path');
     const target = fs.realpathSync(path.resolve(base, artifact.path));
-    if (!target.startsWith(`${base}${path.sep}`)) fail('artifact escapes root');
+    const relative = path.relative(base, target);
+    if (!relative || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) fail('artifact escapes root');
     if (!fs.statSync(target).isFile()) fail('artifact must be a regular file');
     const bytes = fs.readFileSync(target);
     if (bytes.length !== artifact.bytes || createHash('sha256').update(bytes).digest('hex') !== artifact.sha256)
