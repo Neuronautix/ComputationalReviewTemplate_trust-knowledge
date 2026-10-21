@@ -89,3 +89,30 @@ test('CLI writes only descriptor, never overwrites existing output and gives met
     assert.doesNotMatch(second.stderr, /synthetic-project|draft|sha256|Synthetic/);
   } finally { fs.rmSync(scratch, { recursive: true, force: true }); }
 });
+
+
+test('GitHub coordinates reject dot segments and invalid owners while retaining valid repository names', () => {
+  for (const repository of ['../..', './repo', 'owner/..', 'owner/.', '-owner/repo', 'owner-/repo', 'owner--name/repo', 'owner_name/repo', 'owner.name/repo', 'a'.repeat(40) + '/repo', 'owner/' + 'a'.repeat(101), 'owner/repo/extra']) {
+    assert.throws(() => buildManifest(mutation((d) => { d.source.repository = repository; }), root), repository);
+  }
+  for (const repository of ['a/b', 'owner-name/.github', 'Owner/repo_name-1.0', 'a'.repeat(39) + '/' + 'r'.repeat(100)]) {
+    assert.equal(buildManifest(mutation((d) => { d.source.repository = repository; }), root).source.repository, repository);
+  }
+});
+
+test('CLI invoked through a symlink executes and rejects missing arguments', () => {
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'project-artifacts-link-'));
+  const cli = fileURLToPath(new URL('../scripts/project-artifacts/build.mjs', import.meta.url));
+  const link = path.join(scratch, 'manifest.mjs');
+  const output = path.join(scratch, 'private.json');
+  try {
+    fs.symlinkSync(cli, link);
+    const run = spawnSync(process.execPath, [link, path.join(root, 'declaration.json'), root, output], { encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(run.stdout, '');
+    assert.equal(fs.readFileSync(output, 'utf8'), serializeManifest(buildManifest(input(), root)));
+    const invalid = spawnSync(process.execPath, [link], { encoding: 'utf8' });
+    assert.equal(invalid.status, 1);
+    assert.equal(invalid.stdout, '');
+  } finally { fs.rmSync(scratch, { recursive: true, force: true }); }
+});

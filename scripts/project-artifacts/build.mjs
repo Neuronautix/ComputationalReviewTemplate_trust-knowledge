@@ -43,7 +43,16 @@ export function buildManifest(declaration, root) {
   return canonical(result);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Node resolves import.meta.url through symlinks, but preserves argv[1].
+function isEntryPoint() {
+  try {
+    return Boolean(process.argv[1]) && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false; // Library imports need not have an existing script argv[1].
+  }
+}
+
+if (isEntryPoint()) {
   try {
     const [declarationPath, root, output, ...extra] = process.argv.slice(2);
     if (!declarationPath || !root || !output || extra.length) fail('Usage: node scripts/project-artifacts/build.mjs DECLARATION ROOT PRIVATE_OUTPUT');
