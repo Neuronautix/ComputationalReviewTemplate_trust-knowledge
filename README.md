@@ -327,3 +327,8 @@ That DOI is the *concept* DOI: it always resolves to the most recent release, so
 update when a version is cut. To cite one specific version instead, take that version's own
 DOI from the Zenodo record.
 
+## Offline private artifact descriptor
+
+The optional [producer draft](docs/PRIVATE_PROJECT_ARTIFACTS.md) for TRUST #16
+checks exact local artifact hashes and emits a private descriptor. It grants no
+source access and does not publish content or change the public review exporter.

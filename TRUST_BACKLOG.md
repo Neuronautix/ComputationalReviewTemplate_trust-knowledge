@@ -855,3 +855,12 @@ attribution, decision records.*
 | TRUST-H01 | Contributor/reviewer docs | H | P1 | backlog | M | yes |
 | TRUST-H02 | Limitations + attribution | H | P1 | backlog | S | yes |
 | TRUST-H03 | Maintain decision log | H | P1 | ready | S | yes |
+
+## Integration issue #16 — offline artifact descriptor
+
+Status: partial implementation (offline producer draft). The
+producer-draft schema, deterministic CLI and synthetic golden/negative fixtures
+are described in [PRIVATE_PROJECT_ARTIFACTS.md](docs/PRIVATE_PROJECT_ARTIFACTS.md).
+Only local descriptor generation is implemented. Consumer contract ratification,
+principal-scoped listing and production private deployment remain open and gated
+on ORAtlas #202/#203/#204; no scientific or identity decision is made.
