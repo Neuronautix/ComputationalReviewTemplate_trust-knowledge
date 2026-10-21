@@ -1,0 +1,66 @@
+{
+  "protocol": "research-project-artifacts/0.1",
+  "scope": "private-descriptor",
+  "access_effect": "none",
+  "project": {
+    "id": "synthetic-project",
+    "research_question": "Synthetic offline review question"
+  },
+  "source": {
+    "provider": "github",
+    "repository": "example/synthetic-review",
+    "commit": "1111111111111111111111111111111111111111",
+    "visibility": "private"
+  },
+  "workflow": {
+    "phase": "synthetic-demo",
+    "run_id": "offline-run-1"
+  },
+  "artifacts": [
+    {
+      "id": "draft",
+      "path": "files/draft.txt",
+      "sha256": "ef4afc24f11260a00e93512ad2f40b84a4732a0d246594dacf4b2c5be9aeb702",
+      "bytes": 29,
+      "kind": "working-draft",
+      "state": "working",
+      "visibility": "private",
+      "rights": {
+        "license": "CC0-1.0",
+        "redistribution": "allowed"
+      },
+      "clearance": "current",
+      "generator": null
+    },
+    {
+      "id": "graph",
+      "path": "files/graph.txt",
+      "sha256": "d5b2a33e9d0af6ecf2bc8e243df11d7e428ca6248e8247bb4227743d14694cac",
+      "bytes": 31,
+      "kind": "claim-graph",
+      "state": "reviewed",
+      "visibility": "restricted",
+      "rights": {
+        "license": "CC0-1.0",
+        "redistribution": "allowed"
+      },
+      "clearance": "current",
+      "generator": null
+    },
+    {
+      "id": "release",
+      "path": "files/release.txt",
+      "sha256": "e41082c8445f3026292eddadf7ec91e3ba2e0044f768bdc755b809621c545a15",
+      "bytes": 41,
+      "kind": "reviewed-release",
+      "state": "released",
+      "visibility": "public",
+      "rights": {
+        "license": "CC0-1.0",
+        "redistribution": "allowed"
+      },
+      "clearance": "current",
+      "generator": null
+    }
+  ]
+}

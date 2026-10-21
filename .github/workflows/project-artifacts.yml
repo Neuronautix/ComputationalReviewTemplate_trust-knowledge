@@ -1,0 +1,37 @@
+name: Validate offline project artifacts
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/project-artifacts.yml'
+      - 'scripts/project-artifacts/**'
+      - 'scripts/release-artifacts/**'
+      - 'scripts/contributorship/**'
+      - 'scripts/oratlas/**'
+      - 'scripts/source-evidence/**'
+      - 'docs/contracts/project-artifacts/**'
+      - 'docs/contracts/contributorship/**'
+      - 'tests/project-artifacts.test.mjs'
+      - 'tests/contributorship*.test.mjs'
+      - 'tests/oratlas-export.test.mjs'
+      - 'tests/fixtures/**'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Validate producer descriptor and public export regressions
+        run: >-
+          node --test tests/project-artifacts.test.mjs
+          tests/contributorship.test.mjs tests/contributorship-private-leak.test.mjs
+          tests/oratlas-export.test.mjs
