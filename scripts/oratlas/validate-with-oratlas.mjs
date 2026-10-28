@@ -23,8 +23,21 @@ export function oratlasHead(oratlasDir) {
   }
 }
 
+// tsx's own CLI entry, run with the current node: the `node_modules/.bin/tsx` shim is a shell
+// script that Windows cannot spawn (ENOENT), so it is never executed directly.
+export function tsxCli(oratlasDir) {
+  const packageDir = join(resolve(oratlasDir), 'node_modules/tsx');
+  try {
+    const { bin } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
+    return join(packageDir, typeof bin === 'string' ? bin : bin.tsx);
+  } catch {
+    return null;
+  }
+}
+
 export function oratlasAvailable(oratlasDir) {
-  return Boolean(oratlasDir) && existsSync(join(oratlasDir, 'node_modules/.bin/tsx')) && existsSync(join(oratlasDir, 'packages/extractor/node_modules'));
+  const cli = Boolean(oratlasDir) && tsxCli(oratlasDir);
+  return Boolean(cli) && existsSync(cli) && existsSync(join(oratlasDir, 'packages/extractor/node_modules'));
 }
 
 // Fails if the local contract mirror drifted from the checked-out ORAtlas enums.
@@ -42,8 +55,9 @@ export function mirrorDrift(oratlasDir) {
 }
 
 export function runOratlasExtractor(oratlasDir, exportDir) {
-  const tsx = join(resolve(oratlasDir), 'node_modules/.bin/tsx');
-  const output = execFileSync(tsx, [join(HERE, 'oratlas-runner.mts'), resolve(oratlasDir), resolve(exportDir)], {
+  const cli = tsxCli(oratlasDir);
+  if (!cli || !existsSync(cli)) throw new Error(`tsx is not installed in ${resolve(oratlasDir)}`);
+  const output = execFileSync(process.execPath, [cli, join(HERE, 'oratlas-runner.mts'), resolve(oratlasDir), resolve(exportDir)], {
     cwd: resolve(oratlasDir),
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
