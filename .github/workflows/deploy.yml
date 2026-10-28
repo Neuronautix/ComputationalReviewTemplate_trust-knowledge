@@ -61,7 +61,7 @@ jobs:
 
       - name: Build MyST site
         env:
-          BASE_URL: /ComputationalReviewTemplate_trust-knowledge
+          BASE_URL: /${{ github.event.repository.name }}
         run: myst build --html
 
       - name: Upload Pages artifact
